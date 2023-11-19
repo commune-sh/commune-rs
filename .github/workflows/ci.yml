@@ -52,5 +52,5 @@ jobs:
 
       - name: E2E Tests
         env:
-          COMMUNE_SYNAPSE_HOST: 'synapse:8008'
+          COMMUNE_SYNAPSE_HOST: 'http://synapse:8008'
         run: cargo test -p test -- --test-threads=1
