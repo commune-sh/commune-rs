@@ -47,6 +47,7 @@ jobs:
       - name: Prepare Data for Tests
         run: |
           cp -R ./crates/test/fixtures/synapse ./docker/synapse
+          cp -R ./.env.example ./.env
           docker compose up -d
 
       - name: E2E Tests
