@@ -3,6 +3,7 @@ use std::env::var;
 use matrix::admin::Client;
 
 const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
+const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
 
 pub struct Environment {
     pub client: Client,
@@ -13,7 +14,8 @@ impl Environment {
     pub fn new() -> Self {
         dotenv::dotenv().ok();
 
-        let client = Client::new("http://localhost:8008").unwrap();
+        let synapse_host = Self::env_var(COMMUNE_SYNAPSE_HOST);
+        let client = Client::new(synapse_host).unwrap();
         let registration_shared_secret = Self::env_var(COMMUNE_REGISTRATION_SHARED_SECRET);
 
         Self {
