@@ -27,3 +27,7 @@ stop:
 clear: stop
   docker compose rm --all --force --volumes --stop
   docker volume rm commune_synapse_database || true
+
+# Runs all the tests from the `test` package. Optionally runs a single one if name pattern is provided
+e2e *args='':
+  cargo test --package test -- --test-threads=1 $1

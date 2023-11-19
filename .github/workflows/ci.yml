@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    paths:
+      - "**"
+      - "!/*.md"
+      - "!/**.md"
+
+concurrency:
+  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check clippy
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Unit Tests
+        run: cargo test -p matrix
+
+      - name: Install Just
+        uses: extractions/setup-just@v1
+
+      - name: Prepare Data for Tests
+        run: |
+          cp -R ./crates/test/fixtures/synapse ./docker/synapse
+          docker compose up -d
+
+      - name: E2E Tests
+        run: cargo test -p test -- --test-threads=1
