@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  synapse_database:
+    image: 'postgres:16'
+    ports:
+      - '5432:5432'
+    volumes:
+      - synapse_database:/var/lib/postgresql/data
+    env_file:
+      - .env
+    restart: always
+
+  synapse:
+    image: 'matrixdotorg/synapse:v1.96.1'
+    ports:
+      - '8008:8008'
+      - '8448:8448'
+    volumes:
+      - ./docker/synapse:/data
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - synapse_database
+
+volumes:
+  synapse_database:

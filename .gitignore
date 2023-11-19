@@ -12,3 +12,12 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+# Development
+/docker/*
+!/docker/.gitkeep
+!/docker/postgre
+.env
+
+# System Specific
+.DS_Store
