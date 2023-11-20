@@ -52,7 +52,6 @@ jobs:
 
       - name: E2E Tests
         run: |
-          cp -R ./crates/test/fixtures/synapse ./docker/synapse
           docker compose up -d
           sleep 10
           cargo test -p test -- --test-threads=1
