@@ -44,10 +44,11 @@ jobs:
       - name: Install Just
         uses: extractions/setup-just@v1
 
+      - name: Generate Configuration
+        run: just gen_synapse_conf
+
       - name: Prepare Data for Tests
-        run: |
-          cp -R ./.env.example ./.env
-          docker compose up -d
+        run: docker compose up -d
 
       - name: E2E Tests
         env:
