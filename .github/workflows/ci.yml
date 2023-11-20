@@ -46,7 +46,9 @@ jobs:
 
       - name: Generate Synapse Configuration
         run: |
-          docker run -it --rm -v ./docker/synapse:/data --env-file .env matrixdotorg/synapse:v1.96.1 generate
+          docker run -i --rm -v ./docker/synapse:/data \
+            --env-file .env \
+            matrixdotorg/synapse:v1.96.1 generate
 
       - name: E2E Tests
         run: |
