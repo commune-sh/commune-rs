@@ -41,10 +41,16 @@ jobs:
       - name: Unit Tests
         run: cargo test -p matrix
 
+      - name: Create a copy of `.env.example`
+        run: cp ./.env.example ./.env
+
+      - name: Generate Synapse Configuration
+        run: |
+          docker run -it --rm -v ./docker/synapse:/data --env-file .env matrixdotorg/synapse:v1.96.1 generate
+
       - name: E2E Tests
         run: |
           cp -R ./crates/test/fixtures/synapse ./docker/synapse
-          cp ./.env.example ./.env
           docker compose up -d
           sleep 10
           cargo test -p test -- --test-threads=1
