@@ -42,8 +42,6 @@ jobs:
         run: cargo test -p matrix
 
       - name: E2E Tests
-        env:
-          COMMUNE_SYNAPSE_HOST: 'http://localhost:8008'
         run: |
           cp -R ./crates/test/fixtures/synapse ./docker/synapse
           cp ./.env.example ./.env
