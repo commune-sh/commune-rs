@@ -50,6 +50,10 @@ jobs:
             --env-file .env \
             matrixdotorg/synapse:v1.96.1 generate
 
+      - name: Use Test Homeserver
+        run: |
+          sudo cp -f ./crates/test/fixtures/synapse/homeserver.yaml ./docker/synapse/homeserver.yaml
+
       - name: E2E Tests
         run: |
           docker compose up -d
