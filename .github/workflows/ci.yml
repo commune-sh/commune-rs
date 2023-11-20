@@ -48,6 +48,11 @@ jobs:
           docker compose up -d
           sleep 10
           cargo test -p test -- --test-threads=1
-          sleep 10
+
+      - name: Print Logs
+        if: always()
+        run: |
+          docker-compose logs --no-color --tail=1000 synapse > synapse.log
+          cat ./synapse.log
           docker compose down
           docker ps
