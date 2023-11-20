@@ -45,6 +45,8 @@ jobs:
         env:
           COMMUNE_SYNAPSE_HOST: 'http://localhost:8008'
         run: |
+          mkdir ./docker
+          cp -R ./crates/test/fixtures/synapse ./docker/synapse
           cp ./.env.example ./.env
           docker compose up -d
           sleep 10
