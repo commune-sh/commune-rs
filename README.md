@@ -73,7 +73,7 @@ database:
 -    user: synapse_user
 -    password: secretpassword
 -    database: synapse
--    host: synapse_database
+-    host: localhost
 -    port: 5432
 -    cp_min: 5
 -    cp_max: 10
