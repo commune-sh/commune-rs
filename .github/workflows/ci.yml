@@ -41,16 +41,29 @@ jobs:
       - name: Unit Tests
         run: cargo test -p matrix
 
-      # - name: Install Just
-      #   uses: extractions/setup-just@v1
+      - name: Create a copy of `.env.example`
+        run: cp ./.env.example ./.env
 
-      # - name: Generate Configuration
-      #   run: just gen_synapse_conf
+      - name: Generate Synapse Configuration
+        run: |
+          docker run -i --rm -v ./docker/synapse:/data \
+            --env-file .env \
+            matrixdotorg/synapse:v1.96.1 generate
 
-      # - name: Prepare Data for Tests
-      #   run: docker compose up -d
+      - name: Use Test Homeserver
+        run: |
+          sudo cp -f ./crates/test/fixtures/synapse/homeserver.yaml ./docker/synapse/homeserver.yaml
 
-      # - name: E2E Tests
-      #   env:
-      #     COMMUNE_SYNAPSE_HOST: 'http://0.0.0.0:8008'
-      #   run: cargo test -p test -- --test-threads=1
+      - name: E2E Tests
+        run: |
+          docker compose up -d
+          sleep 10
+          cargo test -p test -- --test-threads=1
+
+      - name: Print Logs
+        if: always()
+        run: |
+          docker-compose logs --no-color --tail=1000 synapse > synapse.log
+          cat ./synapse.log
+          docker compose down
+          docker ps
