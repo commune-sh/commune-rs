@@ -41,16 +41,14 @@ jobs:
       - name: Unit Tests
         run: cargo test -p matrix
 
-      # - name: Install Just
-      #   uses: extractions/setup-just@v1
-
-      # - name: Generate Configuration
-      #   run: just gen_synapse_conf
-
-      # - name: Prepare Data for Tests
-      #   run: docker compose up -d
-
-      # - name: E2E Tests
-      #   env:
-      #     COMMUNE_SYNAPSE_HOST: 'http://0.0.0.0:8008'
-      #   run: cargo test -p test -- --test-threads=1
+      - name: E2E Tests
+        env:
+          COMMUNE_SYNAPSE_HOST: 'http://0.0.0.0:8008'
+        run: |
+          cp ./.env.example ./.env
+          docker compose up -d
+          sleep 10
+          cargo test -p test -- --test-threads=1
+          sleep 10
+          docker compose down
+          docker ps
