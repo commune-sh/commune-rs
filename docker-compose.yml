@@ -1,6 +1,5 @@
 version: '3'
 
-network_mode: 'host'
 services:
   synapse_database:
     image: 'postgres:16'
@@ -22,6 +21,7 @@ services:
     env_file:
       - .env
     restart: always
+    network_mode: 'host'
     depends_on:
       - synapse_database
 
