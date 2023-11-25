@@ -3,6 +3,8 @@ pub mod util;
 
 use std::fmt::Debug;
 
+use anyhow::Result;
+
 use matrix::admin::Client as MatrixAdminClient;
 
 use self::user::service::UserService;
@@ -20,15 +22,14 @@ pub struct Commune {
 }
 
 impl Commune {
-    pub fn new<C: Into<CommuneConfig>>(config: C) -> Self {
+    pub fn new<C: Into<CommuneConfig>>(config: C) -> Result<Self> {
         let config: CommuneConfig = config.into();
-        let mut admin =
-            MatrixAdminClient::new(config.synapse_host, config.synapse_server_name).unwrap();
+        let mut admin = MatrixAdminClient::new(config.synapse_host, config.synapse_server_name)?;
 
-        admin.set_token(config.synapse_admin_token).unwrap();
+        admin.set_token(config.synapse_admin_token)?;
 
-        Self {
+        Ok(Self {
             user: UserService::new(admin),
-        }
+        })
     }
 }

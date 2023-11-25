@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use validator::Validate;
 
 use matrix::admin::resources::user::{ThreePid, User as MatrixUser, UserCreateDto};
@@ -45,8 +45,8 @@ impl UserService {
                 threepids: vec![ThreePid {
                     medium: "email".to_string(),
                     address: dto.email,
-                    added_at: timestamp().unwrap(),
-                    validated_at: timestamp().unwrap(),
+                    added_at: timestamp()?,
+                    validated_at: timestamp()?,
                 }],
                 external_ids: Vec::default(),
                 admin: false,
@@ -55,12 +55,19 @@ impl UserService {
                 locked: false,
             },
         )
-        .await
-        .unwrap();
+        .await?;
+
+        let Some(displayname) = matrix_user.displayname else {
+            bail!("Matrix displayname is empty, this value cannot be empty");
+        };
+
+        let Some(threepid) = matrix_user.threepids.first() else {
+            bail!("Matrix Threepid should exist, this value cannot be empty");
+        };
 
         Ok(User {
-            username: matrix_user.displayname.unwrap(),
-            email: matrix_user.threepids.first().unwrap().address.clone(),
+            username: displayname,
+            email: threepid.address.to_owned(),
             session: dto.session,
             code: dto.code,
         })
