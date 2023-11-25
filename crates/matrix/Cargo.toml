@@ -5,16 +5,16 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = "1.0.75"
 async-trait = "0.1.74"
 hex = "0.4.3"
 hmac = "0.12.1"
 matrix-sdk = { git = "https://github.com/matrix-org/matrix-rust-sdk.git", rev = "e43a25a" }
-reqwest = { version = "0.11.22", features = ["json"] }
 serde_path_to_error = "0.1.14"
 serde_qs = "0.12.0"
 sha1 = "0.10.6"
 
 # Workspace Dependencies
+anyhow = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
-url = { workspace = true }
+url = { workspace = true, features = ["serde"] }

@@ -1,0 +1,18 @@
+[package]
+name = "core"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "commune"
+path = "src/lib.rs"
+
+[dependencies]
+validator = { version = "0.16", features = ["derive"] }
+
+# Workspace
+anyhow = { workspace = true }
+
+# Local Dependencies
+matrix = { path = "../matrix" }

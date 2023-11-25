@@ -4,6 +4,7 @@ use matrix::admin::Client;
 
 const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
 const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
+const COMMUNE_SYNAPSE_SERVER_NAME: &str = "COMMUNE_SYNAPSE_SERVER_NAME";
 
 pub struct Environment {
     pub client: Client,
@@ -15,7 +16,8 @@ impl Environment {
         dotenv::dotenv().ok();
 
         let synapse_host = Self::env_var(COMMUNE_SYNAPSE_HOST);
-        let client = Client::new(synapse_host).unwrap();
+        let synapse_server_name = Self::env_var(COMMUNE_SYNAPSE_SERVER_NAME);
+        let client = Client::new(synapse_host, synapse_server_name).unwrap();
         let registration_shared_secret = Self::env_var(COMMUNE_REGISTRATION_SHARED_SECRET);
 
         Self {

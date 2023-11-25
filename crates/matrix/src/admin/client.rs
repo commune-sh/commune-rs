@@ -11,17 +11,25 @@ pub struct Client {
     client: HttpClient,
     base_url: Url,
     token: Option<String>,
+    server_name: String,
 }
 
 impl Client {
-    pub fn new<S: AsRef<str>>(url: S) -> Result<Self> {
+    pub fn new<S: AsRef<str>>(url: S, server_name: S) -> Result<Self> {
         let url = Url::parse(url.as_ref())?;
+        let server_name = server_name.as_ref().to_string();
 
         Ok(Self {
             client: HttpClient::new(),
             base_url: url,
             token: None,
+            server_name,
         })
+    }
+
+    #[inline]
+    pub fn server_name(&self) -> &str {
+        &self.server_name
     }
 
     /// Sets the token to be used for authentication with the server.
