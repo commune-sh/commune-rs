@@ -4,7 +4,7 @@ use std::{borrow::Cow, fmt::Display};
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// @user:server.com
 /// ```
 ///
