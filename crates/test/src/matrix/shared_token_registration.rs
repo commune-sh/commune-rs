@@ -14,7 +14,7 @@ async fn creates_user_using_shared_secret() {
     let mac = SharedSecretRegistration::generate_mac(
         env.registration_shared_secret,
         nonce.clone(),
-        "steve".into(),
+        "steve_campbell".into(),
         "verysecure".into(),
         true,
         None,
@@ -24,8 +24,8 @@ async fn creates_user_using_shared_secret() {
         &env.client,
         SharedSecretRegistrationDto {
             nonce,
-            username: "steve".into(),
-            displayname: Some("steve".into()),
+            username: "steve_campbell".into(),
+            displayname: Some("steve_campbell".into()),
             password: "verysecure".into(),
             admin: true,
             mac,
