@@ -26,19 +26,16 @@ impl HttpClient {
         let addr = listener
             .local_addr()
             .expect("Failed to retrieve local address");
-        let config = ServerConfig::from_env();
-        let services = Services::shared(config).unwrap();
-        let router = {
-            let router = make_router();
-
-            router.with_state(services)
-        };
 
         tokio::spawn(async move {
+            let config = ServerConfig::from_env();
+            let services = Services::shared(config).unwrap();
+            let router = make_router();
+
             axum::Server::bind(&addr)
-                .serve(router.into_make_service())
+                .serve(router.with_state(services).into_make_service())
                 .await
-                .expect("Failed to run test server");
+                .expect("Failed to start server");
         });
 
         let client = reqwest::Client::builder()
