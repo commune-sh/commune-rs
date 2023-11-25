@@ -11,9 +11,9 @@ path = "src/lib.rs"
 [dependencies]
 
 # Workspace Dependencies
-axum = { workspace = true }
+axum = { workspace = true, features = ["tokio"] }
 dotenv = { workspace = true }
-reqwest = { workspace = true, features = ["json"] }
+reqwest = { workspace = true, default-features = false, features = ["json", "stream", "multipart"] }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }

@@ -1,12 +1,9 @@
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpListener};
 
 use dotenv::dotenv;
 use reqwest::{Client, StatusCode};
-use tokio::net::TcpListener;
 
-use commune_server::config::ServerConfig;
-use commune_server::router::make_router;
-use commune_server::services::Services;
+use commune_server::serve;
 
 pub(crate) struct HttpClient {
     pub client: Client,
@@ -17,25 +14,11 @@ impl HttpClient {
     pub(crate) async fn new() -> Self {
         dotenv().ok();
 
-        let std_listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        std_listener
-            .set_nonblocking(true)
-            .expect("Failed to set non-blocking mode");
-
-        let listener = TcpListener::from_std(std_listener).unwrap();
-        let addr = listener
-            .local_addr()
-            .expect("Failed to retrieve local address");
+        let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
+        let tcp = TcpListener::bind(addr).unwrap();
 
         tokio::spawn(async move {
-            let config = ServerConfig::from_env();
-            let services = Services::shared(config).unwrap();
-            let router = make_router();
-
-            axum::Server::bind(&addr)
-                .serve(router.with_state(services).into_make_service())
-                .await
-                .expect("Failed to start server");
+            serve(tcp).await.expect("Failed to bind to address");
         });
 
         let client = reqwest::Client::builder()

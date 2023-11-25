@@ -16,7 +16,7 @@ path = "src/lib.rs"
 serde_json = "1.0.108"
 
 # Workspace Dependencies
-axum = { workspace = true }
+axum = { workspace = true, features = ["tokio"] }
 anyhow = { workspace = true }
 dotenv = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
