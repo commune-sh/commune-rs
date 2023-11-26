@@ -54,6 +54,13 @@ jobs:
         run: |
           sudo cp -f ./crates/test/fixtures/synapse/homeserver.yaml ./docker/synapse/homeserver.yaml
 
+      - name: Retrieve Admin Access Token
+        run: |
+          export COMMUNE_SYNAPSE_ADMIN_TOKEN=$(PGPASSWORD=secretpassword docker compose exec -it synapse_database \
+            psql -d synapse -U synapse_user --no-align --quiet --tuples-only \
+            -c "SELECT a."token" FROM users u LEFT JOIN access_tokens a ON a.user_id=u."name" WHERE u."admin"=1")
+          echo "COMMUNE_SYNAPSE_ADMIN_TOKEN=${COMMUNE_SYNAPSE_ADMIN_TOKEN}" >> $GITHUB_ENV
+
       - name: E2E Tests
         run: |
           docker compose up -d
