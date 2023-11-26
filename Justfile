@@ -24,11 +24,11 @@ gen_synapse_admin: dotenv
     -p admin \
     -a
 
-# Retrieves admin access token
+# Retrieves admin access token uses de-facto admin user and Development Database Credentials
 get_access_token:
   PGPASSWORD=secretpassword docker compose exec -it synapse_database \
   psql -d synapse -U synapse_user --no-align --quiet --tuples-only \
-  -c "SELECT a."token" FROM users u LEFT JOIN access_tokens a ON a.user_id=u."name" WHERE u."admin"=1"
+  -c "SELECT a."token" FROM users u LEFT JOIN access_tokens a ON a.user_id=u."name" WHERE u."admin"=1" > access_token.txt
 
 # Runs backend dependency services
 backend: dotenv

@@ -18,6 +18,7 @@ Cargo.lock
 !/docker/.gitkeep
 !/docker/postgre
 .env
+access_token.txt
 
 # System Specific
 .DS_Store
