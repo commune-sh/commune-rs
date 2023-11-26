@@ -10,14 +10,14 @@ dotenv:
 
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
-  docker run -it --rm \
+  docker run -i --rm \
     -v ./docker/synapse:/data \
     --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
 
 # Generates a de-facto admin user
 gen_synapse_admin: dotenv
-  docker compose exec -it synapse \
+  docker compose exec -i synapse \
     register_new_matrix_user http://localhost:8008 \
     -c /data/homeserver.yaml \
     -u admin \
@@ -26,7 +26,7 @@ gen_synapse_admin: dotenv
 
 # Retrieves admin access token uses de-facto admin user and Development Database Credentials
 get_access_token:
-  PGPASSWORD=secretpassword docker compose exec -it synapse_database \
+  PGPASSWORD=secretpassword docker compose exec -i synapse_database \
   psql -d synapse -U synapse_user --no-align --quiet --tuples-only \
   -c "SELECT a."token" FROM users u LEFT JOIN access_tokens a ON a.user_id=u."name" WHERE u."admin"=1" > access_token.txt
 
