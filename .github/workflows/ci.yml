@@ -60,10 +60,13 @@ jobs:
       - name: Run Docker Containers
         run: |
           docker compose up -d --build
-          sleep 10
+          sleep 20
 
       - name: Create Admin User
         run: just gen_synapse_admin
+
+      - name: Check Synapse is Running
+        run: curl -sSf http://localhost:8008 > /dev/null
 
       - name: Retrieve Admin Access Token
         run: |
