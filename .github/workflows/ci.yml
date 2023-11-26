@@ -59,7 +59,7 @@ jobs:
 
       - name: Run Docker Containers
         run: |
-          docker compose up -d
+          docker compose up -d --build
           sleep 10
 
       - name: Create Admin User
