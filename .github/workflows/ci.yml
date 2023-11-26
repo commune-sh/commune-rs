@@ -54,6 +54,11 @@ jobs:
         run: |
           sudo cp -f ./crates/test/fixtures/synapse/homeserver.yaml ./docker/synapse/homeserver.yaml
 
+      - name: Run Docker Containers
+        run: |
+          docker compose up -d
+          sleep 10
+
       - name: Retrieve Admin Access Token
         run: |
           export COMMUNE_SYNAPSE_ADMIN_TOKEN=$(PGPASSWORD=secretpassword docker compose exec -it synapse_database \
@@ -63,8 +68,6 @@ jobs:
 
       - name: E2E Tests
         run: |
-          docker compose up -d
-          sleep 10
           cargo test -p test -- --test-threads=1
 
       - name: Print Logs
