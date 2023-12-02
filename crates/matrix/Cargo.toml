@@ -17,4 +17,5 @@ sha1 = "0.10.6"
 anyhow = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
+tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }

@@ -26,7 +26,7 @@ pub async fn handler(
             response
         }
         Err(err) => {
-            tracing::error!(?err, "Failed to register user");
+            tracing::warn!(?err, "Failed to register user");
             ApiError::from(err).into_response()
         }
     }
@@ -43,7 +43,7 @@ impl From<UserRegisterPayload> for CreateAccountDto {
     fn from(payload: UserRegisterPayload) -> Self {
         Self {
             username: payload.username,
-            password: payload.password,
+            password: payload.password.into(),
             email: payload.email,
             // FIXME: These should be queried from somewhere
             session: "test".to_string(),

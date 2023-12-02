@@ -6,6 +6,8 @@ use axum::Json;
 use axum::Router;
 use serde::Serialize;
 
+use commune::error::HttpStatusCode;
+
 use crate::services::SharedServices;
 
 pub struct Api;
@@ -19,13 +21,28 @@ impl Api {
 #[derive(Debug, Serialize)]
 pub struct ApiError {
     message: String,
+    code: &'static str,
     #[serde(skip)]
     status: StatusCode,
 }
 
 impl ApiError {
-    pub fn new(message: String, status: StatusCode) -> Self {
-        Self { message, status }
+    pub fn new(message: String, code: &'static str, status: StatusCode) -> Self {
+        Self {
+            message,
+            code,
+            status,
+        }
+    }
+}
+
+impl From<commune::error::Error> for ApiError {
+    fn from(err: commune::error::Error) -> Self {
+        Self {
+            message: err.to_string(),
+            code: err.error_code(),
+            status: err.status_code(),
+        }
     }
 }
 
@@ -40,6 +57,7 @@ impl From<anyhow::Error> for ApiError {
     fn from(err: anyhow::Error) -> Self {
         Self {
             message: err.to_string(),
+            code: "UNKNOWN_ERROR",
             status: StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
