@@ -68,6 +68,12 @@ jobs:
       - name: Check Synapse is Running
         run: curl -sSf http://localhost:8008 > /dev/null
 
+      - name: Provide Database Backup & Test it
+        run: |
+          just backup_db
+          just nuke_db
+          just restore_db
+
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token

@@ -8,6 +8,21 @@ default:
 dotenv:
   cp -n .env.example .env || true
 
+# Dump database to a file
+backup_db:
+  docker compose exec -T synapse_database \
+    pg_dumpall -c -U synapse_user > ./dump.sql
+
+# Restore database from a file
+restore_db:
+  cat ./dump.sql | docker compose exec -T synapse_database \
+    psql -U synapse_user -d synapse
+
+# Nuke database
+nuke_db:
+  docker compose exec -T synapse_database \
+    psql -U synapse_user -d synapse -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
   docker run -i --rm \

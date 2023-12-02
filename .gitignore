@@ -19,6 +19,7 @@ Cargo.lock
 !/docker/postgre
 .env
 access_token.txt
+dump.sql
 
 # System Specific
 .DS_Store
