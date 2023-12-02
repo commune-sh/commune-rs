@@ -19,6 +19,13 @@ impl Secret {
         &self.0
     }
 
+    /// Returs inner value as [`String`]
+    ///
+    /// # Shadowing Note
+    ///
+    /// Intentially shadows [`std::string::ToString::to_string`] to prevent
+    /// getting `"[REDACTED]"` when using `to_string`.
+    #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> String {
         self.0.to_string()
     }
