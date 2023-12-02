@@ -26,7 +26,7 @@ pub async fn handler(
             response
         }
         Err(err) => {
-            tracing::error!(?err, "Failed to register user");
+            tracing::warn!(?err, "Failed to register user");
             ApiError::from(err).into_response()
         }
     }

@@ -1,6 +1,6 @@
 use reqwest::StatusCode;
 
-use commune_server::router::api::v1::user::register::{UserRegisterPayload, UserRegisterResponse};
+use commune_server::router::api::v1::account::create::{UserRegisterPayload, UserRegisterResponse};
 
 use crate::tools::http::HttpClient;
 
@@ -13,7 +13,7 @@ async fn register_account_with_success() {
         email: String::from("donttrythisathome@gmail.com"),
     };
     let response = http_client
-        .post("/api/v1/user/register")
+        .post("/api/v1/account")
         .json(&request_payload)
         .send()
         .await;

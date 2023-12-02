@@ -14,6 +14,8 @@ async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let tcp = TcpListener::bind(addr)?;
 
+    tracing::info!("Listening on {}", addr);
+
     commune_server::serve(tcp).await?;
 
     Ok(())

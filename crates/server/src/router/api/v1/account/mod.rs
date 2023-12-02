@@ -1,14 +1,14 @@
-pub mod register;
+pub mod create;
 
 use axum::routing::post;
 use axum::Router;
 
 use crate::services::SharedServices;
 
-pub struct User;
+pub struct Account;
 
-impl User {
+impl Account {
     pub fn routes() -> Router<SharedServices> {
-        Router::new().route("/register", post(register::handler))
+        Router::new().route("/", post(create::handler))
     }
 }

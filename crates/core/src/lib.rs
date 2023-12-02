@@ -1,9 +1,10 @@
+pub mod error;
 pub mod user;
 pub mod util;
 
-use std::fmt::Debug;
+pub use error::{Error, HttpStatusCode, Result};
 
-use anyhow::Result;
+use std::fmt::Debug;
 
 use matrix::admin::Client as MatrixAdminClient;
 
@@ -24,9 +25,16 @@ pub struct Commune {
 impl Commune {
     pub fn new<C: Into<CommuneConfig>>(config: C) -> Result<Self> {
         let config: CommuneConfig = config.into();
-        let mut admin = MatrixAdminClient::new(config.synapse_host, config.synapse_server_name)?;
+        let mut admin = MatrixAdminClient::new(config.synapse_host, config.synapse_server_name)
+            .map_err(|err| {
+                tracing::error!(?err, "Failed to create admin client");
+                Error::Unknown
+            })?;
 
-        admin.set_token(config.synapse_admin_token)?;
+        admin.set_token(config.synapse_admin_token).map_err(|err| {
+            tracing::error!(?err, "Failed to set admin token");
+            Error::Unknown
+        })?;
 
         Ok(Self {
             user: UserService::new(admin),

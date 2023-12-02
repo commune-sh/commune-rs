@@ -9,10 +9,13 @@ name = "commune"
 path = "src/lib.rs"
 
 [dependencies]
+thiserror = "1.0.50"
 validator = { version = "0.16", features = ["derive"] }
 
 # Workspace
-anyhow = { workspace = true }
+http = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
 matrix = { path = "../matrix" }

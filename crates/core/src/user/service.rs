@@ -1,17 +1,26 @@
-use anyhow::{bail, Result};
-use validator::Validate;
+use tracing::instrument;
+use url::Url;
+use validator::{Validate, ValidationError};
 
-use matrix::admin::resources::user::{ThreePid, User as MatrixUser, UserCreateDto};
+use matrix::admin::resources::user::{
+    ListUsersParams, ThreePid, User as MatrixUser, UserCreateDto,
+};
 use matrix::admin::resources::user_id::UserId;
 use matrix::admin::Client as MatrixAdminClient;
 
 use crate::util::time::timestamp;
+use crate::{Error, Result};
 
+use super::error::UserErrorCode;
 use super::model::User;
+
+const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
+const MIN_USERNAME_LENGTH: usize = 3;
+const MAX_USERNAME_LENGTH: usize = 12;
 
 #[derive(Debug, Validate)]
 pub struct CreateAccountDto {
-    #[validate(length(min = 8, max = 12))]
+    #[validate(custom = "CreateAccountDto::validate_username")]
     pub username: String,
     #[validate(length(min = 8, max = 12))]
     pub password: String,
@@ -19,6 +28,31 @@ pub struct CreateAccountDto {
     pub email: String,
     pub session: String,
     pub code: String,
+}
+
+impl CreateAccountDto {
+    /// Validation logic for usernames enforced in user creation
+    fn validate_username(username: &str) -> std::result::Result<(), ValidationError> {
+        if username.len() < MIN_USERNAME_LENGTH {
+            return Err(ValidationError::new("username is too short"));
+        }
+
+        if username.len() > MAX_USERNAME_LENGTH {
+            return Err(ValidationError::new("username is too long"));
+        }
+
+        if username.contains(' ') {
+            return Err(ValidationError::new("username cannot contain spaces"));
+        }
+
+        if username.to_ascii_lowercase() != username {
+            return Err(ValidationError::new(
+                "username cannot contain uppercase letters",
+            ));
+        }
+
+        Ok(())
+    }
 }
 
 pub struct UserService {
@@ -30,10 +64,36 @@ impl UserService {
         Self { admin }
     }
 
+    #[instrument(skip(self, dto))]
     pub async fn register(&self, dto: CreateAccountDto) -> Result<User> {
-        dto.validate()?;
+        dto.validate().map_err(|err| {
+            tracing::warn!(?err, "Failed to validate user creation dto");
+            UserErrorCode::from(err)
+        })?;
 
         let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
+        let exists = MatrixUser::list(
+            &self.admin,
+            ListUsersParams {
+                user_id: Some(user_id.to_string()),
+                ..Default::default()
+            },
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!(?err, "Failed to list users");
+            Error::Unknown
+        })?;
+
+        if !exists.users.is_empty() {
+            return Err(UserErrorCode::UsernameTaken(dto.username).into());
+        }
+
+        let avatar_url = Url::parse(DEFAULT_AVATAR_URL).map_err(|err| {
+            tracing::error!(?err, "Failed to parse default avatar url");
+            Error::Unknown
+        })?;
+
         let matrix_user = MatrixUser::create(
             &self.admin,
             user_id,
@@ -41,7 +101,7 @@ impl UserService {
                 displayname: Some(dto.username),
                 password: dto.password,
                 logout_devices: false,
-                avatar_url: None,
+                avatar_url: Some(avatar_url),
                 threepids: vec![ThreePid {
                     medium: "email".to_string(),
                     address: dto.email,
@@ -55,14 +115,20 @@ impl UserService {
                 locked: false,
             },
         )
-        .await?;
+        .await
+        .map_err(|err| {
+            tracing::error!(?err, "Failed to create user");
+            Error::Unknown
+        })?;
 
         let Some(displayname) = matrix_user.displayname else {
-            bail!("Matrix displayname is empty, this value cannot be empty");
+            tracing::error!("Failed to get displayname for user");
+            return Err(Error::Unknown);
         };
 
         let Some(threepid) = matrix_user.threepids.first() else {
-            bail!("Matrix Threepid should exist, this value cannot be empty");
+            tracing::error!("Failed to get threepid for user");
+            return Err(Error::Unknown);
         };
 
         Ok(User {
@@ -71,5 +137,68 @@ impl UserService {
             session: dto.session,
             code: dto.code,
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use validator::Validate;
+
+    use super::CreateAccountDto;
+
+    #[test]
+    fn ensure_username_is_not_too_short() {
+        let dto = CreateAccountDto {
+            username: "ab".to_string(),
+            password: "password".to_string(),
+            email: "aby@mail.com".to_string(),
+            code: "1234".to_string(),
+            session: "synapse".to_string(),
+        };
+        let err = dto.validate().err().unwrap();
+
+        assert_eq!(err.to_string(), "username is too short");
+    }
+
+    #[test]
+    fn ensure_username_is_not_too_long() {
+        let dto = CreateAccountDto {
+            username: "abbeyroadismyfavoritealbum".to_string(),
+            password: "password".to_string(),
+            email: "aby@mail.com".to_string(),
+            code: "1234".to_string(),
+            session: "synapse".to_string(),
+        };
+        let err = dto.validate().err().unwrap();
+
+        assert_eq!(err.to_string(), "username is too long");
+    }
+
+    #[test]
+    fn ensure_username_does_not_contain_spaces() {
+        let dto = CreateAccountDto {
+            username: "abbey road".to_string(),
+            password: "password".to_string(),
+            email: "aby@mail.com".to_string(),
+            code: "1234".to_string(),
+            session: "synapse".to_string(),
+        };
+        let err = dto.validate().err().unwrap();
+
+        assert_eq!(err.to_string(), "username cannot contain spaces");
+    }
+
+    #[test]
+    fn ensure_username_is_lowercased() {
+        let dto = CreateAccountDto {
+            username: "AbbeyRoad".to_string(),
+            password: "password".to_string(),
+            email: "aby@mail.com".to_string(),
+            code: "1234".to_string(),
+            session: "synapse".to_string(),
+        };
+        let err = dto.validate().err().unwrap();
+
+        assert_eq!(err.to_string(), "username cannot contain uppercase letters");
     }
 }

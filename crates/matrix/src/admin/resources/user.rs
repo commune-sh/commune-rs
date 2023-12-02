@@ -5,6 +5,7 @@
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 use url::Url;
 
 use crate::admin::Client;
@@ -62,15 +63,39 @@ pub struct UserCreateDto {
     pub locked: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ListUsersParams {
-    user_id: Option<String>,
-    name: Option<String>,
-    guests: Option<bool>,
-    admins: Option<bool>,
-    deactivated: Option<bool>,
-    limit: Option<u64>,
-    from: Option<u64>,
+    pub user_id: Option<String>,
+    pub name: Option<String>,
+    pub guests: Option<bool>,
+    pub admins: Option<bool>,
+    pub deactivated: Option<bool>,
+    pub limit: Option<u64>,
+    pub from: Option<u64>,
+}
+
+/// Data type for the response of the `GET /_synapse/admin/v2/users` endpoint.
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ListUser {
+    pub name: String,
+    pub user_type: Option<String>,
+    pub is_guest: usize,
+    pub admin: usize,
+    pub deactivated: usize,
+    pub shadow_banned: bool,
+    pub avatar_url: Option<Url>,
+    pub creation_ts: u64,
+    pub last_seen_ts: Option<u64>,
+    pub erased: bool,
+    pub locked: bool,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ListUsersResponse {
+    pub users: Vec<ListUser>,
+    pub total: u64,
+    #[serde(default)]
+    pub next_token: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,9 +113,14 @@ pub struct UserUpdateDto {
 }
 
 impl User {
-    /// Allows an administrator to create a user account
+    /// Allows an administrator to create a user account.
+    ///
+    /// Note that internally Synapse uses this same endpoint to modify an
+    /// existing user account, so this method will modify the existing user
+    /// if [`UserId`] matches.
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
+    #[instrument(skip(client, dto))]
     pub async fn create(client: &Client, user_id: UserId, dto: UserCreateDto) -> Result<Self> {
         let resp = client
             .put_json(
@@ -106,17 +136,21 @@ impl User {
     /// ascending user ID.
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-accounts
-    pub async fn list(client: &Client, params: ListUsersParams) -> Result<Self> {
+    #[instrument(skip(client))]
+    pub async fn list(client: &Client, params: ListUsersParams) -> Result<ListUsersResponse> {
         let resp = client
             .get_query("/_synapse/admin/v2/users", &params)
             .await?;
+        println!("{:?}", resp);
+        let data: ListUsersResponse = resp.json().await?;
 
-        Ok(resp.json().await?)
+        Ok(data)
     }
 
     /// Allows an administrator to modify a user account
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
+    #[instrument(skip(client))]
     pub async fn update(client: &Client, user_id: UserId, dto: UserUpdateDto) -> Result<Self> {
         let resp = client
             .put_json(

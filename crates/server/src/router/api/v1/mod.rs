@@ -1,4 +1,4 @@
-pub mod user;
+pub mod account;
 
 use axum::Router;
 
@@ -8,6 +8,6 @@ pub struct V1;
 
 impl V1 {
     pub fn routes() -> Router<SharedServices> {
-        Router::new().nest("/user", user::User::routes())
+        Router::new().nest("/account", account::Account::routes())
     }
 }
