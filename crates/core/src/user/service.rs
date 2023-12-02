@@ -8,6 +8,7 @@ use matrix::admin::resources::user::{
 use matrix::admin::resources::user_id::UserId;
 use matrix::admin::Client as MatrixAdminClient;
 
+use crate::util::secret::Secret;
 use crate::util::time::timestamp;
 use crate::{Error, Result};
 
@@ -17,13 +18,19 @@ use super::model::User;
 const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 3;
 const MAX_USERNAME_LENGTH: usize = 12;
+const MIN_PASSWORD_LENGTH: usize = 8;
+
+pub struct LoginDto {
+    pub username: String,
+    pub password: String,
+}
 
 #[derive(Debug, Validate)]
 pub struct CreateAccountDto {
     #[validate(custom = "CreateAccountDto::validate_username")]
     pub username: String,
-    #[validate(length(min = 8, max = 12))]
-    pub password: String,
+    #[validate(custom = "CreateAccountDto::validate_password")]
+    pub password: Secret,
     #[validate(email)]
     pub email: String,
     pub session: String,
@@ -49,6 +56,15 @@ impl CreateAccountDto {
             return Err(ValidationError::new(
                 "username cannot contain uppercase letters",
             ));
+        }
+
+        Ok(())
+    }
+
+    /// Validation logic for passwords enforced in user creation
+    fn validate_password(password: &Secret) -> std::result::Result<(), ValidationError> {
+        if password.inner().len() < MIN_PASSWORD_LENGTH {
+            return Err(ValidationError::new("password is too short"));
         }
 
         Ok(())
@@ -99,7 +115,7 @@ impl UserService {
             user_id,
             UserCreateDto {
                 displayname: Some(dto.username),
-                password: dto.password,
+                password: dto.password.to_string(),
                 logout_devices: false,
                 avatar_url: Some(avatar_url),
                 threepids: vec![ThreePid {
@@ -144,13 +160,15 @@ impl UserService {
 mod test {
     use validator::Validate;
 
+    use crate::util::secret::Secret;
+
     use super::CreateAccountDto;
 
     #[test]
     fn ensure_username_is_not_too_short() {
         let dto = CreateAccountDto {
             username: "ab".to_string(),
-            password: "password".to_string(),
+            password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: "1234".to_string(),
             session: "synapse".to_string(),
@@ -164,7 +182,7 @@ mod test {
     fn ensure_username_is_not_too_long() {
         let dto = CreateAccountDto {
             username: "abbeyroadismyfavoritealbum".to_string(),
-            password: "password".to_string(),
+            password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: "1234".to_string(),
             session: "synapse".to_string(),
@@ -178,7 +196,7 @@ mod test {
     fn ensure_username_does_not_contain_spaces() {
         let dto = CreateAccountDto {
             username: "abbey road".to_string(),
-            password: "password".to_string(),
+            password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: "1234".to_string(),
             session: "synapse".to_string(),
@@ -192,7 +210,7 @@ mod test {
     fn ensure_username_is_lowercased() {
         let dto = CreateAccountDto {
             username: "AbbeyRoad".to_string(),
-            password: "password".to_string(),
+            password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: "1234".to_string(),
             session: "synapse".to_string(),

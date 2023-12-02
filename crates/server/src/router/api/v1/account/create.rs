@@ -43,7 +43,7 @@ impl From<UserRegisterPayload> for CreateAccountDto {
     fn from(payload: UserRegisterPayload) -> Self {
         Self {
             username: payload.username,
-            password: payload.password,
+            password: payload.password.into(),
             email: payload.email,
             // FIXME: These should be queried from somewhere
             session: "test".to_string(),
