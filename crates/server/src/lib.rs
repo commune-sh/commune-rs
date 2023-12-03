@@ -12,7 +12,7 @@ use crate::services::Services;
 
 pub async fn serve(tcp: TcpListener) -> Result<()> {
     let config = ServerConfig::from_env();
-    let services = Services::shared(config)?;
+    let services = Services::shared(config).await?;
     let router = make_router();
     let router = router.with_state(services);
 

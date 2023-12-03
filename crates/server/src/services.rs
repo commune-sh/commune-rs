@@ -13,14 +13,14 @@ pub struct Services {
 }
 
 impl Services {
-    pub fn new(config: ServerConfig) -> Result<Self> {
+    pub async fn new(config: ServerConfig) -> Result<Self> {
         let commune_config: CommuneConfig = config.into();
-        let commune = Commune::new(commune_config)?;
+        let commune = Commune::new(commune_config).await?;
 
         Ok(Self { commune })
     }
 
-    pub fn shared(config: ServerConfig) -> Result<SharedServices> {
-        Ok(Arc::new(Self::new(config)?))
+    pub async fn shared(config: ServerConfig) -> Result<SharedServices> {
+        Ok(Arc::new(Self::new(config).await?))
     }
 }

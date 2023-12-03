@@ -1,28 +1,40 @@
 use std::env::var;
 
-use matrix::admin::Client;
-
-const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
-const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
-const COMMUNE_SYNAPSE_SERVER_NAME: &str = "COMMUNE_SYNAPSE_SERVER_NAME";
+use commune::{Commune, CommuneConfig};
+use commune_server::config::{
+    COMMUNE_REGISTRATION_SHARED_SECRET, COMMUNE_SYNAPSE_ADMIN_TOKEN, COMMUNE_SYNAPSE_HOST,
+    COMMUNE_SYNAPSE_SERVER_NAME,
+};
+use matrix::Client;
 
 pub struct Environment {
     pub client: Client,
-    pub registration_shared_secret: String,
+    pub commune: Commune,
+    pub config: CommuneConfig,
 }
 
 impl Environment {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
         let synapse_host = Self::env_var(COMMUNE_SYNAPSE_HOST);
         let synapse_server_name = Self::env_var(COMMUNE_SYNAPSE_SERVER_NAME);
-        let client = Client::new(synapse_host, synapse_server_name).unwrap();
-        let registration_shared_secret = Self::env_var(COMMUNE_REGISTRATION_SHARED_SECRET);
+        let synapse_admin_token = Self::env_var(COMMUNE_SYNAPSE_ADMIN_TOKEN);
+        let synapse_registration_shared_secret = Self::env_var(COMMUNE_REGISTRATION_SHARED_SECRET);
+        let client = Client::new(synapse_host.clone(), synapse_server_name.clone()).unwrap();
+
+        let config = CommuneConfig {
+            synapse_host,
+            synapse_admin_token,
+            synapse_server_name,
+            synapse_registration_shared_secret,
+        };
+        let commune = Commune::new(config.clone()).await.unwrap();
 
         Self {
             client,
-            registration_shared_secret,
+            commune,
+            config,
         }
     }
 

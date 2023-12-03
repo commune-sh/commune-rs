@@ -6,13 +6,13 @@ use crate::tools::environment::Environment;
 
 #[tokio::test]
 async fn creates_user_using_shared_secret() {
-    let env = Environment::new();
+    let env = Environment::new().await;
     let nonce = SharedSecretRegistration::get_nonce(&env.client)
         .await
         .unwrap()
         .nonce;
     let mac = SharedSecretRegistration::generate_mac(
-        env.registration_shared_secret,
+        env.config.synapse_registration_shared_secret.clone(),
         nonce.clone(),
         "steve".into(),
         "verysecure".into(),

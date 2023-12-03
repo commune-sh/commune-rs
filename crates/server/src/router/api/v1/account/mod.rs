@@ -1,4 +1,5 @@
 pub mod create;
+pub mod login;
 
 use axum::routing::post;
 use axum::Router;
@@ -9,6 +10,8 @@ pub struct Account;
 
 impl Account {
     pub fn routes() -> Router<SharedServices> {
-        Router::new().route("/", post(create::handler))
+        Router::new()
+            .route("/", post(create::handler))
+            .route("/login", post(login::handler))
     }
 }

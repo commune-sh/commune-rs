@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use url::Url;
 
-use crate::admin::Client;
+use crate::http::Client;
 
 use super::user_id::UserId;
 
@@ -141,7 +141,6 @@ impl User {
         let resp = client
             .get_query("/_synapse/admin/v2/users", &params)
             .await?;
-        println!("{:?}", resp);
         let data: ListUsersResponse = resp.json().await?;
 
         Ok(data)

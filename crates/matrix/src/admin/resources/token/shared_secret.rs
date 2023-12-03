@@ -19,7 +19,7 @@ use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 
-use crate::admin::Client;
+use crate::http::Client;
 
 type HmacSha1 = Hmac<Sha1>;
 
