@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use url::Url;
 
-use crate::admin::Client;
+use crate::http::Client;
 
 use super::user_id::UserId;
 

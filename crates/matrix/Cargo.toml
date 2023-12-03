@@ -8,7 +8,6 @@ publish = false
 async-trait = "0.1.74"
 hex = "0.4.3"
 hmac = "0.12.1"
-matrix-sdk = { git = "https://github.com/matrix-org/matrix-rust-sdk.git", rev = "e43a25a" }
 serde_path_to_error = "0.1.14"
 serde_qs = "0.12.0"
 sha1 = "0.10.6"

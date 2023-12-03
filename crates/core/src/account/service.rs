@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tracing::instrument;
 use url::Url;
 use validator::{Validate, ValidationError};
@@ -6,7 +8,7 @@ use matrix::admin::resources::user::{
     ListUsersParams, ThreePid, User as MatrixUser, UserCreateDto,
 };
 use matrix::admin::resources::user_id::UserId;
-use matrix::admin::Client as MatrixAdminClient;
+use matrix::Client as MatrixAdminClient;
 
 use crate::util::secret::Secret;
 use crate::util::time::timestamp;
@@ -19,11 +21,6 @@ const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 3;
 const MAX_USERNAME_LENGTH: usize = 12;
 const MIN_PASSWORD_LENGTH: usize = 8;
-
-pub struct LoginDto {
-    pub username: String,
-    pub password: String,
-}
 
 #[derive(Debug, Validate)]
 pub struct CreateAccountDto {
@@ -72,11 +69,11 @@ impl CreateAccountDto {
 }
 
 pub struct AccountService {
-    admin: MatrixAdminClient,
+    admin: Arc<MatrixAdminClient>,
 }
 
 impl AccountService {
-    pub fn new(admin: MatrixAdminClient) -> Self {
+    pub fn new(admin: Arc<MatrixAdminClient>) -> Self {
         Self { admin }
     }
 

@@ -1,6 +1,6 @@
 use std::env::var;
 
-use matrix::admin::Client;
+use matrix::Client;
 
 const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
 const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
