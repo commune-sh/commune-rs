@@ -5,8 +5,8 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use commune::user::model::User;
-use commune::user::service::CreateAccountDto;
+use commune::account::model::Account;
+use commune::account::service::CreateAccountDto;
 
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
@@ -14,13 +14,13 @@ use crate::services::SharedServices;
 #[instrument(skip(services, payload))]
 pub async fn handler(
     State(services): State<SharedServices>,
-    Json(payload): Json<UserRegisterPayload>,
+    Json(payload): Json<AccountRegisterPayload>,
 ) -> Response {
     let dto = CreateAccountDto::from(payload);
 
-    match services.commune.user.register(dto).await {
-        Ok(user) => {
-            let mut response = Json(UserRegisterResponse::from(user)).into_response();
+    match services.commune.account.register(dto).await {
+        Ok(account) => {
+            let mut response = Json(AccountRegisterResponse::from(account)).into_response();
 
             *response.status_mut() = StatusCode::CREATED;
             response
@@ -33,14 +33,14 @@ pub async fn handler(
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct UserRegisterPayload {
+pub struct AccountRegisterPayload {
     pub username: String,
     pub password: String,
     pub email: String,
 }
 
-impl From<UserRegisterPayload> for CreateAccountDto {
-    fn from(payload: UserRegisterPayload) -> Self {
+impl From<AccountRegisterPayload> for CreateAccountDto {
+    fn from(payload: AccountRegisterPayload) -> Self {
         Self {
             username: payload.username,
             password: payload.password.into(),
@@ -53,14 +53,14 @@ impl From<UserRegisterPayload> for CreateAccountDto {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct UserRegisterResponse {
+pub struct AccountRegisterResponse {
     pub username: String,
 }
 
-impl From<User> for UserRegisterResponse {
-    fn from(user: User) -> Self {
+impl From<Account> for AccountRegisterResponse {
+    fn from(acc: Account) -> Self {
         Self {
-            username: user.username,
+            username: acc.username,
         }
     }
 }

@@ -1,5 +1,5 @@
+pub mod account;
 pub mod error;
-pub mod user;
 pub mod util;
 
 pub use error::{Error, HttpStatusCode, Result};
@@ -8,7 +8,7 @@ use std::fmt::Debug;
 
 use matrix::admin::Client as MatrixAdminClient;
 
-use self::user::service::UserService;
+use self::account::service::AccountService;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CommuneConfig {
@@ -19,7 +19,7 @@ pub struct CommuneConfig {
 }
 
 pub struct Commune {
-    pub user: UserService,
+    pub account: AccountService,
 }
 
 impl Commune {
@@ -37,7 +37,7 @@ impl Commune {
         })?;
 
         Ok(Self {
-            user: UserService::new(admin),
+            account: AccountService::new(admin),
         })
     }
 }

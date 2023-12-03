@@ -1,7 +1,7 @@
 use http::StatusCode;
 use thiserror::Error;
 
-use crate::user::error::UserErrorCode;
+use crate::account::error::AccountErrorCode;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -13,13 +13,13 @@ pub trait HttpStatusCode {
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("User Error. {0}")]
-    User(UserErrorCode),
+    User(AccountErrorCode),
     #[error("Unknown Error Occured")]
     Unknown,
 }
 
-impl From<UserErrorCode> for Error {
-    fn from(err: UserErrorCode) -> Self {
+impl From<AccountErrorCode> for Error {
+    fn from(err: AccountErrorCode) -> Self {
         Error::User(err)
     }
 }

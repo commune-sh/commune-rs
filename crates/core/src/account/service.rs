@@ -12,8 +12,8 @@ use crate::util::secret::Secret;
 use crate::util::time::timestamp;
 use crate::{Error, Result};
 
-use super::error::UserErrorCode;
-use super::model::User;
+use super::error::AccountErrorCode;
+use super::model::Account;
 
 const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 3;
@@ -71,20 +71,20 @@ impl CreateAccountDto {
     }
 }
 
-pub struct UserService {
+pub struct AccountService {
     admin: MatrixAdminClient,
 }
 
-impl UserService {
+impl AccountService {
     pub fn new(admin: MatrixAdminClient) -> Self {
         Self { admin }
     }
 
     #[instrument(skip(self, dto))]
-    pub async fn register(&self, dto: CreateAccountDto) -> Result<User> {
+    pub async fn register(&self, dto: CreateAccountDto) -> Result<Account> {
         dto.validate().map_err(|err| {
             tracing::warn!(?err, "Failed to validate user creation dto");
-            UserErrorCode::from(err)
+            AccountErrorCode::from(err)
         })?;
 
         let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
@@ -102,7 +102,7 @@ impl UserService {
         })?;
 
         if !exists.users.is_empty() {
-            return Err(UserErrorCode::UsernameTaken(dto.username).into());
+            return Err(AccountErrorCode::UsernameTaken(dto.username).into());
         }
 
         let avatar_url = Url::parse(DEFAULT_AVATAR_URL).map_err(|err| {
@@ -147,7 +147,7 @@ impl UserService {
             return Err(Error::Unknown);
         };
 
-        Ok(User {
+        Ok(Account {
             username: displayname,
             email: threepid.address.to_owned(),
             session: dto.session,
