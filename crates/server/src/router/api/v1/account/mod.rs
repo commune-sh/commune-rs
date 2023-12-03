@@ -10,6 +10,8 @@ pub struct Account;
 
 impl Account {
     pub fn routes() -> Router<SharedServices> {
-        Router::new().route("/", post(create::handler))
+        Router::new()
+            .route("/", post(create::handler))
+            .route("/login", post(login::handler))
     }
 }

@@ -5,7 +5,7 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use commune::auth::service::LoginCredentials;
+use commune::auth::service::{LoginCredentials, LoginCredentialsResponse};
 
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
@@ -16,20 +16,19 @@ pub async fn handler(
     Json(payload): Json<AccountLoginPayload>,
 ) -> Response {
     let login_credentials = LoginCredentials::from(payload);
-    todo!()
 
-    // match services.commune.account.issue_token(login_credentials).await {
-    //     Ok(account) => {
-    //         let mut response = Json(AccountRegisterResponse::from(account)).into_response();
+    match services.commune.auth.login(login_credentials).await {
+        Ok(tokens) => {
+            let mut response = Json(AccountLoginResponse::from(tokens)).into_response();
 
-    //         *response.status_mut() = StatusCode::CREATED;
-    //         response
-    //     }
-    //     Err(err) => {
-    //         tracing::warn!(?err, "Failed to register user");
-    //         ApiError::from(err).into_response()
-    //     }
-    // }
+            *response.status_mut() = StatusCode::OK;
+            response
+        }
+        Err(err) => {
+            tracing::warn!(?err, "Failed to authenticate user");
+            ApiError::from(err).into_response()
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -49,5 +48,13 @@ impl From<AccountLoginPayload> for LoginCredentials {
 
 #[derive(Deserialize, Serialize)]
 pub struct AccountLoginResponse {
-    pub username: String,
+    pub access_token: String,
+}
+
+impl From<LoginCredentialsResponse> for AccountLoginResponse {
+    fn from(tokens: LoginCredentialsResponse) -> Self {
+        Self {
+            access_token: tokens.access_token.to_string(),
+        }
+    }
 }
