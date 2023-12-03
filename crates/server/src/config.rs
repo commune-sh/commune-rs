@@ -1,5 +1,10 @@
 use commune::CommuneConfig;
 
+pub const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
+pub const COMMUNE_SYNAPSE_ADMIN_TOKEN: &str = "COMMUNE_SYNAPSE_ADMIN_TOKEN";
+pub const COMMUNE_SYNAPSE_SERVER_NAME: &str = "COMMUNE_SYNAPSE_SERVER_NAME";
+pub const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
+
 pub struct ServerConfig {
     pub synapse_host: String,
     pub synapse_admin_token: String,
@@ -10,10 +15,10 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn from_env() -> ServerConfig {
         ServerConfig {
-            synapse_host: Self::var("COMMUNE_SYNAPSE_HOST"),
-            synapse_admin_token: Self::var("COMMUNE_SYNAPSE_ADMIN_TOKEN"),
-            synapse_server_name: Self::var("COMMUNE_SYNAPSE_SERVER_NAME"),
-            synapse_registration_shared_secret: Self::var("COMMUNE_REGISTRATION_SHARED_SECRET"),
+            synapse_host: Self::var(COMMUNE_SYNAPSE_HOST),
+            synapse_admin_token: Self::var(COMMUNE_SYNAPSE_ADMIN_TOKEN),
+            synapse_server_name: Self::var(COMMUNE_SYNAPSE_SERVER_NAME),
+            synapse_registration_shared_secret: Self::var(COMMUNE_REGISTRATION_SHARED_SECRET),
         }
     }
 

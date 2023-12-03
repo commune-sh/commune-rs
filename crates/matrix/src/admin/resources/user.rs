@@ -141,7 +141,6 @@ impl User {
         let resp = client
             .get_query("/_synapse/admin/v2/users", &params)
             .await?;
-        println!("{:?}", resp);
         let data: ListUsersResponse = resp.json().await?;
 
         Ok(data)

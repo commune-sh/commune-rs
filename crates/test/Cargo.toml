@@ -19,5 +19,6 @@ tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }
 
 # Local Dependencies
+core = { path = "../core" }
 matrix = { path = "../matrix" }
 server = { path = "../server" }
