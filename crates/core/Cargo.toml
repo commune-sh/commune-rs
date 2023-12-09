@@ -9,6 +9,7 @@ name = "commune"
 path = "src/lib.rs"
 
 [dependencies]
+lettre = "0.11"
 thiserror = "1.0.50"
 validator = { version = "0.16", features = ["derive"] }
 

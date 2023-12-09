@@ -1,5 +1,6 @@
 pub mod account;
 pub mod auth;
+pub mod mail;
 pub mod error;
 pub mod util;
 
