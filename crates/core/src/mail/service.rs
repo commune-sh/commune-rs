@@ -1,5 +1,4 @@
 use lettre::message::header::ContentType;
-use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 
 use crate::{CommuneConfig, Result};
@@ -7,8 +6,6 @@ use crate::{CommuneConfig, Result};
 pub struct MailDevConfig {
     pub smtp_host: String,
     pub smtp_port: u16,
-    pub outgoing_user: String,
-    pub outgoing_pass: String,
 }
 
 pub enum EmailProvider {
@@ -20,19 +17,13 @@ impl EmailProvider {
         if let (
             Some(smtp_host),
             Some(smtp_port),
-            Some(maildev_incoming_user),
-            Some(maildev_incoming_pass),
         ) = (
             &config.smtp_host,
             &config.smtp_port,
-            &config.maildev_incoming_user,
-            &config.maildev_incoming_pass,
         ) {
             return EmailProvider::MailDev(MailDevConfig {
                 smtp_host: smtp_host.clone(),
                 smtp_port: *smtp_port,
-                outgoing_user: maildev_incoming_user.clone(),
-                outgoing_pass: maildev_incoming_pass.clone(),
             });
         }
 
@@ -50,13 +41,9 @@ impl EmailProvider {
                     .body(body)
                     .unwrap();
 
-                let creds =
-                    Credentials::new(config.outgoing_user.clone(), config.outgoing_pass.clone());
-
                 let mailer = SmtpTransport::relay(&config.smtp_host)
                     .unwrap()
                     .port(config.smtp_port)
-                    .credentials(creds)
                     .build();
 
                 mailer.send(&email).unwrap();
