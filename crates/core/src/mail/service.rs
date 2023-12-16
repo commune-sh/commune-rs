@@ -1,11 +1,12 @@
 use lettre::message::header::ContentType;
 use lettre::{Message, SmtpTransport, Transport};
+use url::Url;
 
+use crate::mail::error::MailErrorCode;
 use crate::{CommuneConfig, Result};
 
 pub struct MailDevConfig {
-    pub smtp_host: String,
-    pub smtp_port: u16,
+    pub smtp_host: Url,
 }
 
 pub enum EmailProvider {
@@ -14,23 +15,21 @@ pub enum EmailProvider {
 
 impl EmailProvider {
     pub fn new(config: &CommuneConfig) -> Self {
-        if let (
-            Some(smtp_host),
-            Some(smtp_port),
-        ) = (
-            &config.smtp_host,
-            &config.smtp_port,
-        ) {
+        if let Some(smtp_host) = &config.smtp_host {
+            tracing::warn!(
+                %smtp_host,
+                "Using MailDev as email provider! This is only for development!"
+            );
+
             return EmailProvider::MailDev(MailDevConfig {
-                smtp_host: smtp_host.clone(),
-                smtp_port: *smtp_port,
+                smtp_host: smtp_host.to_owned(),
             });
         }
 
         panic!("No email provider configured");
     }
 
-    pub fn send_mail(&self, from: String, to: String, subject: String, body: String) {
+    pub fn send_mail(&self, from: String, to: String, subject: String, body: String) -> Result<()> {
         match self {
             EmailProvider::MailDev(config) => {
                 let email = Message::builder()
@@ -39,14 +38,24 @@ impl EmailProvider {
                     .subject(subject)
                     .header(ContentType::TEXT_HTML)
                     .body(body)
-                    .unwrap();
+                    .map_err(|err| {
+                        tracing::error!(?err, "Failed to build email message");
+                        MailErrorCode::InvalidMailPayload(err)
+                    })?;
 
-                let mailer = SmtpTransport::relay(&config.smtp_host)
-                    .unwrap()
-                    .port(config.smtp_port)
+                let mailer = SmtpTransport::from_url(config.smtp_host.as_ref())
+                    .map_err(|err| {
+                        tracing::error!(?err, "Failed to build email message");
+                        MailErrorCode::SmtpConnection(err)
+                    })?
                     .build();
 
-                mailer.send(&email).unwrap();
+                mailer.send(&email).map_err(|err| {
+                    tracing::error!(?err, "Failed to build email message");
+                    MailErrorCode::SmtpConnection(err)
+                })?;
+
+                Ok(())
             }
         }
     }
@@ -70,7 +79,6 @@ impl MailService {
         subject: String,
         body: String,
     ) -> Result<()> {
-        self.provider.send_mail(from, to, subject, body);
-        Ok(())
+        self.provider.send_mail(from, to, subject, body)
     }
 }

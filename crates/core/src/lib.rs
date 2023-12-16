@@ -5,7 +5,9 @@ pub mod mail;
 pub mod util;
 
 pub use error::{Error, HttpStatusCode, Result};
+
 use mail::service::MailService;
+use url::Url;
 
 use std::fmt::Debug;
 use std::str::FromStr;
@@ -23,7 +25,6 @@ pub mod env {
     pub const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
 
     pub const SMTP_HOST: &str = "SMTP_HOST";
-    pub const SMTP_PORT: &str = "SMTP_PORT";
 
     pub const MAILDEV_INCOMING_USER: &str = "MAILDEV_INCOMING_USER";
     pub const MAILDEV_INCOMING_PASS: &str = "MAILDEV_INCOMING_USER";
@@ -31,8 +32,7 @@ pub mod env {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CommuneConfig {
-    pub smtp_host: Option<String>,
-    pub smtp_port: Option<u16>,
+    pub smtp_host: Option<Url>,
     pub maildev_incoming_user: Option<String>,
     pub maildev_incoming_pass: Option<String>,
     pub synapse_host: String,
@@ -51,7 +51,6 @@ impl CommuneConfig {
     pub fn new() -> Self {
         Self {
             smtp_host: Self::var_opt(env::SMTP_HOST),
-            smtp_port: Self::var_opt(env::SMTP_PORT),
             maildev_incoming_user: Self::var_opt(env::MAILDEV_INCOMING_USER),
             maildev_incoming_pass: Self::var_opt(env::MAILDEV_INCOMING_PASS),
             synapse_host: Self::var(env::COMMUNE_SYNAPSE_HOST),
