@@ -95,3 +95,10 @@ database:
 The client, any HTTP Client, comunicates with the Commune Server which may or
 may not communicate with Matrix's server _Synapse_ which runs along with its
 database in a Docker container.
+
+#### Email Development
+
+Use [MJML Editor][mjml] and then render into HTML. Make sure variables use
+Handlebars syntax (e.g. `{{name}}`).
+
+[mjml]: https://mjml.io/try-it-live/99k8regCo_

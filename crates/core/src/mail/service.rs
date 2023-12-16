@@ -1,3 +1,4 @@
+use handlebars::Handlebars;
 use lettre::message::header::ContentType;
 use lettre::{Message, SmtpTransport, Transport};
 use url::Url;
@@ -61,15 +62,61 @@ impl EmailProvider {
     }
 }
 
+pub enum EmailTemplate {
+    VerificationCode { name: String, code: String },
+}
+
+impl EmailTemplate {
+    pub fn template(&self) -> &'static str {
+        match self {
+            EmailTemplate::VerificationCode { .. } => {
+                include_str!("templates/verification_code.hbs")
+            }
+        }
+    }
+
+    pub fn subject(&self) -> String {
+        match self {
+            EmailTemplate::VerificationCode { .. } => "Verification Code".to_owned(),
+        }
+    }
+
+    pub fn data(&self) -> serde_json::Value {
+        match self {
+            EmailTemplate::VerificationCode { name, code } => serde_json::json!({
+                "name": name,
+                "code": code,
+            }),
+        }
+    }
+
+    pub fn render(&self, hbs: &Handlebars<'static>) -> Result<String> {
+        match self {
+            EmailTemplate::VerificationCode { .. } => {
+                let data = self.data();
+                let template = self.template();
+                let html = hbs.render_template(template, &data).map_err(|err| {
+                    tracing::error!(?err, "Failed to render handlebars template");
+                    MailErrorCode::RenderHandlebars(err)
+                })?;
+
+                Ok(html)
+            }
+        }
+    }
+}
+
 pub struct MailService {
+    pub hbs: Handlebars<'static>,
     pub provider: EmailProvider,
 }
 
 impl MailService {
     pub fn new(config: &CommuneConfig) -> Self {
         let provider = EmailProvider::new(config);
+        let hbs = Handlebars::new();
 
-        Self { provider }
+        Self { hbs, provider }
     }
 
     pub async fn send_mail(
@@ -77,8 +124,10 @@ impl MailService {
         from: String,
         to: String,
         subject: String,
-        body: String,
+        template: EmailTemplate,
     ) -> Result<()> {
+        let body = template.render(&self.hbs)?;
+
         self.provider.send_mail(from, to, subject, body)
     }
 }

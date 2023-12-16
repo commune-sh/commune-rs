@@ -10,7 +10,7 @@ use matrix::admin::resources::user::{
 use matrix::admin::resources::user_id::UserId;
 use matrix::Client as MatrixAdminClient;
 
-use crate::mail::service::MailService;
+use crate::mail::service::{EmailTemplate, MailService};
 use crate::util::secret::Secret;
 use crate::util::time::timestamp;
 use crate::{Error, Result};
@@ -116,7 +116,10 @@ impl AccountService {
                 "onboarding@commune.sh".into(),
                 dto.email,
                 "Testing Code Sending".into(),
-                "Welcome!".into(),
+                EmailTemplate::VerificationCode {
+                    name: String::from("John"),
+                    code: String::from("1234"),
+                },
             )
             .await?;
 
