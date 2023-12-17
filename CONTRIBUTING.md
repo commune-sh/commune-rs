@@ -101,4 +101,14 @@ database in a Docker container.
 Use [MJML Editor][mjml] and then render into HTML. Make sure variables use
 Handlebars syntax (e.g. `{{name}}`).
 
+For local testing you can use something like:
+
+```bash
+curl -s http://localhost:1080/email | grep -o -E "This is your verification code.{0,7}" | tail -1 | sed 's/^.*://' | awk '{$1=$1;print}
+```
+
+To get the very last email's verification code.
+
+>  **Warning** Note that changes on email content will break this script
+
 [mjml]: https://mjml.io/try-it-live/99k8regCo_
