@@ -10,6 +10,7 @@ use matrix::admin::resources::user::{
 use matrix::admin::resources::user_id::UserId;
 use matrix::Client as MatrixAdminClient;
 
+use crate::auth::service::AuthService;
 use crate::mail::service::{EmailTemplate, MailService};
 use crate::util::secret::Secret;
 use crate::util::time::timestamp;
@@ -78,12 +79,17 @@ impl CreateAccountDto {
 
 pub struct AccountService {
     admin: Arc<MatrixAdminClient>,
+    auth: Arc<AuthService>,
     mail: Arc<MailService>,
 }
 
 impl AccountService {
-    pub fn new(admin: Arc<MatrixAdminClient>, mail: Arc<MailService>) -> Self {
-        Self { admin, mail }
+    pub fn new(
+        admin: Arc<MatrixAdminClient>,
+        auth: Arc<AuthService>,
+        mail: Arc<MailService>,
+    ) -> Self {
+        Self { admin, auth, mail }
     }
 
     /// Returs true if the given email address is already registered
@@ -107,18 +113,16 @@ impl AccountService {
 
     #[instrument(skip(self, dto))]
     pub async fn send_code(&self, dto: SendCodeDto) -> Result<()> {
-        // if !self.email_exists(&dto.email).await? {
-        //     todo!("Send email with code");
-        // }
+        let code = self.auth.create_verification_code(dto.session).await?;
 
         self.mail
             .send_mail(
                 "onboarding@commune.sh".into(),
                 dto.email,
-                "Testing Code Sending".into(),
+                "Welcome to Commune!".into(),
                 EmailTemplate::VerificationCode {
                     name: String::from("John"),
-                    code: String::from("1234"),
+                    code: code.to_string(),
                 },
             )
             .await?;

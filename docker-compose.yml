@@ -7,6 +7,14 @@ services:
       - '1080:1080'
       - '1025:1025'
 
+  redis:
+    image: 'redis/redis-stack'
+    ports:
+      - '6379:6379'
+      - '8001:8001'
+    volumes:
+      - redis-state:/data
+  
   synapse_database:
     image: 'postgres:16'
     ports:
@@ -32,4 +40,5 @@ services:
       - synapse_database
 
 volumes:
+  redis-state:
   synapse_database:

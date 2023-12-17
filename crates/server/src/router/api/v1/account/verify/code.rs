@@ -41,8 +41,7 @@ impl From<AccountVerifyCodePayload> for SendCodeDto {
     fn from(payload: AccountVerifyCodePayload) -> Self {
         Self {
             email: payload.email,
-            // FIXME: This should be queried from somewhere
-            session: "test".to_string(),
+            session: payload.session,
         }
     }
 }

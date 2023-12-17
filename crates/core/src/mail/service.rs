@@ -16,18 +16,15 @@ pub enum EmailProvider {
 
 impl EmailProvider {
     pub fn new(config: &CommuneConfig) -> Self {
-        if let Some(smtp_host) = &config.smtp_host {
-            tracing::warn!(
-                %smtp_host,
-                "Using MailDev as email provider! This is only for development!"
-            );
+        // TODO: Provide support for different providers via Config
+        tracing::warn!(
+            %config.smtp_host,
+            "Using MailDev as email provider! This is only for development!"
+        );
 
-            return EmailProvider::MailDev(MailDevConfig {
-                smtp_host: smtp_host.to_owned(),
-            });
-        }
-
-        panic!("No email provider configured");
+        EmailProvider::MailDev(MailDevConfig {
+            smtp_host: config.smtp_host.to_owned(),
+        })
     }
 
     pub fn send_mail(&self, from: String, to: String, subject: String, body: String) -> Result<()> {
