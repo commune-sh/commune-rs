@@ -1,5 +1,6 @@
 pub mod create;
 pub mod login;
+pub mod verify;
 
 use axum::routing::post;
 use axum::Router;
@@ -13,5 +14,6 @@ impl Account {
         Router::new()
             .route("/", post(create::handler))
             .route("/login", post(login::handler))
+            .route("/verify/code", post(verify::code::handler))
     }
 }

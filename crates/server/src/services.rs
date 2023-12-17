@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
-use commune::{Commune, CommuneConfig};
+use commune::Commune;
 
 use crate::config::ServerConfig;
 
@@ -14,8 +14,7 @@ pub struct Services {
 
 impl Services {
     pub async fn new(config: ServerConfig) -> Result<Self> {
-        let commune_config: CommuneConfig = config.into();
-        let commune = Commune::new(commune_config).await?;
+        let commune = Commune::new(config.commune_config).await?;
 
         Ok(Self { commune })
     }

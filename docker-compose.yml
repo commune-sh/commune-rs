@@ -1,6 +1,12 @@
 version: '3'
 
 services:
+  maildev:
+    image: 'maildev/maildev'
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+
   synapse_database:
     image: 'postgres:16'
     ports:

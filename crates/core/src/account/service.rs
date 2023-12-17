@@ -10,6 +10,7 @@ use matrix::admin::resources::user::{
 use matrix::admin::resources::user_id::UserId;
 use matrix::Client as MatrixAdminClient;
 
+use crate::mail::service::{EmailTemplate, MailService};
 use crate::util::secret::Secret;
 use crate::util::time::timestamp;
 use crate::{Error, Result};
@@ -21,6 +22,13 @@ const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 3;
 const MAX_USERNAME_LENGTH: usize = 12;
 const MIN_PASSWORD_LENGTH: usize = 8;
+
+#[derive(Debug, Validate)]
+pub struct SendCodeDto {
+    #[validate(email)]
+    pub email: String,
+    pub session: String,
+}
 
 #[derive(Debug, Validate)]
 pub struct CreateAccountDto {
@@ -70,21 +78,17 @@ impl CreateAccountDto {
 
 pub struct AccountService {
     admin: Arc<MatrixAdminClient>,
+    mail: Arc<MailService>,
 }
 
 impl AccountService {
-    pub fn new(admin: Arc<MatrixAdminClient>) -> Self {
-        Self { admin }
+    pub fn new(admin: Arc<MatrixAdminClient>, mail: Arc<MailService>) -> Self {
+        Self { admin, mail }
     }
 
-    #[instrument(skip(self, dto))]
-    pub async fn register(&self, dto: CreateAccountDto) -> Result<Account> {
-        dto.validate().map_err(|err| {
-            tracing::warn!(?err, "Failed to validate user creation dto");
-            AccountErrorCode::from(err)
-        })?;
-
-        let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
+    /// Returs true if the given email address is already registered
+    async fn email_exists(&self, email: &str) -> Result<bool> {
+        let user_id = UserId::new(email, self.admin.server_name());
         let exists = MatrixUser::list(
             &self.admin,
             ListUsersParams {
@@ -98,10 +102,42 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        if !exists.users.is_empty() {
+        Ok(!exists.users.is_empty())
+    }
+
+    #[instrument(skip(self, dto))]
+    pub async fn send_code(&self, dto: SendCodeDto) -> Result<()> {
+        // if !self.email_exists(&dto.email).await? {
+        //     todo!("Send email with code");
+        // }
+
+        self.mail
+            .send_mail(
+                "onboarding@commune.sh".into(),
+                dto.email,
+                "Testing Code Sending".into(),
+                EmailTemplate::VerificationCode {
+                    name: String::from("John"),
+                    code: String::from("1234"),
+                },
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    #[instrument(skip(self, dto))]
+    pub async fn register(&self, dto: CreateAccountDto) -> Result<Account> {
+        dto.validate().map_err(|err| {
+            tracing::warn!(?err, "Failed to validate user creation dto");
+            AccountErrorCode::from(err)
+        })?;
+
+        if self.email_exists(&dto.email).await? {
             return Err(AccountErrorCode::UsernameTaken(dto.username).into());
         }
 
+        let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
         let avatar_url = Url::parse(DEFAULT_AVATAR_URL).map_err(|err| {
             tracing::error!(?err, "Failed to parse default avatar url");
             Error::Unknown
