@@ -2,11 +2,13 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use commune::account::model::Account;
 use commune::account::service::CreateAccountDto;
+use uuid::Uuid;
 
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
@@ -37,6 +39,8 @@ pub struct AccountRegisterPayload {
     pub username: String,
     pub password: String,
     pub email: String,
+    pub session: Uuid,
+    pub code: String,
 }
 
 impl From<AccountRegisterPayload> for CreateAccountDto {
@@ -45,9 +49,8 @@ impl From<AccountRegisterPayload> for CreateAccountDto {
             username: payload.username,
             password: payload.password.into(),
             email: payload.email,
-            // FIXME: These should be queried from somewhere
-            session: "test".to_string(),
-            code: "test".to_string(),
+            session: payload.session,
+            code: payload.code.into(),
         }
     }
 }

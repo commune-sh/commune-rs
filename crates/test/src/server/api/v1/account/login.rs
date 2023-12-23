@@ -1,4 +1,6 @@
+use commune::util::secret::Secret;
 use reqwest::StatusCode;
+use uuid::Uuid;
 
 use commune::account::service::CreateAccountDto;
 use commune_server::router::api::v1::account::login::{AccountLoginPayload, AccountLoginResponse};
@@ -20,8 +22,8 @@ async fn logs_into_account() {
             username: username.clone(),
             password: password.clone().into(),
             email: "lucyinthesky@gmail.com".to_string(),
-            session: "TEST".to_string(),
-            code: "TEST".to_string(),
+            code: Secret::new("1234"),
+            session: Uuid::new_v4(),
         })
         .await
         .unwrap();

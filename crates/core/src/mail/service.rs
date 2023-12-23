@@ -28,7 +28,7 @@ impl EmailProvider {
         })
     }
 
-    pub fn send_mail(&self, from: String, to: String, subject: String, body: String) -> Result<()> {
+    pub fn send_mail(&self, from: &str, to: &str, subject: &str, body: &str) -> Result<()> {
         match self {
             EmailProvider::MailDev(config) => {
                 let email = Message::builder()
@@ -36,7 +36,7 @@ impl EmailProvider {
                     .to(to.parse().unwrap())
                     .subject(subject)
                     .header(ContentType::TEXT_HTML)
-                    .body(body)
+                    .body(body.to_owned())
                     .map_err(|err| {
                         tracing::error!(?err, "Failed to build email message");
                         MailErrorCode::InvalidMailPayload(err)
@@ -61,7 +61,7 @@ impl EmailProvider {
 }
 
 pub enum EmailTemplate {
-    VerificationCode { name: String, code: Secret },
+    VerificationCode { code: Secret },
 }
 
 impl EmailTemplate {
@@ -81,8 +81,7 @@ impl EmailTemplate {
 
     pub fn data(&self) -> serde_json::Value {
         match self {
-            EmailTemplate::VerificationCode { name, code } => serde_json::json!({
-                "name": name,
+            EmailTemplate::VerificationCode { code } => serde_json::json!({
                 "code": code,
             }),
         }
@@ -117,15 +116,16 @@ impl MailService {
         Self { hbs, provider }
     }
 
-    pub async fn send_mail(
+    pub async fn send_mail<S: AsRef<str>>(
         &self,
-        from: String,
-        to: String,
-        subject: String,
+        from: S,
+        to: S,
         template: EmailTemplate,
     ) -> Result<()> {
+        let subject = template.subject();
         let body = template.render(&self.hbs)?;
 
-        self.provider.send_mail(from, to, subject, body)
+        self.provider
+            .send_mail(from.as_ref(), to.as_ref(), subject.as_str(), body.as_str())
     }
 }

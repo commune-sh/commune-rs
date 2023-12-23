@@ -1,5 +1,7 @@
 use reqwest::StatusCode;
+use uuid::Uuid;
 
+use commune::util::secret::Secret;
 use commune_server::router::api::v1::account::create::{
     AccountRegisterPayload, AccountRegisterResponse,
 };
@@ -13,6 +15,8 @@ async fn register_account_with_success() {
         username: String::from("john_wick"),
         password: String::from("P@ssW0Rd$"),
         email: String::from("donttrythisathome@gmail.com"),
+        code: Secret::new("1234").to_string(),
+        session: Uuid::new_v4(),
     };
     let response = http_client
         .post("/api/v1/account")

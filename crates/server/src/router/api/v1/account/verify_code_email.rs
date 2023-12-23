@@ -2,11 +2,12 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use commune::util::secret::Secret;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 
-use commune::account::service::SendCodeDto;
+use commune::account::service::VerifyCodeDto;
 
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
@@ -14,13 +15,13 @@ use crate::services::SharedServices;
 #[instrument(skip(services, payload))]
 pub async fn handler(
     State(services): State<SharedServices>,
-    Json(payload): Json<AccountVerifyCodePayload>,
+    Json(payload): Json<AccountVerifyCodeEmailPayload>,
 ) -> Response {
-    let dto = SendCodeDto::from(payload);
+    let dto = VerifyCodeDto::from(payload);
 
-    match services.commune.account.send_code(dto).await {
-        Ok(_) => {
-            let mut response = Json(VerifyCodeResponse { sent: true }).into_response();
+    match services.commune.account.verify_code(dto).await {
+        Ok(valid) => {
+            let mut response = Json(VerifyCodeResponse { valid }).into_response();
 
             *response.status_mut() = StatusCode::OK;
             response
@@ -33,21 +34,23 @@ pub async fn handler(
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct AccountVerifyCodePayload {
+pub struct AccountVerifyCodeEmailPayload {
     pub email: String,
     pub session: Uuid,
+    pub code: Secret,
 }
 
-impl From<AccountVerifyCodePayload> for SendCodeDto {
-    fn from(payload: AccountVerifyCodePayload) -> Self {
+impl From<AccountVerifyCodeEmailPayload> for VerifyCodeDto {
+    fn from(payload: AccountVerifyCodeEmailPayload) -> Self {
         Self {
             email: payload.email,
             session: payload.session,
+            code: payload.code,
         }
     }
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct VerifyCodeResponse {
-    pub sent: bool,
+    pub valid: bool,
 }

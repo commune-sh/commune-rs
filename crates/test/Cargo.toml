@@ -17,6 +17,7 @@ reqwest = { workspace = true, features = ["json", "stream", "multipart"] }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }
+uuid = { workspace = true, features= ["serde"] }
 
 # Local Dependencies
 core = { path = "../core" }
