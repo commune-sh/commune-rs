@@ -1,0 +1,33 @@
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use serde::{Deserialize, Serialize};
+use tracing::instrument;
+
+use crate::router::api::ApiError;
+use crate::services::SharedServices;
+
+#[instrument(skip(services))]
+pub async fn handler(
+    State(services): State<SharedServices>,
+    Path(email): Path<String>,
+) -> Response {
+    match services.commune.account.email_exists(&email).await {
+        Ok(available) => {
+            let mut response = Json(AccountEmailExistsResponse { available }).into_response();
+
+            *response.status_mut() = StatusCode::OK;
+            response
+        }
+        Err(err) => {
+            tracing::warn!(?err, ?email, "Failed to find email");
+            ApiError::from(err).into_response()
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct AccountEmailExistsResponse {
+    pub available: bool,
+}

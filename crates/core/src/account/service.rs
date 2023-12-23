@@ -93,7 +93,7 @@ impl AccountService {
     }
 
     /// Returs true if the given email address is already registered
-    async fn email_exists(&self, email: &str) -> Result<bool> {
+    pub async fn email_exists(&self, email: &str) -> Result<bool> {
         let user_id = UserId::new(email, self.admin.server_name());
         let exists = MatrixUser::list(
             &self.admin,
