@@ -4,6 +4,7 @@ use lettre::{Message, SmtpTransport, Transport};
 use url::Url;
 
 use crate::mail::error::MailErrorCode;
+use crate::util::secret::Secret;
 use crate::{CommuneConfig, Result};
 
 pub struct MailDevConfig {
@@ -60,7 +61,7 @@ impl EmailProvider {
 }
 
 pub enum EmailTemplate {
-    VerificationCode { name: String, code: String },
+    VerificationCode { name: String, code: Secret },
 }
 
 impl EmailTemplate {

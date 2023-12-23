@@ -122,7 +122,7 @@ impl AccountService {
                 "Welcome to Commune!".into(),
                 EmailTemplate::VerificationCode {
                     name: String::from("John"),
-                    code: code.to_string(),
+                    code,
                 },
             )
             .await?;

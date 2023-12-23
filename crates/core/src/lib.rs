@@ -134,7 +134,10 @@ impl Commune {
         };
 
         let admin_client = Arc::new(admin);
-        let auth = Arc::new(AuthService::new(Arc::clone(&admin_client), Arc::clone(&redis)));
+        let auth = Arc::new(AuthService::new(
+            Arc::clone(&admin_client),
+            Arc::clone(&redis),
+        ));
         let mail = Arc::new(MailService::new(&config));
         let account = AccountService::new(
             Arc::clone(&admin_client),
