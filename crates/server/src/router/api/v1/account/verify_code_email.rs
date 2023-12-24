@@ -21,7 +21,7 @@ pub async fn handler(
 
     match services.commune.account.verify_code(dto).await {
         Ok(valid) => {
-            let mut response = Json(VerifyCodeResponse { valid }).into_response();
+            let mut response = Json(VerifyCodeEmailResponse { valid }).into_response();
 
             *response.status_mut() = StatusCode::OK;
             response
@@ -51,6 +51,6 @@ impl From<AccountVerifyCodeEmailPayload> for VerifyCodeDto {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct VerifyCodeResponse {
+pub struct VerifyCodeEmailResponse {
     pub valid: bool,
 }

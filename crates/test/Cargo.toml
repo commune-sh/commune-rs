@@ -9,8 +9,11 @@ name = "test"
 path = "src/lib.rs"
 
 [dependencies]
+fake = { version = "2.9.2", features = ["derive"] }
+scraper = "0.18.1"
 
 # Workspace Dependencies
+anyhow = { workspace = true }
 axum = { workspace = true, features = ["tokio"] }
 dotenv = { workspace = true }
 reqwest = { workspace = true, features = ["json", "stream", "multipart"] }
