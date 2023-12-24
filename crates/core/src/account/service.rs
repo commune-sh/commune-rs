@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use tracing::instrument;
 use url::Url;
+use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use matrix::admin::resources::user::{
@@ -10,6 +11,7 @@ use matrix::admin::resources::user::{
 use matrix::admin::resources::user_id::UserId;
 use matrix::Client as MatrixAdminClient;
 
+use crate::auth::service::AuthService;
 use crate::mail::service::{EmailTemplate, MailService};
 use crate::util::secret::Secret;
 use crate::util::time::timestamp;
@@ -27,7 +29,15 @@ const MIN_PASSWORD_LENGTH: usize = 8;
 pub struct SendCodeDto {
     #[validate(email)]
     pub email: String,
-    pub session: String,
+    pub session: Uuid,
+}
+
+#[derive(Debug, Validate)]
+pub struct VerifyCodeDto {
+    #[validate(email)]
+    pub email: String,
+    pub session: Uuid,
+    pub code: Secret,
 }
 
 #[derive(Debug, Validate)]
@@ -38,8 +48,8 @@ pub struct CreateAccountDto {
     pub password: Secret,
     #[validate(email)]
     pub email: String,
-    pub session: String,
-    pub code: String,
+    pub session: Uuid,
+    pub code: Secret,
 }
 
 impl CreateAccountDto {
@@ -78,16 +88,21 @@ impl CreateAccountDto {
 
 pub struct AccountService {
     admin: Arc<MatrixAdminClient>,
+    auth: Arc<AuthService>,
     mail: Arc<MailService>,
 }
 
 impl AccountService {
-    pub fn new(admin: Arc<MatrixAdminClient>, mail: Arc<MailService>) -> Self {
-        Self { admin, mail }
+    pub fn new(
+        admin: Arc<MatrixAdminClient>,
+        auth: Arc<AuthService>,
+        mail: Arc<MailService>,
+    ) -> Self {
+        Self { admin, auth, mail }
     }
 
     /// Returs true if the given email address is already registered
-    async fn email_exists(&self, email: &str) -> Result<bool> {
+    pub async fn email_exists(&self, email: &str) -> Result<bool> {
         let user_id = UserId::new(email, self.admin.server_name());
         let exists = MatrixUser::list(
             &self.admin,
@@ -107,18 +122,17 @@ impl AccountService {
 
     #[instrument(skip(self, dto))]
     pub async fn send_code(&self, dto: SendCodeDto) -> Result<()> {
-        // if !self.email_exists(&dto.email).await? {
-        //     todo!("Send email with code");
-        // }
+        let verification_code = self
+            .auth
+            .send_verification_code(&dto.email, &dto.session)
+            .await?;
 
         self.mail
             .send_mail(
-                "onboarding@commune.sh".into(),
+                String::from("onboarding@commune.sh"),
                 dto.email,
-                "Testing Code Sending".into(),
                 EmailTemplate::VerificationCode {
-                    name: String::from("John"),
-                    code: String::from("1234"),
+                    code: verification_code.code,
                 },
             )
             .await?;
@@ -127,7 +141,25 @@ impl AccountService {
     }
 
     #[instrument(skip(self, dto))]
+    pub async fn verify_code(&self, dto: VerifyCodeDto) -> Result<bool> {
+        let result = self
+            .auth
+            .check_verification_code(&dto.email, &dto.session, &dto.code)
+            .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(skip(self, dto))]
     pub async fn register(&self, dto: CreateAccountDto) -> Result<Account> {
+        if !self
+            .auth
+            .check_verification_code(&dto.email, &dto.session, &dto.code)
+            .await?
+        {
+            return Err(AccountErrorCode::InvalidVerificationCode.into());
+        }
+
         dto.validate().map_err(|err| {
             tracing::warn!(?err, "Failed to validate user creation dto");
             AccountErrorCode::from(err)
@@ -183,14 +215,13 @@ impl AccountService {
         Ok(Account {
             username: displayname,
             email: threepid.address.to_owned(),
-            session: dto.session,
-            code: dto.code,
         })
     }
 }
 
 #[cfg(test)]
 mod test {
+    use uuid::Uuid;
     use validator::Validate;
 
     use crate::util::secret::Secret;
@@ -203,8 +234,8 @@ mod test {
             username: "ab".to_string(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
-            code: "1234".to_string(),
-            session: "synapse".to_string(),
+            code: Secret::new("1234"),
+            session: Uuid::new_v4(),
         };
         let err = dto.validate().err().unwrap();
 
@@ -217,8 +248,8 @@ mod test {
             username: "abbeyroadismyfavoritealbum".to_string(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
-            code: "1234".to_string(),
-            session: "synapse".to_string(),
+            code: Secret::new("1234"),
+            session: Uuid::new_v4(),
         };
         let err = dto.validate().err().unwrap();
 
@@ -231,8 +262,8 @@ mod test {
             username: "abbey road".to_string(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
-            code: "1234".to_string(),
-            session: "synapse".to_string(),
+            code: Secret::new("1234"),
+            session: Uuid::new_v4(),
         };
         let err = dto.validate().err().unwrap();
 
@@ -245,8 +276,8 @@ mod test {
             username: "AbbeyRoad".to_string(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
-            code: "1234".to_string(),
-            session: "synapse".to_string(),
+            code: Secret::new("1234"),
+            session: Uuid::new_v4(),
         };
         let err = dto.validate().err().unwrap();
 

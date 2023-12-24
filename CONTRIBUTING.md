@@ -112,3 +112,13 @@ To get the very last email's verification code.
 >  **Warning** Note that changes on email content will break this script
 
 [mjml]: https://mjml.io/try-it-live/99k8regCo_
+
+#### Redis
+
+A Redis instance is used to keep in-memory short-lived data used certain server
+operations such as storing verification codes.
+
+For this purpose Redis is served as part of the development stack on Docker.
+
+The `redis/redis-stack` image contains both Redis Stack server and RedisInsight,
+you can use RedisInsight by pointing your browser to `localhost:8001`.

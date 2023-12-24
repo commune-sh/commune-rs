@@ -11,6 +11,8 @@ path = "src/lib.rs"
 [dependencies]
 handlebars = "4.5.0"
 lettre = "0.11"
+rand = "0.8.5"
+redis = { version = "0.24.0", features = ["aio", "tokio-comp"] }
 thiserror = "1.0.50"
 validator = { version = "0.16", features = ["derive"] }
 
@@ -19,6 +21,7 @@ http = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tracing = { workspace = true }
+uuid = { workspace = true, features= ["serde"] }
 url = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
