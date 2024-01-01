@@ -9,7 +9,7 @@ name = "commune"
 path = "src/lib.rs"
 
 [dependencies]
-handlebars = "4.5.0"
+handlebars = "5.0.0"
 lettre = "0.11"
 rand = "0.8.5"
 redis = { version = "0.24.0", features = ["aio", "tokio-comp"] }
