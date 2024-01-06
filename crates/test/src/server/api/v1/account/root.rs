@@ -13,6 +13,7 @@ use commune_server::router::api::v1::account::{
     verify_code::{AccountVerifyCodePayload, VerifyCodeResponse},
     verify_code_email::{AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse},
 };
+use matrix::admin::resources::user_id::UserId;
 
 use crate::tools::{http::HttpClient, maildev::MailDevClient};
 
@@ -79,7 +80,8 @@ async fn register_account_with_success() {
         "should return 201 for created"
     );
     assert_eq!(
-        request_payload.username, response_payload.credentials.username,
+        UserId::new(request_payload.username, "matrix.localhost".into()).to_string(),
+        response_payload.credentials.username,
         "should return the same username"
     )
 }

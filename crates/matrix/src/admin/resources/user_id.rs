@@ -1,4 +1,7 @@
-use std::{borrow::Cow, fmt::Display};
+use std::borrow::Cow;
+use std::fmt::Display;
+
+use serde::{Deserialize, Serialize};
 
 /// A Matrix user ID.
 ///
@@ -14,7 +17,7 @@ use std::{borrow::Cow, fmt::Display};
 /// # Devnotes
 ///
 /// Perhaps using Ruma's `UserId` would be better?
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct UserId(Cow<'static, str>);
 
 impl UserId {

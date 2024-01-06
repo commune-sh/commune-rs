@@ -122,7 +122,41 @@ pub struct LoginAsUserResponse {
     pub access_token: String,
 }
 
+pub struct QueryUserDataResponse {
+    pub name: String,
+    pub displayname: Option<String>,
+    pub threepids: Vec<ThreePid>,
+    pub avatar_url: Option<Url>,
+    pub is_guest: bool,
+    pub admin: bool,
+    pub deactivated: bool,
+    pub erased: bool,
+    pub shadow_banned: bool,
+    pub creation_ts: i64,
+    pub appservice_id: Option<String>,
+    pub consent_server_notice_sent: Option<bool>,
+    pub consent_version: Option<bool>,
+    pub consent_ts: Option<bool>,
+    pub external_ids: Vec<Vec<ExternalId>>,
+    pub user_type: Option<String>,
+}
+
 impl User {
+    /// This API returns information about a specific user account.
+    ///
+    /// Refer: https://matrix-org.github.io/synapse/v1.88/admin_api/user_admin_api.html#query-user-account
+    #[instrument(skip(client))]
+    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<Self> {
+        let resp = client
+            .get(format!(
+                "/_synapse/admin/v2/users/{user_id}",
+                user_id = user_id
+            ))
+            .await?;
+
+        Ok(resp.json().await?)
+    }
+
     /// Allows an administrator to create a user account.
     ///
     /// Note that internally Synapse uses this same endpoint to modify an

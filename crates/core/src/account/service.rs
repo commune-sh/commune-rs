@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use matrix::client::resources::session::Session;
 use tracing::instrument;
 use url::Url;
 use uuid::Uuid;
@@ -180,7 +181,7 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        let matrix_user = MatrixUser::create(
+        MatrixUser::create(
             &self.admin,
             user_id.clone(),
             UserCreateDto {
@@ -207,30 +208,32 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        let Some(displayname) = matrix_user.displayname else {
-            tracing::error!("Failed to get displayname for user");
-            return Err(Error::Unknown);
-        };
-
-        let Some(threepid) = matrix_user.threepids.first() else {
-            tracing::error!("Failed to get threepid for user");
-            return Err(Error::Unknown);
-        };
-
         self.auth
             .drop_verification_code(&dto.email, &dto.session)
             .await?;
 
-        Ok(Account {
+        let matrix_account = MatrixUser::query_user_account(&self.admin, user_id.clone())
+            .await
+            .map_err(|err| {
+                tracing::error!(?err, "Failed to query user account");
+                Error::Unknown
+            })?;
+        let account = Account {
             user_id,
-            username: displayname.clone(),
-            email: threepid.address.to_owned(),
-            display_name: displayname,
-            avatar_url: matrix_user.avatar_url,
+            username: matrix_account.name,
+            email: matrix_account
+                .threepids
+                .first()
+                .map(|t| t.address.clone())
+                .unwrap_or_default(),
+            display_name: matrix_account.displayname.unwrap_or_default(),
+            avatar_url: matrix_account.avatar_url,
             age: 0,
-            admin: matrix_user.admin,
+            admin: matrix_account.admin,
             verified: true,
-        })
+        };
+
+        Ok(account)
     }
 
     /// Creates an access token for the given user
@@ -244,6 +247,37 @@ impl AccountService {
                 })?;
 
         Ok(credentials.access_token)
+    }
+
+    pub async fn whoami(&self, access_token: Secret) -> Result<Account> {
+        let session = Session::get(&self.admin, access_token.to_string())
+            .await
+            .map_err(|err| {
+                tracing::error!(?err, "Failed to get session from matrix as client");
+                Error::Unknown
+            })?;
+        let matrix_account = MatrixUser::query_user_account(&self.admin, session.user_id.clone())
+            .await
+            .map_err(|err| {
+                tracing::error!(?err, "Failed to query user account");
+                Error::Unknown
+            })?;
+        let account = Account {
+            user_id: session.user_id,
+            username: matrix_account.name,
+            email: matrix_account
+                .threepids
+                .first()
+                .map(|t| t.address.clone())
+                .unwrap_or_default(),
+            display_name: matrix_account.displayname.unwrap_or_default(),
+            avatar_url: matrix_account.avatar_url,
+            age: 0,
+            admin: matrix_account.admin,
+            verified: true,
+        };
+
+        Ok(account)
     }
 }
 
