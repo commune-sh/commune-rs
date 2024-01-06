@@ -2,7 +2,9 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use commune::account::error::AccountErrorCode;
 use commune::util::secret::Secret;
+use commune::Error;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
@@ -18,6 +20,26 @@ pub async fn handler(
     Json(payload): Json<AccountVerifyCodeEmailPayload>,
 ) -> Response {
     let dto = VerifyCodeDto::from(payload);
+
+    match services
+        .commune
+        .account
+        .is_email_available(&dto.email)
+        .await
+    {
+        Ok(available) => {
+            if !available {
+                let email_taken_error = AccountErrorCode::EmailTaken(dto.email);
+                let error = Error::User(email_taken_error);
+
+                return ApiError::from(error).into_response();
+            }
+        }
+        Err(err) => {
+            tracing::warn!(?err, ?dto, "Failed to verify email availability");
+            return ApiError::from(err).into_response();
+        }
+    }
 
     match services.commune.account.verify_code(dto).await {
         Ok(valid) => {

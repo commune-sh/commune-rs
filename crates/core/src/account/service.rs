@@ -101,8 +101,9 @@ impl AccountService {
         Self { admin, auth, mail }
     }
 
-    /// Returs true if the given email address is already registered
-    pub async fn email_exists(&self, email: &str) -> Result<bool> {
+    /// Returs `true` if the given `email address` is NOT registered in the
+    /// Matrix Server
+    pub async fn is_email_available(&self, email: &str) -> Result<bool> {
         let user_id = UserId::new(email, self.admin.server_name());
         let exists = MatrixUser::list(
             &self.admin,
@@ -117,7 +118,7 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        Ok(!exists.users.is_empty())
+        Ok(exists.users.is_empty())
     }
 
     /// Sends a verification code to the given email address
@@ -169,8 +170,8 @@ impl AccountService {
             AccountErrorCode::from(err)
         })?;
 
-        if self.email_exists(&dto.email).await? {
-            return Err(AccountErrorCode::UsernameTaken(dto.username).into());
+        if !self.is_email_available(&dto.email).await? {
+            return Err(AccountErrorCode::EmailTaken(dto.email).into());
         }
 
         let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
@@ -189,7 +190,7 @@ impl AccountService {
                 avatar_url: Some(avatar_url),
                 threepids: vec![ThreePid {
                     medium: "email".to_string(),
-                    address: dto.email,
+                    address: dto.email.clone(),
                     added_at: timestamp()?,
                     validated_at: timestamp()?,
                 }],
@@ -216,10 +217,19 @@ impl AccountService {
             return Err(Error::Unknown);
         };
 
+        self.auth
+            .drop_verification_code(&dto.email, &dto.session)
+            .await?;
+
         Ok(Account {
             user_id,
-            username: displayname,
+            username: displayname.clone(),
             email: threepid.address.to_owned(),
+            display_name: displayname,
+            avatar_url: matrix_user.avatar_url,
+            age: 0,
+            admin: matrix_user.admin,
+            verified: true,
         })
     }
 

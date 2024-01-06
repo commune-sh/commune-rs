@@ -8,6 +8,7 @@ use tracing::instrument;
 
 use commune::account::model::Account;
 use commune::account::service::CreateAccountDto;
+use url::Url;
 use uuid::Uuid;
 
 use crate::router::api::ApiError;
@@ -22,13 +23,33 @@ pub async fn handler(
 
     match services.commune.account.register(dto).await {
         Ok(account) => {
-            let _access_token = services
+            let access_token = services
                 .commune
                 .account
                 .issue_user_token(account.user_id.clone())
                 .await
                 .unwrap();
-            let mut response = Json(AccountRegisterResponse::from(account)).into_response();
+            let payload = AccountRegisterResponse {
+                access_token: access_token.to_string(),
+                created: true,
+                credentials: AccountMatrixCredentials {
+                    username: account.username,
+                    display_name: account.display_name,
+                    avatar_url: account.avatar_url,
+                    access_token: access_token.to_string(),
+                    matrix_access_token: access_token.to_string(),
+                    matrix_user_id: account.user_id.to_string(),
+                    matrix_device_id: "".to_string(),
+                    user_space_id: "".to_string(),
+                    email: account.email,
+                    age: account.age,
+                    admin: account.admin,
+                    verified: account.verified,
+                },
+                ..Default::default()
+            };
+
+            let mut response = Json(payload).into_response();
 
             *response.status_mut() = StatusCode::CREATED;
             response
@@ -78,7 +99,7 @@ pub struct AccountSpace {
 pub struct AccountMatrixCredentials {
     pub username: String,
     pub display_name: String,
-    pub avatar_url: String,
+    pub avatar_url: Option<Url>,
     pub access_token: String,
     pub matrix_access_token: String,
     pub matrix_user_id: String,
