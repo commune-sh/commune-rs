@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use commune::util::secret::Secret;
 use commune_server::router::api::v1::account::{
-    create::{AccountRegisterPayload, AccountRegisterResponse},
+    root::{AccountRegisterPayload, AccountRegisterResponse},
     verify_code::{AccountVerifyCodePayload, VerifyCodeResponse},
     verify_code_email::{AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse},
 };
@@ -79,7 +79,7 @@ async fn register_account_with_success() {
         "should return 201 for created"
     );
     assert_eq!(
-        request_payload.username, response_payload.username,
+        request_payload.username, response_payload.credentials.username,
         "should return the same username"
     )
 }

@@ -6,7 +6,7 @@ use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use matrix::admin::resources::user::{
-    ListUsersParams, ThreePid, User as MatrixUser, UserCreateDto,
+    ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto,
 };
 use matrix::admin::resources::user_id::UserId;
 use matrix::Client as MatrixAdminClient;
@@ -120,6 +120,7 @@ impl AccountService {
         Ok(!exists.users.is_empty())
     }
 
+    /// Sends a verification code to the given email address
     #[instrument(skip(self, dto))]
     pub async fn send_code(&self, dto: SendCodeDto) -> Result<()> {
         let verification_code = self
@@ -140,6 +141,8 @@ impl AccountService {
         Ok(())
     }
 
+    /// Verifies the given verification code against the given email address
+    /// and session id
     #[instrument(skip(self, dto))]
     pub async fn verify_code(&self, dto: VerifyCodeDto) -> Result<bool> {
         let result = self
@@ -150,6 +153,7 @@ impl AccountService {
         Ok(result)
     }
 
+    /// Registers a new user account in Matrix Server
     #[instrument(skip(self, dto))]
     pub async fn register(&self, dto: CreateAccountDto) -> Result<Account> {
         if !self
@@ -177,7 +181,7 @@ impl AccountService {
 
         let matrix_user = MatrixUser::create(
             &self.admin,
-            user_id,
+            user_id.clone(),
             UserCreateDto {
                 displayname: Some(dto.username),
                 password: dto.password.to_string(),
@@ -213,9 +217,23 @@ impl AccountService {
         };
 
         Ok(Account {
+            user_id,
             username: displayname,
             email: threepid.address.to_owned(),
         })
+    }
+
+    /// Creates an access token for the given user
+    pub async fn issue_user_token(&self, user_id: UserId) -> Result<String> {
+        let credentials =
+            MatrixUser::login_as_user(&self.admin, user_id.clone(), LoginAsUserDto::default())
+                .await
+                .map_err(|err| {
+                    tracing::error!(?err, ?user_id, "Failed to login as user");
+                    Error::Unknown
+                })?;
+
+        Ok(credentials.access_token)
     }
 }
 

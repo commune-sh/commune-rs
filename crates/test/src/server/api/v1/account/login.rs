@@ -1,4 +1,4 @@
-use commune_server::router::api::v1::account::create::AccountRegisterPayload;
+use commune_server::router::api::v1::account::root::AccountRegisterPayload;
 use fake::faker::internet::en::{FreeEmail, Password};
 use fake::Fake;
 use reqwest::StatusCode;

@@ -22,6 +22,12 @@ pub async fn handler(
 
     match services.commune.account.register(dto).await {
         Ok(account) => {
+            let _access_token = services
+                .commune
+                .account
+                .issue_user_token(account.user_id.clone())
+                .await
+                .unwrap();
             let mut response = Json(AccountRegisterResponse::from(account)).into_response();
 
             *response.status_mut() = StatusCode::CREATED;
@@ -55,15 +61,48 @@ impl From<AccountRegisterPayload> for CreateAccountDto {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct AccountRegisterResponse {
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct AccountSpace {
+    pub room_id: String,
+    pub alias: String,
+    pub name: String,
+    pub topic: Option<String>,
+    pub avatar: Option<String>,
+    pub header: Option<String>,
+    pub is_profile: bool,
+    pub is_default: bool,
+    pub is_owner: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct AccountMatrixCredentials {
     pub username: String,
+    pub display_name: String,
+    pub avatar_url: String,
+    pub access_token: String,
+    pub matrix_access_token: String,
+    pub matrix_user_id: String,
+    pub matrix_device_id: String,
+    pub user_space_id: String,
+    pub email: String,
+    pub age: i64,
+    pub admin: bool,
+    pub verified: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct AccountRegisterResponse {
+    pub access_token: String,
+    pub created: bool,
+    pub credentials: AccountMatrixCredentials,
+    pub rooms: Vec<String>,
+    pub spaces: Vec<AccountSpace>,
 }
 
 impl From<Account> for AccountRegisterResponse {
-    fn from(acc: Account) -> Self {
+    fn from(_: Account) -> Self {
         Self {
-            username: acc.username,
+            ..Default::default()
         }
     }
 }
