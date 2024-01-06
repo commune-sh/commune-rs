@@ -112,7 +112,51 @@ pub struct UserUpdateDto {
     pub locked: bool,
 }
 
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct LoginAsUserDto {
+    pub valid_until_ms: Option<u64>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct LoginAsUserResponse {
+    pub access_token: String,
+}
+
+pub struct QueryUserDataResponse {
+    pub name: String,
+    pub displayname: Option<String>,
+    pub threepids: Vec<ThreePid>,
+    pub avatar_url: Option<Url>,
+    pub is_guest: bool,
+    pub admin: bool,
+    pub deactivated: bool,
+    pub erased: bool,
+    pub shadow_banned: bool,
+    pub creation_ts: i64,
+    pub appservice_id: Option<String>,
+    pub consent_server_notice_sent: Option<bool>,
+    pub consent_version: Option<bool>,
+    pub consent_ts: Option<bool>,
+    pub external_ids: Vec<Vec<ExternalId>>,
+    pub user_type: Option<String>,
+}
+
 impl User {
+    /// This API returns information about a specific user account.
+    ///
+    /// Refer: https://matrix-org.github.io/synapse/v1.88/admin_api/user_admin_api.html#query-user-account
+    #[instrument(skip(client))]
+    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<Self> {
+        let resp = client
+            .get(format!(
+                "/_synapse/admin/v2/users/{user_id}",
+                user_id = user_id
+            ))
+            .await?;
+
+        Ok(resp.json().await?)
+    }
+
     /// Allows an administrator to create a user account.
     ///
     /// Note that internally Synapse uses this same endpoint to modify an
@@ -154,6 +198,39 @@ impl User {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
+                &dto,
+            )
+            .await?;
+
+        Ok(resp.json().await?)
+    }
+
+    /// **Note: This API is disabled when MSC3861 is enabled. [See #15582][1]**
+    ///
+    /// Get an access token that can be used to authenticate as that user.
+    /// Useful for when admins wish to do actions on behalf of a user.
+    ///
+    /// An optional `valid_until_ms` field can be specified in the request body
+    /// as an integer timestamp that specifies when the token should expire.
+    ///
+    /// **By default tokens do not expire. Note that this API does not allow a
+    /// user to login as themselves (to create more tokens).**
+    ///
+    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#login-as-a-user
+    ///
+    /// [1]: https://github.com/matrix-org/synapse/pull/15582
+    #[instrument(skip(client))]
+    pub async fn login_as_user(
+        client: &Client,
+        user_id: UserId,
+        dto: LoginAsUserDto,
+    ) -> Result<LoginAsUserResponse> {
+        let resp = client
+            .post_json(
+                format!(
+                    "/_synapse/admin/v1/users/{user_id}/login",
+                    user_id = user_id
+                ),
                 &dto,
             )
             .await?;

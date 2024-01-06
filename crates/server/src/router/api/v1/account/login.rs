@@ -2,13 +2,16 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use commune::Error;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use commune::auth::service::{LoginCredentials, LoginCredentialsResponse};
+use commune::auth::service::LoginCredentials;
 
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
+
+use super::root::{AccountMatrixCredentials, AccountSpace};
 
 #[instrument(skip(services, payload))]
 pub async fn handler(
@@ -17,9 +20,40 @@ pub async fn handler(
 ) -> Response {
     let login_credentials = LoginCredentials::from(payload);
 
-    match services.commune.auth.login(login_credentials).await {
-        Ok(tokens) => {
-            let mut response = Json(AccountLoginResponse::from(tokens)).into_response();
+    let Ok(tokens) = services.commune.auth.login(login_credentials).await else {
+        tracing::warn!("Failed to authenticate user");
+        return ApiError::from(Error::Auth(
+            commune::auth::error::AuthErrorCode::InvalidCredentials,
+        ))
+        .into_response();
+    };
+
+    match services
+        .commune
+        .account
+        .whoami(tokens.access_token.clone())
+        .await
+    {
+        Ok(account) => {
+            let mut response = Json(AccountLoginResponse {
+                access_token: tokens.access_token.to_string(),
+                credentials: AccountMatrixCredentials {
+                    username: account.username,
+                    display_name: account.display_name,
+                    avatar_url: account.avatar_url,
+                    access_token: tokens.access_token.to_string(),
+                    matrix_access_token: tokens.access_token.to_string(),
+                    matrix_user_id: account.user_id.to_string(),
+                    matrix_device_id: String::new(),
+                    user_space_id: String::new(),
+                    email: account.email,
+                    age: account.age,
+                    admin: account.admin,
+                    verified: account.verified,
+                },
+                ..Default::default()
+            })
+            .into_response();
 
             *response.status_mut() = StatusCode::OK;
             response
@@ -46,15 +80,10 @@ impl From<AccountLoginPayload> for LoginCredentials {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct AccountLoginResponse {
     pub access_token: String,
-}
-
-impl From<LoginCredentialsResponse> for AccountLoginResponse {
-    fn from(tokens: LoginCredentialsResponse) -> Self {
-        Self {
-            access_token: tokens.access_token.to_string(),
-        }
-    }
+    pub credentials: AccountMatrixCredentials,
+    pub rooms: Vec<String>,
+    pub spaces: Vec<AccountSpace>,
 }

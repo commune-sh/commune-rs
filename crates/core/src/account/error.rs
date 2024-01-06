@@ -12,6 +12,8 @@ pub enum AccountErrorCode {
     ValidationError(#[from] ValidationErrors),
     #[error("The username {0} is already taken")]
     UsernameTaken(String),
+    #[error("The email {0} is already taken")]
+    EmailTaken(String),
 }
 
 impl HttpStatusCode for AccountErrorCode {
@@ -19,7 +21,9 @@ impl HttpStatusCode for AccountErrorCode {
         match self {
             AccountErrorCode::InvalidVerificationCode => StatusCode::UNAUTHORIZED,
             AccountErrorCode::ValidationError(_) => StatusCode::BAD_REQUEST,
-            AccountErrorCode::UsernameTaken(_) => StatusCode::CONFLICT,
+            AccountErrorCode::UsernameTaken(_) | AccountErrorCode::EmailTaken(_) => {
+                StatusCode::CONFLICT
+            }
         }
     }
 
@@ -28,6 +32,7 @@ impl HttpStatusCode for AccountErrorCode {
             AccountErrorCode::InvalidVerificationCode => "INVALID_VERIFICATION_CODE",
             AccountErrorCode::ValidationError(_) => "VALIDATION_ERROR",
             AccountErrorCode::UsernameTaken(_) => "USERNAME_TAKEN",
+            AccountErrorCode::EmailTaken(_) => "EMAIL_TAKEN",
         }
     }
 }

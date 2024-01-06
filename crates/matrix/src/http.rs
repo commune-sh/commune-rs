@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use std::str::from_utf8;
 
 use anyhow::{bail, Result};
@@ -7,6 +6,7 @@ use reqwest::{Client as HttpClient, Response};
 use serde::Serialize;
 use url::Url;
 
+#[derive(Clone, Debug)]
 pub struct Client {
     client: HttpClient,
     base_url: Url,
@@ -133,13 +133,5 @@ impl Client {
         url.set_query(Some(&params));
 
         Ok(url)
-    }
-}
-
-impl Deref for Client {
-    type Target = HttpClient;
-
-    fn deref(&self) -> &Self::Target {
-        &self.client
     }
 }

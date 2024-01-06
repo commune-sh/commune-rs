@@ -13,7 +13,7 @@ pub async fn handler(
     State(services): State<SharedServices>,
     Path(email): Path<String>,
 ) -> Response {
-    match services.commune.account.email_exists(&email).await {
+    match services.commune.account.is_email_available(&email).await {
         Ok(available) => {
             let mut response = Json(AccountEmailExistsResponse { available }).into_response();
 

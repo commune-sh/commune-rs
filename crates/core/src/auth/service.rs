@@ -86,8 +86,8 @@ impl AuthService {
             AuthErrorCode::RedisConnectionError(err)
         })?;
 
-        let marshalled_verification_code = conn
-            .get::<String, String>(Self::verification_code_key(session))
+        let maybe_marshalled_verification_code = conn
+            .get::<String, Option<String>>(Self::verification_code_key(session))
             .await
             .map_err(|err| {
                 tracing::error!(
@@ -98,16 +98,41 @@ impl AuthService {
                 );
                 AuthErrorCode::RedisConnectionError(err)
             })?;
-        let verification_code = VerificationCode::unmarshall(marshalled_verification_code);
 
-        if verification_code.email == email
-            && verification_code.code == *code
-            && verification_code.session == *session
-        {
-            Ok(true)
-        } else {
-            Ok(false)
+        if let Some(marshalled_verification_code) = maybe_marshalled_verification_code {
+            let verification_code = VerificationCode::unmarshall(marshalled_verification_code);
+
+            if verification_code.email == email
+                && verification_code.code == *code
+                && verification_code.session == *session
+            {
+                return Ok(true);
+            }
         }
+
+        tracing::warn!(?session, ?email, "Verification code not found in storge");
+        Ok(false)
+    }
+
+    pub async fn drop_verification_code(&self, email: &str, session: &Uuid) -> Result<bool> {
+        let mut conn = self.redis.get_async_connection().await.map_err(|err| {
+            tracing::error!(?err, "Failed to get Redis connection");
+            AuthErrorCode::RedisConnectionError(err)
+        })?;
+
+        conn.del(Self::verification_code_key(session))
+            .await
+            .map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    ?session,
+                    ?email,
+                    "Failed to delete verification code in Redis"
+                );
+                AuthErrorCode::RedisConnectionError(err)
+            })?;
+
+        Ok(true)
     }
 
     fn verification_code_key(session: &Uuid) -> String {

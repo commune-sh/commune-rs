@@ -14,11 +14,11 @@ pub trait HttpStatusCode {
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Auth Error. {0}")]
+    #[error("{0}")]
     Auth(#[from] AuthErrorCode),
-    #[error("User Error. {0}")]
+    #[error("{0}")]
     User(AccountErrorCode),
-    #[error("Mail Error. {0}")]
+    #[error("{0}")]
     Mail(#[from] MailErrorCode),
     #[error("An error occured while starting up. {0}")]
     Startup(String),
