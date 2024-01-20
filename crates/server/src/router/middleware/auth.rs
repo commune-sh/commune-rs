@@ -1,7 +1,7 @@
 use axum::body::Body;
 use axum::http::{header::AUTHORIZATION, Request};
 use axum::middleware::Next;
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 
 use commune::util::secret::Secret;
 
@@ -17,13 +17,16 @@ impl ToString for AccessToken {
     }
 }
 
-pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, ApiError> {
+pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, Response> {
     let access_token = request
         .headers()
         .get(AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
-        .ok_or(ApiError::unauthorized())?
+        .ok_or_else(|| {
+            tracing::warn!("No access token provided");
+            ApiError::unauthorized().into_response()
+        })?
         .to_owned();
 
     let services = request
@@ -31,7 +34,7 @@ pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, Ap
         .get::<SharedServices>()
         .ok_or_else(|| {
             tracing::error!("SharedServices not found in request extensions");
-            ApiError::internal_server_error()
+            ApiError::internal_server_error().into_response()
         })?;
 
     let access_token = Secret::new(access_token);
@@ -42,7 +45,7 @@ pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, Ap
         .await
         .map_err(|err| {
             tracing::error!("Failed to validate token: {}", err);
-            ApiError::internal_server_error()
+            ApiError::internal_server_error().into_response()
         })?;
 
     request.extensions_mut().insert(user);

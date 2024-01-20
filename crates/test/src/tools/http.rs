@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use dotenv::dotenv;
-use reqwest::{Client, StatusCode};
+use reqwest::{header::AUTHORIZATION, Client, StatusCode};
 use tokio::net::TcpListener;
 
 use commune_server::serve;
@@ -30,6 +30,12 @@ impl HttpClient {
         HttpClient { client, addr }
     }
 
+    pub(crate) fn get(&self, url: &str) -> RequestBuilder {
+        RequestBuilder {
+            builder: self.client.get(self.path(url)),
+        }
+    }
+
     pub(crate) fn post(&self, url: &str) -> RequestBuilder {
         RequestBuilder {
             builder: self.client.post(self.path(url)),
@@ -50,6 +56,15 @@ impl RequestBuilder {
         TestResponse {
             response: self.builder.send().await.unwrap(),
         }
+    }
+
+    pub(crate) fn token(mut self, token: impl AsRef<str>) -> Self {
+        let next = self
+            .builder
+            .header(AUTHORIZATION, format!("Bearer {}", token.as_ref()));
+
+        self.builder = next;
+        self
     }
 
     pub(crate) fn json<T>(mut self, json: &T) -> Self
