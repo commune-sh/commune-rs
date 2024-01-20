@@ -1,7 +1,6 @@
-use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{Extension, Json};
 use commune::account::error::AccountErrorCode;
 use commune::util::secret::Secret;
 use commune::Error;
@@ -16,7 +15,7 @@ use crate::services::SharedServices;
 
 #[instrument(skip(services, payload))]
 pub async fn handler(
-    State(services): State<SharedServices>,
+    Extension(services): Extension<SharedServices>,
     Json(payload): Json<AccountVerifyCodeEmailPayload>,
 ) -> Response {
     let dto = VerifyCodeDto::from(payload);
