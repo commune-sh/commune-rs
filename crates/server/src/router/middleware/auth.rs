@@ -1,3 +1,4 @@
+use axum::body::Body;
 use axum::http::{header::AUTHORIZATION, Request};
 use axum::middleware::Next;
 use axum::response::Response;
@@ -7,7 +8,16 @@ use commune::util::secret::Secret;
 use crate::router::api::ApiError;
 use crate::services::SharedServices;
 
-pub async fn auth<T>(mut request: Request<T>, next: Next<T>) -> Result<Response, ApiError> {
+#[derive(Debug, Clone)]
+pub struct AccessToken(Secret);
+
+impl ToString for AccessToken {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
+pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, ApiError> {
     let access_token = request
         .headers()
         .get(AUTHORIZATION)
@@ -24,10 +34,11 @@ pub async fn auth<T>(mut request: Request<T>, next: Next<T>) -> Result<Response,
             ApiError::internal_server_error()
         })?;
 
+    let access_token = Secret::new(access_token);
     let user = services
         .commune
         .account
-        .whoami(Secret::new(access_token))
+        .whoami(&access_token)
         .await
         .map_err(|err| {
             tracing::error!("Failed to validate token: {}", err);
@@ -35,5 +46,7 @@ pub async fn auth<T>(mut request: Request<T>, next: Next<T>) -> Result<Response,
         })?;
 
     request.extensions_mut().insert(user);
+    request.extensions_mut().insert(AccessToken(access_token));
+
     Ok(next.run(request).await)
 }

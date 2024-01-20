@@ -1,7 +1,6 @@
-use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{Extension, Json};
 use commune::Error;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -15,7 +14,7 @@ use super::root::{AccountMatrixCredentials, AccountSpace};
 
 #[instrument(skip(services, payload))]
 pub async fn handler(
-    State(services): State<SharedServices>,
+    Extension(services): Extension<SharedServices>,
     Json(payload): Json<AccountLoginPayload>,
 ) -> Response {
     let login_credentials = LoginCredentials::from(payload);
@@ -28,12 +27,7 @@ pub async fn handler(
         .into_response();
     };
 
-    match services
-        .commune
-        .account
-        .whoami(tokens.access_token.clone())
-        .await
-    {
+    match services.commune.account.whoami(&tokens.access_token).await {
         Ok(account) => {
             let mut response = Json(AccountLoginResponse {
                 access_token: tokens.access_token.to_string(),

@@ -249,7 +249,7 @@ impl AccountService {
         Ok(credentials.access_token)
     }
 
-    pub async fn whoami(&self, access_token: Secret) -> Result<Account> {
+    pub async fn whoami(&self, access_token: &Secret) -> Result<Account> {
         let session = Session::get(&self.admin, access_token.to_string())
             .await
             .map_err(|err| {

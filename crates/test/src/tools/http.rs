@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use dotenv::dotenv;
 use reqwest::{Client, StatusCode};
+use tokio::net::TcpListener;
 
 use commune_server::serve;
 
@@ -14,9 +15,7 @@ impl HttpClient {
     pub(crate) async fn new() -> Self {
         dotenv().ok();
 
-        let tcp = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        tcp.set_nonblocking(true)
-            .expect("Failed to set non-blocking mode");
+        let tcp = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = tcp.local_addr().unwrap();
 
         tokio::spawn(async move {

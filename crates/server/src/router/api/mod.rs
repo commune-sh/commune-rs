@@ -1,20 +1,18 @@
 pub mod v1;
 
-use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use axum::Router;
+use http::StatusCode;
 use serde::Serialize;
 
 use commune::error::HttpStatusCode;
 
-use crate::services::SharedServices;
-
 pub struct Api;
 
 impl Api {
-    pub fn routes() -> Router<SharedServices> {
-        Router::new().nest("/v1", v1::V1::routes())
+    pub fn routes() -> Router {
+        Router::new().nest("/api", Router::new().nest("/v1", v1::V1::routes()))
     }
 }
 
@@ -81,10 +79,11 @@ impl From<anyhow::Error> for ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        let status = self.status;
+        let status = self.status.as_u16();
         let mut response = Json(self).into_response();
 
-        *response.status_mut() = status;
+        *response.status_mut() =
+            axum::http::StatusCode::from_u16(status).expect("Invalid status code");
         response
     }
 }

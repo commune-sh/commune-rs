@@ -9,12 +9,11 @@ use axum::routing::{get, post};
 use axum::{middleware, Router};
 
 use crate::router::middleware::auth;
-use crate::services::SharedServices;
 
 pub struct Account;
 
 impl Account {
-    pub fn routes() -> Router<SharedServices> {
+    pub fn routes() -> Router {
         Router::new()
             .route("/session", get(session::handler))
             .route_layer(middleware::from_fn(auth))
