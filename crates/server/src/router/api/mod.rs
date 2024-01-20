@@ -34,6 +34,22 @@ impl ApiError {
             status,
         }
     }
+
+    pub fn unauthorized() -> Self {
+        Self::new(
+            "You must be authenticated to access this request".to_string(),
+            "UNAUTHORIZED",
+            StatusCode::UNAUTHORIZED,
+        )
+    }
+
+    pub fn internal_server_error() -> Self {
+        Self::new(
+            "Internal server error".to_string(),
+            "INTERNAL_SERVER_ERROR",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
+    }
 }
 
 impl From<commune::error::Error> for ApiError {
