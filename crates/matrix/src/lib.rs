@@ -16,3 +16,12 @@ pub mod admin;
 /// Different to the Matrix SDK, no user state is kept in the Client instance,
 /// this is equivalent to making cURL requests to the Matrix server.
 pub mod client;
+
+/// Implementation of our custom space events
+pub mod space;
+
+/// Implementation of database entities
+pub mod entities;
+
+/// Wrapper to open our database connection
+pub mod postgres;
