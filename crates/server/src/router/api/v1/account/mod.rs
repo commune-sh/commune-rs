@@ -1,26 +1,30 @@
 pub mod email;
 pub mod login;
 pub mod root;
+pub mod session;
 pub mod verify_code;
 pub mod verify_code_email;
 
 use axum::routing::{get, post};
-use axum::Router;
+use axum::{middleware, Router};
 
-use crate::services::SharedServices;
+use crate::router::middleware::auth;
 
 pub struct Account;
 
 impl Account {
-    pub fn routes() -> Router<SharedServices> {
-        let verify = Router::new()
-            .route("/code", post(verify_code::handler))
-            .route("/code/email", post(verify_code_email::handler));
-
+    pub fn routes() -> Router {
         Router::new()
+            .route("/session", get(session::handler))
+            .route_layer(middleware::from_fn(auth))
             .route("/", post(root::handler))
-            .route("/email/:email", get(email::handler))
             .route("/login", post(login::handler))
-            .nest("/verify", verify)
+            .route("/email/:email", get(email::handler))
+            .nest(
+                "/verify",
+                Router::new()
+                    .route("/code", post(verify_code::handler))
+                    .route("/code/email", post(verify_code_email::handler)),
+            )
     }
 }
