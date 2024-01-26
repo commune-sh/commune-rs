@@ -13,7 +13,9 @@ handlebars = "5.0.0"
 lettre = "0.11"
 rand = "0.8.5"
 redis = { version = "0.24.0", features = ["aio", "tokio-comp"] }
+serde_postgres = "0.2.0"
 thiserror = "1.0.50"
+tokio-postgres = "0.7.10"
 validator = { version = "0.16", features = ["derive"] }
 
 # Workspace
@@ -23,6 +25,7 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true, features= ["serde"] }
 url = { workspace = true, features = ["serde"] }
+tokio = { workspace = true, features = ["full"] }
 
 # Local Dependencies
 matrix = { path = "../matrix" }
