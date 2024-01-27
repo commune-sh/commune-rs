@@ -13,6 +13,7 @@ use mail::service::MailService;
 use url::Url;
 
 use std::fmt::Debug;
+
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -117,8 +118,19 @@ impl Commune {
     pub async fn new<C: Into<CommuneConfig>>(config: C) -> Result<Self> {
         let config: CommuneConfig = config.into();
 
-        let postgres = db::connect(config.postgres_db, config.postgres_user, config.postgres_password, config.postgres_db).await?;
-        let events = EventsService::new(postgres);
+        let postgres = db::connect(
+            &config.postgres_host,
+            &config.postgres_user,
+            &config.postgres_password,
+            &config.postgres_db,
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!(?err, "Failed to open connection to PostgreSQL");
+            Error::Startup(err.to_string())
+        })?;
+
+        let events = EventsService::new(&config.synapse_host, postgres);
 
         let mut admin = MatrixAdminClient::new(&config.synapse_host, &config.synapse_server_name)
             .map_err(|err| {
@@ -168,7 +180,7 @@ impl Commune {
         Ok(Self {
             account: Arc::new(account),
             auth,
-            events,
+            events: Arc::new(events),
         })
     }
 }
