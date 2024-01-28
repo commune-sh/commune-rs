@@ -1,6 +1,3 @@
-use commune_server::router::api::v1::account::root::AccountRegisterPayload;
-use commune_server::router::api::v1::account::session::AccountSessionResponse;
-use commune_server::router::api::ApiError;
 use fake::faker::internet::en::{FreeEmail, Password};
 use fake::Fake;
 use reqwest::StatusCode;
@@ -9,12 +6,15 @@ use uuid::Uuid;
 
 use commune::util::secret::Secret;
 use commune_server::router::api::v1::account::login::{AccountLoginPayload, AccountLoginResponse};
+use commune_server::router::api::v1::account::root::AccountRegisterPayload;
+use commune_server::router::api::v1::account::session::AccountSessionResponse;
 use commune_server::router::api::v1::account::verify_code::{
     AccountVerifyCodePayload, VerifyCodeResponse,
 };
 use commune_server::router::api::v1::account::verify_code_email::{
     AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse,
 };
+use commune_server::router::api::ApiError;
 
 use crate::tools::http::HttpClient;
 use crate::tools::maildev::MailDevClient;
