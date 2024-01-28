@@ -1,4 +1,7 @@
 #[cfg(test)]
+mod commune;
+
+#[cfg(test)]
 mod tools;
 
 #[cfg(test)]

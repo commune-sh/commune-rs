@@ -53,6 +53,16 @@ pub struct CreateAccountDto {
     pub code: Secret,
 }
 
+#[derive(Debug, Validate)]
+pub struct CreateUnverifiedAccountDto {
+    #[validate(custom = "CreateAccountDto::validate_username")]
+    pub username: String,
+    #[validate(custom = "CreateAccountDto::validate_password")]
+    pub password: Secret,
+    #[validate(email)]
+    pub email: String,
+}
+
 impl CreateAccountDto {
     /// Validation logic for usernames enforced in user creation
     fn validate_username(username: &str) -> std::result::Result<(), ValidationError> {
@@ -166,6 +176,25 @@ impl AccountService {
             return Err(AccountErrorCode::InvalidVerificationCode.into());
         }
 
+        let account = self
+            .register_unverified(CreateUnverifiedAccountDto {
+                username: dto.username,
+                password: dto.password,
+                email: dto.email.to_owned(),
+            })
+            .await?;
+
+        self.auth
+            .drop_verification_code(&dto.email, &dto.session)
+            .await?;
+
+        Ok(account)
+    }
+
+    /// Registers a new user account in Matrix Server without verifying the email ownership.
+    /// This shuld be used for testing purposes only.
+    #[instrument(skip(self, dto))]
+    pub async fn register_unverified(&self, dto: CreateUnverifiedAccountDto) -> Result<Account> {
         dto.validate().map_err(|err| {
             tracing::warn!(?err, "Failed to validate user creation dto");
             AccountErrorCode::from(err)
@@ -207,10 +236,6 @@ impl AccountService {
             tracing::error!(?err, "Failed to create user");
             Error::Unknown
         })?;
-
-        self.auth
-            .drop_verification_code(&dto.email, &dto.session)
-            .await?;
 
         let matrix_account = MatrixUser::query_user_account(&self.admin, user_id.clone())
             .await
