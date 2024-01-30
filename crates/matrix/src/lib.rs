@@ -23,10 +23,10 @@ mod space;
 /// Here we intentionally shadow `ruma::events::space` in favor of our own.
 /// `ruma::events` extended with the implementation of our custom space events.
 pub mod events {
-    pub use ruma::events::*;
+    pub use ruma_events::*;
 
     pub mod space {
-        pub use ruma::events::space::*;
+        pub use ruma_events::space::*;
 
         pub use crate::space::*;
     }

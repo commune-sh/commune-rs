@@ -4,7 +4,8 @@
 //! for a server admin: see Admin API.
 
 use anyhow::Result;
-use ruma::{events::{AnyTimelineEvent, AnyStateEvent}, OwnedRoomId, OwnedEventId, OwnedUserId};
+use ruma_common::{OwnedEventId, OwnedRoomId, OwnedUserId};
+use ruma_events::{AnyStateEvent, AnyTimelineEvent};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -318,11 +319,14 @@ impl RoomService {
         params: EventContextParams,
     ) -> Result<EventContextResponse> {
         let resp = client
-            .get_query(format!(
-                "/_synapse/admin/v1/rooms/{room_id}/context/{event_id}",
-                room_id = room_id,
-                event_id = event_id,
-            ),&params)
+            .get_query(
+                format!(
+                    "/_synapse/admin/v1/rooms/{room_id}/context/{event_id}",
+                    room_id = room_id,
+                    event_id = event_id,
+                ),
+                &params,
+            )
             .await?;
         let data: EventContextResponse = resp.json().await?;
 
