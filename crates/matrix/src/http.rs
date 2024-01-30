@@ -99,6 +99,20 @@ impl Client {
         Ok(resp)
     }
 
+    pub async fn delete(&self, path: impl AsRef<str>) -> Result<Response>
+    {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let resp = self
+            .client
+            .delete(url)
+            .headers(headers)
+            .send()
+            .await?;
+
+        Ok(resp)
+    }
+
     fn build_headers(&self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
 

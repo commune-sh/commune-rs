@@ -17,11 +17,17 @@ pub mod admin;
 /// this is equivalent to making cURL requests to the Matrix server.
 pub mod client;
 
-/// Implementation of our custom space events
-pub mod space;
+/// Implementation of our custom space events.
+mod space;
 
-/// Implementation of database entities
-pub mod entities;
+/// Here we intentionally shadow `ruma::events::space` in favor of our own.
+/// `ruma::events` extended with the implementation of our custom space events.
+pub mod events {
+    pub use ruma::events::*;
 
-/// Wrapper to open our database connection
-pub mod postgres;
+    pub mod space {
+        pub use ruma::events::space::*;
+
+        pub use crate::space::*;
+    }
+}
