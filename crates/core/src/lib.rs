@@ -4,12 +4,14 @@ pub mod db;
 pub mod error;
 pub mod events;
 pub mod mail;
+pub mod room;
 pub mod util;
 
 pub use error::{Error, HttpStatusCode, Result};
 
 use events::service::EventsService;
 use mail::service::MailService;
+use room::service::RoomService;
 use url::Url;
 
 use std::fmt::Debug;
@@ -112,6 +114,7 @@ pub struct Commune {
     pub account: Arc<AccountService>,
     pub auth: Arc<AuthService>,
     pub events: Arc<EventsService>,
+    pub room: Arc<RoomService>,
 }
 
 impl Commune {
@@ -176,11 +179,13 @@ impl Commune {
             Arc::clone(&auth),
             Arc::clone(&mail),
         );
+        let room = RoomService::new(Arc::clone(&admin_client));
 
         Ok(Self {
             account: Arc::new(account),
             auth,
             events: Arc::new(events),
+            room: Arc::new(room),
         })
     }
 }
