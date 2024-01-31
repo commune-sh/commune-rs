@@ -21,3 +21,6 @@ reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+assert_matches2 = { workspace = true }
