@@ -17,6 +17,12 @@ impl ToString for AccessToken {
     }
 }
 
+impl From<AccessToken> for Secret {
+    fn from(value: AccessToken) -> Secret {
+        value.0
+    }
+}
+
 pub async fn auth(mut request: Request<Body>, next: Next) -> Result<Response, Response> {
     let access_token = request
         .headers()
