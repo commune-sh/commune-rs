@@ -4,9 +4,9 @@
 //! for a server admin: see Admin API.
 
 use anyhow::Result;
-use ruma_common::{OwnedEventId, OwnedRoomId, OwnedUserId};
-use ruma_events::{AnyStateEvent, AnyTimelineEvent};
-use serde::{Deserialize, Serialize};
+use ruma_common::{serde::Raw, OwnedEventId, OwnedRoomId, OwnedUserId, RoomId};
+use ruma_events::{AnyMessageLikeEvent, AnyStateEvent};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::http::Client;
@@ -91,8 +91,8 @@ pub struct RoomEventFilter {
     pub not_senders: Vec<OwnedUserId>,
     pub senders: Option<Vec<OwnedUserId>>,
     pub types: Option<Vec<String>>,
-    pub url_filter: Option<bool>,
-    pub lazy_load_options: Option<bool>,
+    pub include_urls: Option<bool>,
+    pub lazy_load_members: Option<bool>,
     pub unread_thread_notifications: bool,
 }
 
@@ -102,16 +102,18 @@ pub struct MessagesParams {
     pub to: Option<String>,
     pub limit: Option<u64>,
     pub filter: Option<RoomEventFilter>,
-    pub direction: Option<String>,
+    pub direction: Option<Direction>,
 }
 
-#[derive(Default, Debug, Deserialize)]
-pub struct MessagesResponse {
-    pub chunk: Vec<AnyTimelineEvent>,
+#[derive(Deserialize)]
+pub struct GetEventsResponse<T> {
+    pub chunk: T,
     pub start: String,
     pub end: String,
     pub state: Option<Vec<State>>,
 }
+
+type RawEvents = Raw<Vec<AnyMessageLikeEvent>>;
 
 #[derive(Debug, Default, Serialize)]
 pub struct TimestampToEventParams {
@@ -154,10 +156,10 @@ pub struct EventContextParams {
 pub struct EventContextResponse {
     pub start: String,
     pub end: String,
-    pub events_before: Vec<AnyTimelineEvent>,
-    pub event: AnyTimelineEvent,
-    pub events_after: Vec<AnyTimelineEvent>,
-    pub state: Vec<AnyStateEvent>,
+    pub events_before: Vec<Raw<AnyMessageLikeEvent>>,
+    pub event: Raw<AnyMessageLikeEvent>,
+    pub events_after: Vec<Raw<AnyMessageLikeEvent>>,
+    pub state: Vec<Raw<AnyStateEvent>>,
 }
 
 impl RoomService {
@@ -206,9 +208,9 @@ impl RoomService {
         Ok(data)
     }
 
-    /// Allows a server admin to get a list of all state events in a room
+    /// Allows a server admin to get all messages sent to a room in a given timeframe
     ///
-    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
+    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-messages-api
     #[instrument(skip(client))]
     pub async fn get_state(client: &Client, room_id: OwnedRoomId) -> Result<StateResponse> {
         let resp = client
@@ -218,29 +220,6 @@ impl RoomService {
             ))
             .await?;
         let data: StateResponse = resp.json().await?;
-
-        Ok(data)
-    }
-
-    /// Allows a server admin to get all messages sent to a room in a given timeframe
-    ///
-    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-messages-api
-    #[instrument(skip(client))]
-    pub async fn get_messages(
-        client: &Client,
-        room_id: OwnedRoomId,
-        params: MessagesParams,
-    ) -> Result<MessagesResponse> {
-        let resp = client
-            .get_query(
-                format!(
-                    "/_synapse/admin/v1/rooms/{room_id}/messages",
-                    room_id = room_id
-                ),
-                &params,
-            )
-            .await?;
-        let data: MessagesResponse = resp.json().await?;
 
         Ok(data)
     }
@@ -306,11 +285,42 @@ impl RoomService {
 
         Ok(data)
     }
+}
 
-    /// Allows a server admin to delete forward extremities for a room
-    /// WARNING: Please ensure you know what you're doing and have read the related issue [#1760](https://github.com/matrix-org/synapse/issues/1760)
+impl RoomService {
+    /// Allows a server admin to get a list of all state events in a room
     ///
-    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#delete-for-forward-extremities
+    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
+    #[instrument(skip(client))]
+    pub async fn get_room_events<M: DeserializeOwned>(
+        client: &Client,
+        room_id: &RoomId,
+        params: MessagesParams,
+    ) -> Result<GetEventsResponse<Vec<M>>> {
+        let resp = client
+            .get_query(
+                format!(
+                    "/_synapse/admin/v1/rooms/{room_id}/messages",
+                    room_id = room_id.as_str()
+                ),
+                &params,
+            )
+            .await?;
+
+        let data: GetEventsResponse<RawEvents> = resp.json().await?;
+        let chunk: Vec<M> = data.chunk.deserialize_as()?;
+
+        Ok(GetEventsResponse {
+            chunk,
+            start: data.start,
+            end: data.end,
+            state: data.state,
+        })
+    }
+
+    /// This API lets a client find the context of an event. This is designed primarily to investigate abuse reports.
+    ///
+    /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#event-context-api
     #[instrument(skip(client))]
     pub async fn get_event_context(
         client: &Client,
