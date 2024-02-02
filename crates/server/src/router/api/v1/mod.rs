@@ -1,4 +1,5 @@
 pub mod account;
+pub mod events;
 
 use axum::Router;
 
