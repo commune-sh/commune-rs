@@ -1,6 +1,5 @@
 pub mod account;
 pub mod auth;
-pub mod db;
 pub mod error;
 pub mod events;
 pub mod mail;
@@ -121,20 +120,6 @@ impl Commune {
     pub async fn new<C: Into<CommuneConfig>>(config: C) -> Result<Self> {
         let config: CommuneConfig = config.into();
 
-        let postgres = db::connect(
-            &config.postgres_host,
-            &config.postgres_user,
-            &config.postgres_password,
-            &config.postgres_db,
-        )
-        .await
-        .map_err(|err| {
-            tracing::error!(?err, "Failed to open connection to PostgreSQL");
-            Error::Startup(err.to_string())
-        })?;
-
-        let events = EventsService::new(&config.synapse_host, postgres);
-
         let mut admin = MatrixAdminClient::new(&config.synapse_host, &config.synapse_server_name)
             .map_err(|err| {
             tracing::error!(?err, "Failed to create admin client");
@@ -179,6 +164,7 @@ impl Commune {
             Arc::clone(&auth),
             Arc::clone(&mail),
         );
+        let events = EventsService::new(Arc::clone(&admin_client));
         let room = RoomService::new(Arc::clone(&admin_client));
 
         Ok(Self {

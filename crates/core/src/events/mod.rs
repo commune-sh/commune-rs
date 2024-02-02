@@ -1,4 +1,6 @@
-pub mod service;
 pub mod error;
+pub mod service;
 
-pub use matrix::events::{AnyStateEvent, AnyMessageLikeEvent};
+pub use matrix::events::{
+    space, Raw, AnyMessageLikeEvent, StateEventContent,
+};
