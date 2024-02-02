@@ -5,26 +5,30 @@ use ruma_common::serde::Raw;
 use ruma_common::{OwnedEventId, OwnedRoomId, TransactionId};
 
 use ruma_events::room::redaction::RoomRedactionEventContent;
-use ruma_events::{AnyStateEventContent, MessageLikeEventContent, StateEventType};
-use serde::Deserialize;
+use ruma_events::{MessageLikeEventContent, StateEventContent, StateEventType};
+use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::Client;
 
 pub struct Events;
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct SendResponse {
-    pub event_id: String,
+#[derive(Serialize, Deserialize)]
+pub struct CreateEventResponse {
+    event_id: String,
 }
 
 impl Events {
-    #[instrument(skip(client, content, room_id))]
+    #[instrument(skip(client, access_token, content, room_id))]
     pub async fn send_message<T: MessageLikeEventContent>(
         client: &Client,
+        access_token: impl Into<String>,
         content: T,
         room_id: OwnedRoomId,
-    ) -> Result<SendResponse> {
+    ) -> Result<CreateEventResponse> {
+        let mut client = (*client).clone();
+        client.set_token(access_token)?;
+
         let resp = client
             .put_json(
                 format!(
@@ -40,14 +44,18 @@ impl Events {
         Ok(resp.json().await?)
     }
 
-    #[instrument(skip(client, content, event_type, room_id, state_key))]
-    pub async fn send_state<S: AsRef<str>>(
+    #[instrument(skip(client, access_token, content, event_type, room_id, state_key))]
+    pub async fn send_state<S: AsRef<str>, T: StateEventContent>(
         client: &Client,
-        content: Raw<AnyStateEventContent>,
+        access_token: impl Into<String>,
+        content: Raw<T>,
         room_id: OwnedRoomId,
         event_type: StateEventType,
         state_key: S,
-    ) -> Result<SendResponse> {
+    ) -> Result<CreateEventResponse> {
+        let mut client = (*client).clone();
+        client.set_token(access_token)?;
+
         let resp = client
             .put_json(
                 format!(
@@ -63,13 +71,17 @@ impl Events {
         Ok(resp.json().await?)
     }
 
-    #[instrument(skip(client, room_id, event_id))]
+    #[instrument(skip(client, access_token, room_id, event_id))]
     pub async fn send_redaction(
         client: &Client,
+        access_token: impl Into<String>,
         room_id: OwnedRoomId,
         event_id: OwnedEventId,
         reason: Option<String>,
-    ) -> Result<SendResponse> {
+    ) -> Result<CreateEventResponse> {
+        let mut client = (*client).clone();
+        client.set_token(access_token)?;
+
         let content =
             RoomRedactionEventContent::new_v11(OwnedEventId::from_str(event_id.as_ref())?);
 
