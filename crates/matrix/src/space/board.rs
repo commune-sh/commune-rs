@@ -75,6 +75,7 @@ pub struct SpaceReactionEventContent {
 }
 
 impl BoardPostEventContent {
+    /// A convenience constructor to create a plain text post.
     pub fn plain(body: impl Into<String>) -> Self {
         let body: String = body.into();
 
@@ -87,9 +88,10 @@ impl BoardPostEventContent {
         }
     }
 
-    pub fn html(body: impl Into<String>) -> Self {
+    /// A convenience constructor to create an HTML post.
+    pub fn html(body: impl Into<String>, html_body: impl Into<String>) -> Self {
         let body: String = body.into();
-        let formatted = Some(FormattedBody::html(body.clone()));
+        let formatted = Some(FormattedBody::html(html_body.into()));
 
         Self {
             title: None,
@@ -98,10 +100,27 @@ impl BoardPostEventContent {
             relates_to: None,
             mentions: None,
         }
+    }
+
+    /// A convenience constructor to create a Markdown post.
+    ///
+    /// Returns an HTML post if some Markdown formatting was detected, otherwise returns a plain
+    /// text post.
+    pub fn markdown(body: impl AsRef<str> + Into<String>) -> Self {
+        if let Some(formatted) = FormattedBody::markdown(&body) {
+            Self::html(body, formatted.body)
+        } else {
+            Self::plain(body)
+        }
+    }
+
+    pub fn set_title(&mut self, title: impl Into<String>) {
+        self.title = Some(title.into());
     }
 }
 
 impl BoardReplyEventContent {
+    /// A convenience constructor to create a plain text post.
     pub fn plain(body: impl Into<String>) -> Self {
         let body: String = body.into();
 
@@ -113,15 +132,28 @@ impl BoardReplyEventContent {
         }
     }
 
-    pub fn html(body: impl Into<String>) -> Self {
+    /// A convenience constructor to create an HTML post.
+    pub fn html(body: impl Into<String>, html_body: impl Into<String>) -> Self {
         let body: String = body.into();
-        let formatted = Some(FormattedBody::html(body.clone()));
+        let formatted = Some(FormattedBody::html(html_body.into()));
 
         Self {
             body,
             formatted,
             relates_to: None,
             mentions: None,
+        }
+    }
+
+    /// A convenience constructor to create a Markdown post.
+    ///
+    /// Returns an HTML post if some Markdown formatting was detected, otherwise returns a plain
+    /// text post.
+    pub fn markdown(body: impl AsRef<str> + Into<String>) -> Self {
+        if let Some(formatted) = FormattedBody::markdown(&body) {
+            Self::html(body, formatted.body)
+        } else {
+            Self::plain(body)
         }
     }
 }
