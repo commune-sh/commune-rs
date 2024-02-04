@@ -1,5 +1,8 @@
 set positional-arguments
 
+commit_sha := `git rev-parse --verify --short=7 HEAD`
+target_release := "x86_64-unknown-linux-musl"
+
 # Lists all available commands
 default:
   just --list
@@ -60,3 +63,14 @@ clear: stop
 # Runs all the tests from the `test` package. Optionally runs a single one if name pattern is provided
 e2e *args='':
   cargo test --package test -- --nocapture --test-threads=1 $1
+
+# Builds the Server binary used in the Docker Image
+docker_build_server:
+  cargo zigbuild --target {{target_release}} --release -p server
+
+# Builds the Docker image for the backend
+docker_build_image: docker_build_server
+  mkdir tmp/
+  cp ./target/{{target_release}}/release/server ./tmp/server
+  chmod +x ./tmp/server
+  docker build -t "commune:{{commit_sha}}-{{target_release}}" .

@@ -20,6 +20,8 @@ axum = { workspace = true, features = ["tokio"] }
 anyhow = { workspace = true }
 dotenv = { workspace = true }
 http = { workspace = true }
+openssl = { workspace = true, features = ["vendored"] }
+openssl-sys = { workspace = true, features = ["vendored"] }
 serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 tracing = { workspace = true }

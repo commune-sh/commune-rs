@@ -16,7 +16,8 @@ scraper = "0.18.1"
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["tokio"] }
 dotenv = { workspace = true }
-reqwest = { workspace = true, features = ["json", "stream", "multipart"] }
+reqwest = { workspace = true }
+openssl = { workspace = true, features = ["vendored"] }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }

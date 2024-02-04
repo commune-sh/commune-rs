@@ -1,0 +1,55 @@
+name: Publish Docker Image
+
+on:
+  push:
+
+concurrency:
+  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: commune
+  GHCR_REGISTRY: ghcr.io/commune-os
+
+jobs:
+  publish_image:
+    name: Publish image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-musl
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Rust Target
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2.2.0
+
+      - name: Install ZigBuild
+        run: cargo install cargo-zigbuild
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            pkg-config \
+            libssl-dev
+
+      - name: Install Just
+        uses: extractions/setup-just@v1
+
+      - name: Build Image
+        run: just docker_build_image
