@@ -9,7 +9,6 @@ concurrency:
 
 env:
   IMAGE_NAME: commune
-  GHCR_REGISTRY: ghcr.io/commune-os
 
 jobs:
   publish_image:
@@ -53,3 +52,13 @@ jobs:
 
       - name: Build Image
         run: just docker_build_image
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish image to GitHub Container Registry
+        run: just docker_publish_image
