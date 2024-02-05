@@ -74,3 +74,8 @@ docker_build_image: docker_build_server
   cp ./target/{{target_release}}/release/server ./tmp/server
   chmod +x ./tmp/server
   docker build -t "commune:{{commit_sha}}-{{target_release}}" .
+
+# Publishes the Docker image to the GitHub Container Registry
+docker_publish_image:
+  docker tag commune:{{commit_sha}}-{{target_release}} ghcr.io/commune-os/commune:{{commit_sha}}-{{target_release}}
+  docker push ghcr.io/commune-os/commune:{{commit_sha}}-{{target_release}}
