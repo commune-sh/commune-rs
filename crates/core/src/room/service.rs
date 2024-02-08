@@ -4,7 +4,7 @@ use tracing::instrument;
 use validator::Validate;
 
 use matrix::client::resources::room::{
-    CreateRoomCreationContent, CreateRoomRequestBody, Room as MatrixRoom, RoomPreset,
+    Room as MatrixRoom, RoomPreset, RoomCreationContent, CreateRoomBody,
 };
 use matrix::Client as MatrixAdminClient;
 
@@ -46,12 +46,13 @@ impl RoomService {
         match MatrixRoom::create(
             &self.admin,
             access_token.to_string(),
-            CreateRoomRequestBody {
-                creation_content: CreateRoomCreationContent { m_federate: false },
+            CreateRoomBody {
+                creation_content: Some(RoomCreationContent { federate: false }),
+                preset: Some(RoomPreset::PublicChat),
                 name: dto.name,
-                preset: RoomPreset::PublicChat,
                 room_alias_name: dto.alias,
                 topic: dto.topic,
+                ..Default::default()
             },
         )
         .await
