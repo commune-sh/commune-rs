@@ -28,37 +28,59 @@ pub enum RoomVisibility {
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct CreateRoomBody {
+    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
     pub initial_state: Vec<Raw<AnyInitialStateEvent>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub creation_content: Option<RoomCreationContent>,
+
+    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
     pub invite: Vec<OwnedUserId>,
+
     pub is_direct: bool,
-    pub name: Option<String>,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub name: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub power_override: Option<RoomPowerLevelsEventContent>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub preset: Option<RoomPreset>,
-    pub room_alias_name: Option<String>,
-    pub topic: Option<String>,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub room_alias_name: String,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub topic: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub visibility: Option<RoomVisibility>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct JoinRoomBody {
-    pub reason: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct ForgetRoomBody {
-    pub reason: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub reason: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct LeaveRoomBody {
-    pub reason: Option<String>,
-    pub user_id: OwnedUserId,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub reason: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct RoomKickOrBanBody {
-    pub reason: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub reason: String,
+
     pub user_id: OwnedUserId,
 }
 
