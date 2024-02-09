@@ -40,8 +40,8 @@ just backend
 
 **When you are ready**
 
-Teardown services using `just stop`. If you want to perform a complete cleanup
-use `just clear`.
+Teardown services using `just stop`.
+If you want to perform a complete cleanup use `just clear`.
 
 > **Warning** `just clear` will remove all containers and images.
 
@@ -122,3 +122,13 @@ For this purpose Redis is served as part of the development stack on Docker.
 
 The `redis/redis-stack` image contains both Redis Stack server and RedisInsight,
 you can use RedisInsight by pointing your browser to `localhost:8001`.
+
+#### Synapse
+
+There is an official [Synapse][1] image available at https://hub.docker.com/r/matrixdotorg/synapse
+or at `ghcr.io/matrix-org/synapse` which can be used with the `docker-compose`
+file available at [contrib/docker][2]. Further information on this including
+configuration options is available in the README on hub.docker.com.
+
+[1]: https://matrix-org.github.io/synapse/latest/setup/installation.html#docker-images-and-ansible-playbooks
+[2]: https://github.com/matrix-org/synapse/tree/develop/contrib/docker
