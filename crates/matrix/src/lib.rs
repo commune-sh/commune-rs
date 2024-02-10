@@ -16,3 +16,6 @@ pub mod admin;
 /// Different to the Matrix SDK, no user state is kept in the Client instance,
 /// this is equivalent to making cURL requests to the Matrix server.
 pub mod client;
+
+/// Ruma re-exports
+pub use ruma_common;
