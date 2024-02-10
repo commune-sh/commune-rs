@@ -8,7 +8,7 @@ use matrix::{
     },
     ruma_common::{OwnedUserId, OwnedRoomId, OwnedRoomOrAliasId},
     Client as MatrixAdminClient,
-
+};
 use crate::{util::secret::Secret, Error, Result};
 
 use super::model::Room;
