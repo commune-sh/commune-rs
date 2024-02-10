@@ -8,7 +8,6 @@ use matrix::{
     },
     ruma_common::{OwnedUserId, OwnedRoomId, OwnedRoomOrAliasId},
     Client as MatrixAdminClient,
-};
 
 use crate::{util::secret::Secret, Error, Result};
 
@@ -78,7 +77,7 @@ impl RoomService {
                 room_id: room.room_id,
             }),
             Err(err) => {
-                tracing::error!("Failed to create room: {}", err);
+                tracing::error!("Failed to create public room: {}", err);
                 Err(Error::Unknown)
             }
         }
@@ -139,7 +138,7 @@ impl RoomService {
                 room_id: room.room_id,
             }),
             Err(err) => {
-                tracing::error!("Failed to create room: {}", err);
+                tracing::error!("Failed to create direct room: {}", err);
                 Err(Error::Unknown)
             }
         }
