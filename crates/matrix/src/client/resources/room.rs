@@ -4,7 +4,7 @@ use ruma_events::{AnyInitialStateEvent, room::power_levels::RoomPowerLevelsEvent
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RoomPreset {
     PrivateChat,
@@ -12,13 +12,13 @@ pub enum RoomPreset {
     TrustedPrivateChat,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct RoomCreationContent {
     #[serde(rename = "m.federate")]
     pub federate: bool,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RoomVisibility {
     Public,
@@ -26,15 +26,15 @@ pub enum RoomVisibility {
     Private,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct CreateRoomBody {
-    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub initial_state: Vec<Raw<AnyInitialStateEvent>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub creation_content: Option<RoomCreationContent>,
 
-    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub invite: Vec<OwnedUserId>,
 
     pub is_direct: bool,
@@ -58,25 +58,25 @@ pub struct CreateRoomBody {
     pub visibility: Option<RoomVisibility>,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct JoinRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct ForgetRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct LeaveRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct RoomKickOrBanBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
@@ -84,17 +84,17 @@ pub struct RoomKickOrBanBody {
     pub user_id: OwnedUserId,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CreateRoomResponse {
     pub room_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct JoinRoomResponse {
     pub room_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RoomApiError {
     pub errcode: String,
     pub error: String,

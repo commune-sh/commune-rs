@@ -99,6 +99,31 @@ impl Client {
         Ok(resp)
     }
 
+    pub async fn delete(&self, path: impl AsRef<str>) -> Result<Response> {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let response = self.client.delete(url).headers(headers).send().await?;
+
+        Ok(response)
+    }
+
+    pub async fn delete_json<T>(&self, path: impl AsRef<str>, body: &T) -> Result<Response>
+    where
+        T: Serialize,
+    {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let resp = self
+            .client
+            .delete(url)
+            .json(body)
+            .headers(headers)
+            .send()
+            .await?;
+
+        Ok(resp)
+    }
+
     fn build_headers(&self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
 

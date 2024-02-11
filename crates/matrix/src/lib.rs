@@ -4,6 +4,8 @@
 
 mod http;
 
+mod error;
+
 pub use http::Client;
 
 /// Implementation on the Administrator API of Matrix
