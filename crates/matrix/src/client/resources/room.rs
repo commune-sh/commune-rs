@@ -95,7 +95,7 @@ pub struct JoinRoomResponse {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RoomApiError {
+pub struct MatrixError {
     pub errcode: String,
     pub error: String,
 }
@@ -123,7 +123,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -149,7 +149,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -176,7 +176,7 @@ impl Room {
             return Ok(());
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -204,7 +204,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -232,7 +232,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -261,7 +261,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -290,7 +290,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }

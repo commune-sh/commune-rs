@@ -2,7 +2,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::http::Client;
+use crate::{error::MatrixError, http::Client};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LoginCredentials {
@@ -43,6 +43,12 @@ impl Login {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 }

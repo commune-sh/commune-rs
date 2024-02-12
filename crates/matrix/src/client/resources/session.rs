@@ -2,7 +2,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::admin::resources::user_id::UserId;
+use crate::{admin::resources::user_id::UserId, error::MatrixError};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Session {
@@ -34,6 +34,12 @@ impl Session {
 
         let resp = tmp.get("/_matrix/client/v3/account/whoami").await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 }
