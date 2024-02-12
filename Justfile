@@ -29,6 +29,7 @@ nuke_db:
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
   docker run -i --rm \
+    -u $(id -u):$(id -g) \
     -v ./docker/synapse:/data \
     --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
@@ -37,6 +38,7 @@ gen_synapse_conf: dotenv
 gen_synapse_admin: dotenv
   docker compose exec -i synapse \
     register_new_matrix_user http://localhost:8008 \
+    -u $(id -u):$(id -g) \
     -c /data/homeserver.yaml \
     -u admin \
     -p admin \
@@ -44,8 +46,10 @@ gen_synapse_admin: dotenv
 
 # Retrieves admin access token uses de-facto admin user and Development Database Credentials
 get_access_token:
-  curl -sS -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' \
-  http://localhost:8008/_matrix/client/v3/login | jq --raw-output '.access_token' > access_token.txt
+  sed -i "s/COMMUNE_SYNAPSE_ADMIN_TOKEN='.*'/COMMUNE_SYNAPSE_ADMIN_TOKEN='$( \
+    curl -sS -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' \
+    http://localhost:8008/_matrix/client/v3/login | jq --raw-output '.access_token' \
+  )'/" .env
 
 # Runs backend dependency services
 backend: dotenv
