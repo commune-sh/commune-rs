@@ -24,8 +24,8 @@ use crate::{
 use super::{error::AccountErrorCode, model::Account};
 
 const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
-const MIN_USERNAME_LENGTH: usize = 3;
-const MAX_USERNAME_LENGTH: usize = 12;
+const MIN_USERNAME_LENGTH: usize = 1;
+const MAX_USERNAME_LENGTH: usize = 255;
 const MIN_PASSWORD_LENGTH: usize = 8;
 
 #[derive(Debug, Validate)]
