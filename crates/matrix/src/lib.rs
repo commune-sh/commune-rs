@@ -21,3 +21,4 @@ pub mod client;
 
 /// Ruma re-exports
 pub use ruma_common;
+pub use ruma_events;

@@ -18,14 +18,9 @@ use super::model::Room;
 
 #[derive(Debug, Default, Validate)]
 pub struct CreateRoomDto {
-    #[validate(length(min = 1))]
-    pub name: Option<String>,
-
-    #[validate(length(min = 1))]
-    pub topic: Option<String>,
-
-    #[validate(length(min = 1))]
-    pub alias: Option<String>,
+    pub name: String,
+    pub topic: String,
+    pub alias: String,
 }
 
 #[derive(Debug, Clone, Validate)]
@@ -79,9 +74,9 @@ impl RoomService {
             CreateRoomBody {
                 creation_content: Some(RoomCreationContent { federate: false }),
                 preset: Some(RoomPreset::PublicChat),
-                name: dto.name.unwrap_or_default(),
-                room_alias_name: dto.alias.unwrap_or_default(),
-                topic: dto.topic.unwrap_or_default(),
+                name: dto.name,
+                room_alias_name: dto.alias,
+                topic: dto.topic,
                 ..Default::default()
             },
         )
@@ -110,9 +105,9 @@ impl RoomService {
             CreateRoomBody {
                 creation_content: Some(RoomCreationContent { federate: false }),
                 preset: Some(RoomPreset::PrivateChat),
-                name: dto.name.unwrap_or_default(),
-                room_alias_name: dto.alias.unwrap_or_default(),
-                topic: dto.topic.unwrap_or_default(),
+                name: dto.name,
+                room_alias_name: dto.alias,
+                topic: dto.topic,
                 ..Default::default()
             },
         )
