@@ -15,7 +15,6 @@ struct Sample {
     id: String,
     user_id: OwnedUserId,
     room_id: OwnedRoomId,
-    // access_token: String,
 }
 
 async fn create_accounts(
@@ -63,7 +62,6 @@ async fn create_rooms(env: &Environment, accounts: &[(String, String)]) -> Vec<O
             topic: format!("{id}-room-topic"),
             alias: format!("{id}-room-alias"),
         };
-        dbg!(&room_dto);
         let Room { room_id } = env
             .commune
             .room
@@ -81,6 +79,12 @@ async fn remove_rooms(client: &Client) {
     let ListResponse { rooms, .. } = AdminRoomService::get_all(client, ListBody::default())
         .await
         .unwrap();
+    let room_names: Vec<_> = rooms
+        .iter()
+        .map(|r| r.name.clone().unwrap_or(r.room_id.to_string()))
+        .collect();
+
+    tracing::info!(?room_names, "purging all rooms!");
 
     for room in rooms {
         AdminRoomService::delete_room(
@@ -122,7 +126,7 @@ mod tests {
 
     async fn init() -> Test {
         TRACING.call_once(|| {
-            tracing_subscriber::fmt::init();
+            let _ = tracing_subscriber::fmt::try_init();
         });
 
         let mut env = Environment::new().await;
@@ -132,7 +136,6 @@ mod tests {
             .set_token(env.config.synapse_admin_token.clone())
             .unwrap();
         remove_rooms(&env.client).await;
-        dbg!(&env.config.synapse_admin_token.clone());
 
         let accounts = create_accounts(&env, 4, seed).await;
         let rooms = create_rooms(

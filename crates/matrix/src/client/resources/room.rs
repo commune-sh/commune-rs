@@ -95,6 +95,12 @@ pub struct JoinRoomResponse {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct LeaveRoomResponse {}
+
+#[derive(Debug, Deserialize)]
+pub struct ForgetRoomResponse {}
+
+#[derive(Debug, Deserialize)]
 pub struct MatrixError {
     pub errcode: String,
     pub error: String,
@@ -154,33 +160,6 @@ impl Room {
         Err(anyhow::anyhow!(error.error))
     }
 
-    /// Forget a particular room.
-    /// This will prevent the user from accessing the history of the room.
-    ///
-    /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
-    #[instrument(skip(client, access_token))]
-    pub async fn forget(
-        client: &crate::http::Client,
-        access_token: impl Into<String>,
-        room_id: &RoomId,
-        body: ForgetRoomBody,
-    ) -> Result<()> {
-        let mut tmp = (*client).clone();
-        tmp.set_token(access_token)?;
-
-        let resp = tmp
-            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/forget"), &body)
-            .await?;
-
-        if resp.status().is_success() {
-            return Ok(());
-        }
-
-        let error = resp.json::<MatrixError>().await?;
-
-        Err(anyhow::anyhow!(error.error))
-    }
-
     /// Leave a particular room.
     /// They are still allowed to retrieve the history which they were
     /// previously allowed to see.
@@ -192,12 +171,39 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: LeaveRoomBody,
-    ) -> Result<()> {
+    ) -> Result<LeaveRoomResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
             .post_json(format!("/_matrix/client/v3/rooms/{room_id}/leave"), &body)
+            .await?;
+
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
+    }
+
+    /// Forget a particular room.
+    /// This will prevent the user from accessing the history of the room.
+    ///
+    /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
+    #[instrument(skip(client, access_token))]
+    pub async fn forget(
+        client: &crate::http::Client,
+        access_token: impl Into<String>,
+        room_id: &RoomId,
+        body: ForgetRoomBody,
+    ) -> Result<ForgetRoomResponse> {
+        let mut tmp = (*client).clone();
+        tmp.set_token(access_token)?;
+
+        let resp = tmp
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/forget"), &body)
             .await?;
 
         if resp.status().is_success() {
