@@ -1,5 +1,7 @@
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::{
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 

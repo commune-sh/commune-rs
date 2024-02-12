@@ -9,7 +9,7 @@ use ruma_events::{AnyMessageLikeEvent, AnyStateEvent};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{http::Client, error::MatrixError};
+use crate::{error::MatrixError, http::Client};
 
 #[derive(Default)]
 pub struct RoomService;

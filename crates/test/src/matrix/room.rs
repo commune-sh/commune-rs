@@ -40,7 +40,7 @@ async fn create_rooms(env: &Environment, i: usize) -> Vec<AccountWithRoom> {
                 "{j} - discussion about {buzzword}",
                 buzzword = faker::company::en::Buzzword().fake::<String>()
             ),
-            alias: format!("{j}-{username}",  username = account_dto.username),
+            alias: format!("{j}-{username}", username = account_dto.username),
         };
 
         let account = env
@@ -101,7 +101,9 @@ mod tests {
     #[tokio::test]
     async fn list_room() {
         let mut env = Environment::new().await;
-        env.client.set_token(env.config.synapse_admin_token.clone()).unwrap();
+        env.client
+            .set_token(env.config.synapse_admin_token.clone())
+            .unwrap();
 
         remove_rooms(&env.client).await;
         let accounts_with_room = create_rooms(&env, 10).await;
@@ -117,7 +119,10 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            rooms.iter().map(|r| r.name.clone().unwrap()).collect::<Vec<_>>(),
+            rooms
+                .iter()
+                .map(|r| r.name.clone().unwrap())
+                .collect::<Vec<_>>(),
             accounts_with_room
                 .iter()
                 .enumerate()

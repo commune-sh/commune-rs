@@ -1,2 +1,2 @@
-mod shared_token_registration;
 mod room;
+mod shared_token_registration;

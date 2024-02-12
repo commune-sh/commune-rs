@@ -11,14 +11,11 @@ use mail::service::MailService;
 use room::service::RoomService;
 use url::Url;
 
-use std::fmt::Debug;
-use std::str::FromStr;
-use std::sync::Arc;
+use std::{fmt::Debug, str::FromStr, sync::Arc};
 
 use matrix::Client as MatrixAdminClient;
 
-use self::account::service::AccountService;
-use self::auth::service::AuthService;
+use self::{account::service::AccountService, auth::service::AuthService};
 
 pub mod env {
     pub const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";

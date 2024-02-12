@@ -1,16 +1,16 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
-use commune::account::error::AccountErrorCode;
-use commune::Error;
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
+use commune::{account::error::AccountErrorCode, Error};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 
 use commune::account::service::SendCodeDto;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 #[instrument(skip(services, payload))]
 pub async fn handler(

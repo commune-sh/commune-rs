@@ -6,20 +6,22 @@ use url::Url;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-use matrix::admin::resources::user::{
-    ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto,
+use matrix::{
+    admin::resources::{
+        user::{ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto},
+        user_id::UserId,
+    },
+    Client as MatrixAdminClient,
 };
-use matrix::admin::resources::user_id::UserId;
-use matrix::Client as MatrixAdminClient;
 
-use crate::auth::service::AuthService;
-use crate::mail::service::{EmailTemplate, MailService};
-use crate::util::secret::Secret;
-use crate::util::time::timestamp;
-use crate::{Error, Result};
+use crate::{
+    auth::service::AuthService,
+    mail::service::{EmailTemplate, MailService},
+    util::{secret::Secret, time::timestamp},
+    Error, Result,
+};
 
-use super::error::AccountErrorCode;
-use super::model::Account;
+use super::{error::AccountErrorCode, model::Account};
 
 const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 3;
@@ -191,8 +193,8 @@ impl AccountService {
         Ok(account)
     }
 
-    /// Registers a new user account in Matrix Server without verifying the email ownership.
-    /// This shuld be used for testing purposes only.
+    /// Registers a new user account in Matrix Server without verifying the
+    /// email ownership. This shuld be used for testing purposes only.
     #[instrument(skip(self, dto))]
     pub async fn register_unverified(&self, dto: CreateUnverifiedAccountDto) -> Result<Account> {
         dto.validate().map_err(|err| {

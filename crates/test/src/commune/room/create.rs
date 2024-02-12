@@ -1,10 +1,14 @@
-use fake::faker::internet::en::{FreeEmail, Password, Username};
-use fake::Fake;
+use fake::{
+    faker::internet::en::{FreeEmail, Password, Username},
+    Fake,
+};
 
-use commune::account::service::CreateUnverifiedAccountDto;
-use commune::auth::service::{LoginCredentials, LoginCredentialsResponse};
-use commune::room::service::CreateRoomDto;
-use commune::util::secret::Secret;
+use commune::{
+    account::service::CreateUnverifiedAccountDto,
+    auth::service::{LoginCredentials, LoginCredentialsResponse},
+    room::service::CreateRoomDto,
+    util::secret::Secret,
+};
 
 use crate::tools::environment::Environment;
 

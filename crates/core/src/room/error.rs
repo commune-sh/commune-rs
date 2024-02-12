@@ -15,7 +15,9 @@ pub enum RoomErrorCode {
 impl HttpStatusCode for RoomErrorCode {
     fn status_code(&self) -> StatusCode {
         match self {
-            RoomErrorCode::MalformedRoomId | RoomErrorCode::ValidationError(_) => StatusCode::BAD_REQUEST,
+            RoomErrorCode::MalformedRoomId | RoomErrorCode::ValidationError(_) => {
+                StatusCode::BAD_REQUEST
+            }
         }
     }
 

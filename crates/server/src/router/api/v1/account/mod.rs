@@ -5,8 +5,11 @@ pub mod session;
 pub mod verify_code;
 pub mod verify_code_email;
 
-use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{
+    middleware,
+    routing::{get, post},
+    Router,
+};
 
 use crate::router::middleware::auth;
 

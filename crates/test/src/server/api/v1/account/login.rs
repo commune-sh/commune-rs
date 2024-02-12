@@ -1,21 +1,20 @@
 use commune_server::router::api::v1::account::root::AccountRegisterPayload;
-use fake::faker::internet::en::{FreeEmail, Password};
-use fake::Fake;
+use fake::{
+    faker::internet::en::{FreeEmail, Password},
+    Fake,
+};
 use reqwest::StatusCode;
 use scraper::Selector;
 use uuid::Uuid;
 
 use commune::util::secret::Secret;
-use commune_server::router::api::v1::account::login::{AccountLoginPayload, AccountLoginResponse};
-use commune_server::router::api::v1::account::verify_code::{
-    AccountVerifyCodePayload, VerifyCodeResponse,
-};
-use commune_server::router::api::v1::account::verify_code_email::{
-    AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse,
+use commune_server::router::api::v1::account::{
+    login::{AccountLoginPayload, AccountLoginResponse},
+    verify_code::{AccountVerifyCodePayload, VerifyCodeResponse},
+    verify_code_email::{AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse},
 };
 
-use crate::tools::http::HttpClient;
-use crate::tools::maildev::MailDevClient;
+use crate::tools::{http::HttpClient, maildev::MailDevClient};
 
 #[tokio::test]
 async fn logs_into_account() {

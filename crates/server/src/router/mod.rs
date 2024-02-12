@@ -1,8 +1,7 @@
 pub mod api;
 pub mod middleware;
 
-use axum::Extension;
-use axum::Router;
+use axum::{Extension, Router};
 
 use crate::services::SharedServices;
 

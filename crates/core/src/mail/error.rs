@@ -1,6 +1,5 @@
 use http::StatusCode;
-use lettre::error::Error as LettreError;
-use lettre::transport::smtp::Error as LettreSmtpError;
+use lettre::{error::Error as LettreError, transport::smtp::Error as LettreSmtpError};
 use thiserror::Error;
 
 use crate::error::HttpStatusCode;

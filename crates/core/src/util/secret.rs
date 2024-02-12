@@ -1,11 +1,14 @@
-use std::borrow::Cow;
-use std::convert::Infallible;
-use std::fmt::{Debug, Display};
-use std::str::FromStr;
+use std::{
+    borrow::Cow,
+    convert::Infallible,
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 use serde::{Deserialize, Serialize};
 
-/// A `String` wrapper that does not display the value when debugged or displayed.
+/// A `String` wrapper that does not display the value when debugged or
+/// displayed.
 #[derive(Clone, Deserialize, PartialEq, Eq, Hash, Serialize)]
 pub struct Secret(Cow<'static, str>);
 

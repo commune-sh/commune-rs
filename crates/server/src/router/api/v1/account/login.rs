@@ -1,14 +1,15 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 use commune::Error;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use commune::auth::service::LoginCredentials;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 use super::root::{AccountMatrixCredentials, AccountSpace};
 

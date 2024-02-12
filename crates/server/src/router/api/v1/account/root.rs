@@ -1,17 +1,17 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use commune::account::model::Account;
-use commune::account::service::CreateAccountDto;
+use commune::account::{model::Account, service::CreateAccountDto};
 use url::Url;
 use uuid::Uuid;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 #[instrument(skip(services, payload))]
 pub async fn handler(

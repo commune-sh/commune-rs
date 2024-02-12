@@ -1,8 +1,10 @@
 use std::str::from_utf8;
 
 use anyhow::{bail, Result};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
-use reqwest::{Client as HttpClient, Response};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, AUTHORIZATION},
+    Client as HttpClient, Response,
+};
 use serde::Serialize;
 use url::Url;
 

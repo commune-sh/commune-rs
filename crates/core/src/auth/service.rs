@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
-use matrix::client::resources::login::Login;
-use matrix::Client as MatrixAdminClient;
+use matrix::{client::resources::login::Login, Client as MatrixAdminClient};
 use redis::AsyncCommands;
 use uuid::Uuid;
 
-use crate::auth::error::AuthErrorCode;
-use crate::util::secret::Secret;
-use crate::Result;
+use crate::{auth::error::AuthErrorCode, util::secret::Secret, Result};
 
 use super::model::VerificationCode;
 

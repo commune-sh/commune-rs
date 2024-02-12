@@ -1,12 +1,13 @@
-use axum::body::Body;
-use axum::http::{header::AUTHORIZATION, Request};
-use axum::middleware::Next;
-use axum::response::{IntoResponse, Response};
+use axum::{
+    body::Body,
+    http::{header::AUTHORIZATION, Request},
+    middleware::Next,
+    response::{IntoResponse, Response},
+};
 
 use commune::util::secret::Secret;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 #[derive(Debug, Clone)]
 pub struct AccessToken(Secret);

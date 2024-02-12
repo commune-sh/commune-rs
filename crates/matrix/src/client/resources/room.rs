@@ -1,6 +1,6 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, OwnedUserId, RoomOrAliasId, RoomId};
-use ruma_events::{AnyInitialStateEvent, room::power_levels::RoomPowerLevelsEventContent};
+use ruma_common::{serde::Raw, OwnedUserId, RoomId, RoomOrAliasId};
+use ruma_events::{room::power_levels::RoomPowerLevelsEventContent, AnyInitialStateEvent};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -142,10 +142,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/join/{alias_or_id}"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/join/{alias_or_id}"), &body)
             .await?;
 
         if resp.status().is_success() {
@@ -172,10 +169,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/forget"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/forget"), &body)
             .await?;
 
         if resp.status().is_success() {
@@ -188,7 +182,8 @@ impl Room {
     }
 
     /// Leave a particular room.
-    /// They are still allowed to retrieve the history which they were previously allowed to see.
+    /// They are still allowed to retrieve the history which they were
+    /// previously allowed to see.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
     #[instrument(skip(client, access_token))]
@@ -202,10 +197,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/leave"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/leave"), &body)
             .await?;
 
         if resp.status().is_success() {
@@ -218,7 +210,8 @@ impl Room {
     }
 
     /// Kick a user from a particular room.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
     #[instrument(skip(client, access_token))]
@@ -232,10 +225,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/kick"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/kick"), &body)
             .await?;
 
         if resp.status().is_success() {
@@ -249,7 +239,8 @@ impl Room {
 
     /// Ban a user from a particular room.
     /// This will kick them too if they are still a member.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
     #[instrument(skip(client, access_token))]
@@ -263,10 +254,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/ban"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/ban"), &body)
             .await?;
 
         if resp.status().is_success() {
@@ -280,7 +268,8 @@ impl Room {
 
     /// Unban a user from a particular room.
     /// This will allow them to re-join or be re-invited.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#banning-users-in-a-room
     #[instrument(skip(client, access_token))]
@@ -294,10 +283,7 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/unban"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/unban"), &body)
             .await?;
 
         if resp.status().is_success() {
