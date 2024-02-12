@@ -13,8 +13,19 @@ use crate::{router::api::ApiError, services::SharedServices};
 
 use super::root::{AccountMatrixCredentials, AccountSpace};
 
+#[instrument(skip(services))]
+pub async fn get(Extension(services): Extension<SharedServices>) -> Response {
+    match services.commune.auth.get_login_flows().await {
+        Ok(flows) => Json(flows).into_response(),
+        Err(err) => {
+            tracing::warn!(?err, "Failed to retrieve login flows");
+            ApiError::from(err).into_response()
+        }
+    }
+}
+
 #[instrument(skip(services, payload))]
-pub async fn handler(
+pub async fn post(
     Extension(services): Extension<SharedServices>,
     Json(payload): Json<AccountLoginPayload>,
 ) -> Response {

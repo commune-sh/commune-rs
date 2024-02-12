@@ -109,7 +109,9 @@ mod tests {
 
     use matrix::{
         admin::resources::room::RoomService as AdminRoomService,
-        client::resources::room::{JoinRoomBody, Room as RoomService, LeaveRoomBody, ForgetRoomBody},
+        client::resources::room::{
+            ForgetRoomBody, JoinRoomBody, LeaveRoomBody, Room as RoomService,
+        },
         ruma_common::OwnedRoomOrAliasId,
     };
     use rand::Rng;
@@ -201,10 +203,7 @@ mod tests {
                 .unwrap();
             resp.members.sort();
 
-            let guests: Vec<_> = samples
-                .iter()
-                .map(|g| g.user_id.to_string())
-                .collect();
+            let guests: Vec<_> = samples.iter().map(|g| g.user_id.to_string()).collect();
 
             assert!(resps.iter().all(|r| r.room_id.clone() == room_id));
 
@@ -248,7 +247,14 @@ mod tests {
                 .unwrap();
 
             assert_eq!(resp.members.len(), 1);
-            assert_eq!(&samples.iter().find(|s| s.room_id == room_id).map(|s| s.user_id.to_string()).unwrap(), resp.members.first().unwrap());
+            assert_eq!(
+                &samples
+                    .iter()
+                    .find(|s| s.room_id == room_id)
+                    .map(|s| s.user_id.to_string())
+                    .unwrap(),
+                resp.members.first().unwrap()
+            );
         }
     }
 
@@ -288,7 +294,14 @@ mod tests {
                 .unwrap();
 
             assert_eq!(resp.members.len(), 1);
-            assert_eq!(&samples.iter().find(|s| s.room_id == room_id).map(|s| s.user_id.to_string()).unwrap(), resp.members.first().unwrap());
+            assert_eq!(
+                &samples
+                    .iter()
+                    .find(|s| s.room_id == room_id)
+                    .map(|s| s.user_id.to_string())
+                    .unwrap(),
+                resp.members.first().unwrap()
+            );
         }
     }
 }

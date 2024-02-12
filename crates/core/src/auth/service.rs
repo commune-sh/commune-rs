@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
-use matrix::{client::resources::login::Login, Client as MatrixAdminClient};
+use matrix::{
+    client::resources::login::{Login, LoginFlows as LoginFlowsResponse},
+    Client as MatrixAdminClient,
+};
 use redis::AsyncCommands;
 use uuid::Uuid;
 
-use crate::{auth::error::AuthErrorCode, util::secret::Secret, Result};
+use crate::{auth::error::AuthErrorCode, util::secret::Secret, Error, Result};
 
 use super::model::VerificationCode;
 
@@ -40,11 +43,22 @@ impl AuthService {
             credentials.password.inner(),
         )
         .await
+        // ???
         .unwrap();
 
         Ok(LoginCredentialsResponse {
             access_token: Secret::new(login_response.access_token),
         })
+    }
+
+    pub async fn get_login_flows(&self) -> Result<LoginFlowsResponse> {
+        match Login::get_login_flows(&self.admin).await {
+            Ok(flows) => Ok(flows),
+            Err(err) => {
+                tracing::error!("Failed to get login flows: {}", err);
+                Err(Error::Unknown)
+            }
+        }
     }
 
     pub async fn send_verification_code(
