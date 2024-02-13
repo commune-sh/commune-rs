@@ -1,11 +1,8 @@
 pub mod v1;
 
-use axum::response::IntoResponse;
-use axum::Json;
-use axum::Router;
+use axum::{response::IntoResponse, Json, Router};
 use http::StatusCode;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use commune::error::HttpStatusCode;
 

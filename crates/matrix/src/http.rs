@@ -1,8 +1,10 @@
 use std::str::from_utf8;
 
 use anyhow::{bail, Result};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
-use reqwest::{Client as HttpClient, Response};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, AUTHORIZATION},
+    Client as HttpClient, Response,
+};
 use serde::Serialize;
 use url::Url;
 
@@ -91,6 +93,31 @@ impl Client {
         let resp = self
             .client
             .put(url)
+            .json(body)
+            .headers(headers)
+            .send()
+            .await?;
+
+        Ok(resp)
+    }
+
+    pub async fn delete(&self, path: impl AsRef<str>) -> Result<Response> {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let response = self.client.delete(url).headers(headers).send().await?;
+
+        Ok(response)
+    }
+
+    pub async fn delete_json<T>(&self, path: impl AsRef<str>, body: &T) -> Result<Response>
+    where
+        T: Serialize,
+    {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let resp = self
+            .client
+            .delete(url)
             .json(body)
             .headers(headers)
             .send()

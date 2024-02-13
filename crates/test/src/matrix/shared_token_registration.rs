@@ -1,11 +1,14 @@
 use matrix::admin::resources::token::shared_secret::{
     SharedSecretRegistration, SharedSecretRegistrationDto,
 };
+use rand::distributions::{Alphanumeric, DistString};
 
 use crate::tools::environment::Environment;
 
 #[tokio::test]
 async fn creates_user_using_shared_secret() {
+    let username = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
+
     let env = Environment::new().await;
     let nonce = SharedSecretRegistration::get_nonce(&env.client)
         .await
@@ -14,7 +17,7 @@ async fn creates_user_using_shared_secret() {
     let mac = SharedSecretRegistration::generate_mac(
         env.config.synapse_registration_shared_secret.clone(),
         nonce.clone(),
-        "steve".into(),
+        username.clone(),
         "verysecure".into(),
         true,
         None,
@@ -24,8 +27,8 @@ async fn creates_user_using_shared_secret() {
         &env.client,
         SharedSecretRegistrationDto {
             nonce,
-            username: "steve".into(),
-            displayname: Some("steve".into()),
+            username: username.clone(),
+            displayname: Some(username.clone()),
             password: "verysecure".into(),
             admin: true,
             mac,

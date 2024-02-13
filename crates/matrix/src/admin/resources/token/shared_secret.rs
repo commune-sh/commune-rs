@@ -19,7 +19,7 @@ use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 
-use crate::http::Client;
+use crate::{error::MatrixError, http::Client};
 
 type HmacSha1 = Hmac<Sha1>;
 
@@ -57,7 +57,13 @@ impl SharedSecretRegistration {
     pub async fn get_nonce(client: &Client) -> Result<Nonce> {
         let resp = client.get("/_synapse/admin/v1/register").await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// Creates the [`SharedSecretRegistration`] instance.
@@ -68,7 +74,13 @@ impl SharedSecretRegistration {
             .post_json("/_synapse/admin/v1/register", &dto)
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// Generates the MAC.

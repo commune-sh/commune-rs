@@ -5,8 +5,11 @@ pub mod session;
 pub mod verify_code;
 pub mod verify_code_email;
 
-use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{
+    middleware,
+    routing::{get, post},
+    Router,
+};
 
 use crate::router::middleware::auth;
 
@@ -18,7 +21,9 @@ impl Account {
             .route("/session", get(session::handler))
             .route_layer(middleware::from_fn(auth))
             .route("/", post(root::handler))
-            .route("/login", post(login::handler))
+            .route("/login", get(login::get))
+            .route("/login", post(login::post))
+            .route("/login/sso/redirect", get(login::get))
             .route("/email/:email", get(email::handler))
             .nest(
                 "/verify",

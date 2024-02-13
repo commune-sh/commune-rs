@@ -1,10 +1,10 @@
 use http::StatusCode;
 use thiserror::Error;
 
-use crate::account::error::AccountErrorCode;
-use crate::auth::error::AuthErrorCode;
-use crate::mail::error::MailErrorCode;
-use crate::room::error::RoomErrorCode;
+use crate::{
+    account::error::AccountErrorCode, auth::error::AuthErrorCode, mail::error::MailErrorCode,
+    room::error::RoomErrorCode,
+};
 
 pub type Result<T> = std::result::Result<T, Error>;
 

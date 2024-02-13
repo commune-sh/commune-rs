@@ -1,29 +1,25 @@
 use std::sync::Arc;
 
 use tracing::instrument;
+
+use matrix::{
+    client::resources::room::{
+        CreateRoomBody, Room as MatrixRoom, RoomCreationContent, RoomPreset,
+    },
+    Client as MatrixAdminClient,
+};
 use validator::Validate;
 
-use matrix::client::resources::room::{
-    Room as MatrixRoom, RoomPreset, RoomCreationContent, CreateRoomBody,
-};
-use matrix::Client as MatrixAdminClient;
+use crate::{util::secret::Secret, Error, Result};
 
-use crate::util::secret::Secret;
-use crate::{Error, Result};
-
-use super::error::RoomErrorCode;
 use super::model::Room;
 
-#[derive(Debug, Clone, Validate)]
+#[derive(Debug, Default, Validate)]
 pub struct CreateRoomDto {
-    #[validate(length(min = 3, max = 255))]
     pub name: String,
-    #[validate(length(min = 3, max = 255))]
     pub topic: String,
-    #[validate(length(min = 3, max = 255))]
     pub alias: String,
 }
-
 pub struct RoomService {
     admin: Arc<MatrixAdminClient>,
 }
@@ -40,9 +36,6 @@ impl RoomService {
         access_token: &Secret,
         dto: CreateRoomDto,
     ) -> Result<Room> {
-        dto.validate()
-            .map_err(|err| Error::Room(RoomErrorCode::from(err)))?;
-
         match MatrixRoom::create(
             &self.admin,
             access_token.to_string(),
@@ -61,7 +54,7 @@ impl RoomService {
                 room_id: room.room_id,
             }),
             Err(err) => {
-                tracing::error!("Failed to create room: {}", err);
+                tracing::error!("Failed to create public room: {}", err);
                 Err(Error::Unknown)
             }
         }

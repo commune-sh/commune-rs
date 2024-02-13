@@ -1,19 +1,31 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 use commune::Error;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use commune::auth::service::LoginCredentials;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 use super::root::{AccountMatrixCredentials, AccountSpace};
 
+#[instrument(skip(services))]
+pub async fn get(Extension(services): Extension<SharedServices>) -> Response {
+    match services.commune.auth.get_login_flows().await {
+        Ok(flows) => Json(flows).into_response(),
+        Err(err) => {
+            tracing::warn!(?err, "Failed to retrieve login flows");
+            ApiError::from(err).into_response()
+        }
+    }
+}
+
 #[instrument(skip(services, payload))]
-pub async fn handler(
+pub async fn post(
     Extension(services): Extension<SharedServices>,
     Json(payload): Json<AccountLoginPayload>,
 ) -> Response {

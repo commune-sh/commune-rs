@@ -6,24 +6,26 @@ use url::Url;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-use matrix::admin::resources::user::{
-    ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto,
+use matrix::{
+    admin::resources::{
+        user::{ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto},
+        user_id::UserId,
+    },
+    Client as MatrixAdminClient,
 };
-use matrix::admin::resources::user_id::UserId;
-use matrix::Client as MatrixAdminClient;
 
-use crate::auth::service::AuthService;
-use crate::mail::service::{EmailTemplate, MailService};
-use crate::util::secret::Secret;
-use crate::util::time::timestamp;
-use crate::{Error, Result};
+use crate::{
+    auth::service::AuthService,
+    mail::service::{EmailTemplate, MailService},
+    util::{secret::Secret, time::timestamp},
+    Error, Result,
+};
 
-use super::error::AccountErrorCode;
-use super::model::Account;
+use super::{error::AccountErrorCode, model::Account};
 
 const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
-const MIN_USERNAME_LENGTH: usize = 3;
-const MAX_USERNAME_LENGTH: usize = 12;
+const MIN_USERNAME_LENGTH: usize = 1;
+const MAX_USERNAME_LENGTH: usize = 255;
 const MIN_PASSWORD_LENGTH: usize = 8;
 
 #[derive(Debug, Validate)]
@@ -191,8 +193,8 @@ impl AccountService {
         Ok(account)
     }
 
-    /// Registers a new user account in Matrix Server without verifying the email ownership.
-    /// This shuld be used for testing purposes only.
+    /// Registers a new user account in Matrix Server without verifying the
+    /// email ownership. This shuld be used for testing purposes only.
     #[instrument(skip(self, dto))]
     pub async fn register_unverified(&self, dto: CreateUnverifiedAccountDto) -> Result<Account> {
         dto.validate().map_err(|err| {
@@ -318,7 +320,7 @@ mod test {
     #[test]
     fn ensure_username_is_not_too_short() {
         let dto = CreateAccountDto {
-            username: "ab".to_string(),
+            username: "".to_string(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: Secret::new("1234"),
@@ -326,13 +328,13 @@ mod test {
         };
         let err = dto.validate().err().unwrap();
 
-        assert_eq!(err.to_string(), "username is too short");
+        assert!(err.to_string().contains("username is too short"));
     }
 
     #[test]
     fn ensure_username_is_not_too_long() {
         let dto = CreateAccountDto {
-            username: "abbeyroadismyfavoritealbum".to_string(),
+            username: (0..300).map(|_| "a").collect(),
             password: Secret::new("password"),
             email: "aby@mail.com".to_string(),
             code: Secret::new("1234"),
@@ -340,7 +342,7 @@ mod test {
         };
         let err = dto.validate().err().unwrap();
 
-        assert_eq!(err.to_string(), "username is too long");
+        assert!(err.to_string().contains("username is too long"));
     }
 
     #[test]
@@ -354,7 +356,7 @@ mod test {
         };
         let err = dto.validate().err().unwrap();
 
-        assert_eq!(err.to_string(), "username cannot contain spaces");
+        assert!(err.to_string().contains("username cannot contain spaces"));
     }
 
     #[test]
@@ -368,6 +370,8 @@ mod test {
         };
         let err = dto.validate().err().unwrap();
 
-        assert_eq!(err.to_string(), "username cannot contain uppercase letters");
+        assert!(err
+            .to_string()
+            .contains("username cannot contain uppercase letters"));
     }
 }

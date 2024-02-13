@@ -1,10 +1,10 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, OwnedUserId, RoomOrAliasId, RoomId};
-use ruma_events::{AnyInitialStateEvent, room::power_levels::RoomPowerLevelsEventContent};
+use ruma_common::{serde::Raw, OwnedUserId, RoomId, RoomOrAliasId};
+use ruma_events::{room::power_levels::RoomPowerLevelsEventContent, AnyInitialStateEvent};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RoomPreset {
     PrivateChat,
@@ -12,13 +12,13 @@ pub enum RoomPreset {
     TrustedPrivateChat,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct RoomCreationContent {
     #[serde(rename = "m.federate")]
     pub federate: bool,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RoomVisibility {
     Public,
@@ -26,15 +26,15 @@ pub enum RoomVisibility {
     Private,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct CreateRoomBody {
-    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub initial_state: Vec<Raw<AnyInitialStateEvent>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub creation_content: Option<RoomCreationContent>,
 
-    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub invite: Vec<OwnedUserId>,
 
     pub is_direct: bool,
@@ -58,25 +58,25 @@ pub struct CreateRoomBody {
     pub visibility: Option<RoomVisibility>,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct JoinRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct ForgetRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct LeaveRoomBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct RoomKickOrBanBody {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub reason: String,
@@ -84,18 +84,27 @@ pub struct RoomKickOrBanBody {
     pub user_id: OwnedUserId,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CreateRoomResponse {
     pub room_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct JoinRoomResponse {
     pub room_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct RoomApiError {
+#[derive(Debug, Deserialize)]
+pub struct LeaveRoomResponse {}
+
+#[derive(Debug, Deserialize)]
+pub struct ForgetRoomResponse {}
+
+#[derive(Debug, Deserialize)]
+pub struct RoomKickOrBanResponse {}
+
+#[derive(Debug, Deserialize)]
+pub struct MatrixError {
     pub errcode: String,
     pub error: String,
 }
@@ -123,7 +132,7 @@ impl Room {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -142,17 +151,42 @@ impl Room {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/join/{alias_or_id}"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/join/{alias_or_id}"), &body)
             .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
+    }
+
+    /// Leave a particular room.
+    /// They are still allowed to retrieve the history which they were
+    /// previously allowed to see.
+    ///
+    /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
+    #[instrument(skip(client, access_token))]
+    pub async fn leave(
+        client: &crate::http::Client,
+        access_token: impl Into<String>,
+        room_id: &RoomId,
+        body: LeaveRoomBody,
+    ) -> Result<LeaveRoomResponse> {
+        let mut tmp = (*client).clone();
+        tmp.set_token(access_token)?;
+
+        let resp = tmp
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/leave"), &body)
+            .await?;
+
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
@@ -167,58 +201,26 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: ForgetRoomBody,
-    ) -> Result<()> {
+    ) -> Result<ForgetRoomResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/forget"),
-                &body,
-            )
-            .await?;
-
-        if resp.status().is_success() {
-            return Ok(());
-        }
-
-        let error = resp.json::<RoomApiError>().await?;
-
-        Err(anyhow::anyhow!(error.error))
-    }
-
-    /// Leave a particular room.
-    /// They are still allowed to retrieve the history which they were previously allowed to see.
-    ///
-    /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
-    #[instrument(skip(client, access_token))]
-    pub async fn leave(
-        client: &crate::http::Client,
-        access_token: impl Into<String>,
-        room_id: &RoomId,
-        body: LeaveRoomBody,
-    ) -> Result<()> {
-        let mut tmp = (*client).clone();
-        tmp.set_token(access_token)?;
-
-        let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/leave"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/forget"), &body)
             .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
 
     /// Kick a user from a particular room.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
     #[instrument(skip(client, access_token))]
@@ -227,29 +229,27 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/kick"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/kick"), &body)
             .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
 
     /// Ban a user from a particular room.
     /// This will kick them too if they are still a member.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#leaving-rooms
     #[instrument(skip(client, access_token))]
@@ -258,29 +258,27 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/ban"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/ban"), &body)
             .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }
 
     /// Unban a user from a particular room.
     /// This will allow them to re-join or be re-invited.
-    /// The caller must have the required power level in order to perform this operation.
+    /// The caller must have the required power level in order to perform this
+    /// operation.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#banning-users-in-a-room
     #[instrument(skip(client, access_token))]
@@ -289,22 +287,19 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .post_json(
-                format!("/_matrix/client/v3/rooms/{room_id}/unban"),
-                &body,
-            )
+            .post_json(format!("/_matrix/client/v3/rooms/{room_id}/unban"), &body)
             .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
         }
 
-        let error = resp.json::<RoomApiError>().await?;
+        let error = resp.json::<MatrixError>().await?;
 
         Err(anyhow::anyhow!(error.error))
     }

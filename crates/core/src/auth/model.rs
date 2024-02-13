@@ -1,5 +1,7 @@
-use rand::distributions::{Alphanumeric, DistString};
-use rand::SeedableRng;
+use rand::{
+    distributions::{Alphanumeric, DistString},
+    SeedableRng,
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

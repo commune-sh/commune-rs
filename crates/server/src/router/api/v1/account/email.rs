@@ -1,12 +1,13 @@
-use axum::extract::Path;
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
+};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::router::api::ApiError;
-use crate::services::SharedServices;
+use crate::{router::api::ApiError, services::SharedServices};
 
 #[instrument(skip(services))]
 pub async fn handler(

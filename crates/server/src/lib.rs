@@ -5,9 +5,7 @@ pub mod config;
 pub mod router;
 pub mod services;
 
-use crate::config::ServerConfig;
-use crate::router::make_router;
-use crate::services::Services;
+use crate::{config::ServerConfig, router::make_router, services::Services};
 
 pub async fn serve(listener: TcpListener) -> Result<()> {
     let config = ServerConfig::from_env();

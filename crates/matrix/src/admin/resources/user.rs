@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use url::Url;
 
-use crate::http::Client;
+use crate::{error::MatrixError, http::Client};
 
 use super::user_id::UserId;
 
@@ -154,7 +154,13 @@ impl User {
             ))
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// Allows an administrator to create a user account.
@@ -173,7 +179,13 @@ impl User {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// Returns all local user accounts. By default, the response is ordered by
@@ -185,9 +197,14 @@ impl User {
         let resp = client
             .get_query("/_synapse/admin/v2/users", &params)
             .await?;
-        let data: ListUsersResponse = resp.json().await?;
 
-        Ok(data)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// Allows an administrator to modify a user account
@@ -202,7 +219,13 @@ impl User {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     /// **Note: This API is disabled when MSC3861 is enabled. [See #15582][1]**
@@ -235,6 +258,12 @@ impl User {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 }

@@ -1,11 +1,8 @@
 use handlebars::Handlebars;
-use lettre::message::header::ContentType;
-use lettre::{Message, SmtpTransport, Transport};
+use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
 use url::Url;
 
-use crate::mail::error::MailErrorCode;
-use crate::util::secret::Secret;
-use crate::{CommuneConfig, Result};
+use crate::{mail::error::MailErrorCode, util::secret::Secret, CommuneConfig, Result};
 
 pub struct MailDevConfig {
     pub smtp_host: Url,
