@@ -370,6 +370,8 @@ mod test {
         };
         let err = dto.validate().err().unwrap();
 
-        assert!(err.to_string().contains("username cannot contain uppercase letters"));
+        assert!(err
+            .to_string()
+            .contains("username cannot contain uppercase letters"));
     }
 }

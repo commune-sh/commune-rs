@@ -127,7 +127,7 @@ pub struct ListResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct MembersResponse {
-    pub members: Vec<String>,
+    pub members: Vec<OwnedUserId>,
     pub total: u64,
 }
 

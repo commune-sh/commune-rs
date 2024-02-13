@@ -101,6 +101,9 @@ pub struct LeaveRoomResponse {}
 pub struct ForgetRoomResponse {}
 
 #[derive(Debug, Deserialize)]
+pub struct RoomKickOrBanResponse {}
+
+#[derive(Debug, Deserialize)]
 pub struct MatrixError {
     pub errcode: String,
     pub error: String,
@@ -226,7 +229,7 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
@@ -255,7 +258,7 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
@@ -284,7 +287,7 @@ impl Room {
         access_token: impl Into<String>,
         room_id: &RoomId,
         body: RoomKickOrBanBody,
-    ) -> Result<()> {
+    ) -> Result<RoomKickOrBanResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 

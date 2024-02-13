@@ -3,7 +3,7 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - "*"
+      - main
   pull_request:
     branches: [main]
     paths:
@@ -85,9 +85,6 @@ jobs:
           COMMUNE_SYNAPSE_ADMIN_TOKEN: ${{ env.COMMUNE_SYNAPSE_ADMIN_TOKEN }}
         run: |
           cargo test -p test -- --test-threads=1
-
-      - name: Code Coverage
-        uses: actions-rs/tarpaulin@v0.1
 
       - name: Print Logs
         if: always()
