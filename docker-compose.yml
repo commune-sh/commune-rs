@@ -14,7 +14,7 @@ services:
       - '8001:8001'
     volumes:
       - redis-state:/data
-  
+
   synapse_database:
     image: 'postgres:16'
     ports:
@@ -27,6 +27,7 @@ services:
 
   synapse:
     image: 'ghcr.io/element-hq/synapse:v1.100.0'
+    user: '${UID:-1000}:${GID:-1000}'
     ports:
       - '8008:8008'
       - '8448:8448'
