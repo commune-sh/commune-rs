@@ -6,6 +6,8 @@ mod http;
 
 mod error;
 
+mod event_filter;
+
 pub use http::Client;
 
 /// Implementation on the Administrator API of Matrix

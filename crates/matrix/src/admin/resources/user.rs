@@ -12,6 +12,9 @@ use crate::{error::MatrixError, http::Client};
 
 use super::user_id::UserId;
 
+#[derive(Default)]
+pub struct UserService;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExternalId {
     pub auth_provider: String,
@@ -50,7 +53,7 @@ pub struct User {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UserCreateDto {
+pub struct CreateUserBody {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -64,7 +67,7 @@ pub struct UserCreateDto {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ListUsersParams {
+pub struct ListUsersQuery {
     pub user_id: Option<String>,
     pub name: Option<String>,
     pub guests: Option<bool>,
@@ -99,7 +102,7 @@ pub struct ListUsersResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UserUpdateDto {
+pub struct UpdateUserBody {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -113,7 +116,7 @@ pub struct UserUpdateDto {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct LoginAsUserDto {
+pub struct LoginAsUserBody {
     pub valid_until_ms: Option<u64>,
 }
 
@@ -141,12 +144,12 @@ pub struct QueryUserDataResponse {
     pub user_type: Option<String>,
 }
 
-impl User {
+impl UserService {
     /// This API returns information about a specific user account.
     ///
     /// Refer: https://matrix-org.github.io/synapse/v1.88/admin_api/user_admin_api.html#query-user-account
     #[instrument(skip(client))]
-    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<Self> {
+    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<User> {
         let resp = client
             .get(format!(
                 "/_synapse/admin/v2/users/{user_id}",
@@ -170,12 +173,12 @@ impl User {
     /// if [`UserId`] matches.
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
-    #[instrument(skip(client, dto))]
-    pub async fn create(client: &Client, user_id: UserId, dto: UserCreateDto) -> Result<Self> {
+    #[instrument(skip(client, body))]
+    pub async fn create(client: &Client, user_id: UserId, body: CreateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
-                &dto,
+                &body,
             )
             .await?;
 
@@ -193,10 +196,8 @@ impl User {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-accounts
     #[instrument(skip(client))]
-    pub async fn list(client: &Client, params: ListUsersParams) -> Result<ListUsersResponse> {
-        let resp = client
-            .get_query("/_synapse/admin/v2/users", &params)
-            .await?;
+    pub async fn list(client: &Client, query: ListUsersQuery) -> Result<ListUsersResponse> {
+        let resp = client.get_query("/_synapse/admin/v2/users", &query).await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
@@ -211,11 +212,11 @@ impl User {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client))]
-    pub async fn update(client: &Client, user_id: UserId, dto: UserUpdateDto) -> Result<Self> {
+    pub async fn update(client: &Client, user_id: UserId, body: UpdateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
-                &dto,
+                &body,
             )
             .await?;
 
@@ -246,7 +247,7 @@ impl User {
     pub async fn login_as_user(
         client: &Client,
         user_id: UserId,
-        dto: LoginAsUserDto,
+        body: LoginAsUserBody,
     ) -> Result<LoginAsUserResponse> {
         let resp = client
             .post_json(
@@ -254,7 +255,7 @@ impl User {
                     "/_synapse/admin/v1/users/{user_id}/login",
                     user_id = user_id
                 ),
-                &dto,
+                &body,
             )
             .await?;
 
