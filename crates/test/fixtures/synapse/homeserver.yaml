@@ -21,9 +21,17 @@ listeners:
       - names: [client, federation]
         compress: false
 database:
-  name: sqlite3
+  name: psycopg2
+  txn_limit: 10000
+  allow_unsafe_locale: true
   args:
-    database: /data/homeserver.db
+    user: synapse_user
+    password: secretpassword
+    database: synapse
+    host: localhost
+    port: 5432
+    cp_min: 5
+    cp_max: 10
 log_config: "/data/matrix.localhost.log.config"
 media_store_path: /data/media_store
 registration_shared_secret: "m@;wYOUOh0f:CH5XA65sJB1^q01~DmIriOysRImot,OR_vzN&B"
@@ -70,4 +78,5 @@ rc_invites:
   per_user:
     per_second: 1000
     burst_count: 1000
+
 # vim:ft=yaml

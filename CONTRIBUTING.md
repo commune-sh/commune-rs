@@ -63,26 +63,6 @@ You must run Docker services as for development. In order to avoid messing up
 the development environment, its recommended to use the synapse setup from
 `crates/test/fixtures/synapse` replacing it with `docker/synapse`.
 
-The only difference should be the `database` section, which uses SQLite instead.
-
-```diff
-database:
-+  name: psycopg2
-+  args:
-+    database: /data/homeserver.db
--  name: psycopg2
--  txn_limit: 10000
--  allow_unsafe_locale: true
--  args:
--    user: synapse_user
--    password: secretpassword
--    database: synapse
--    host: localhost
--    port: 5432
--    cp_min: 5
--    cp_max: 10
-```
-
 > Make sure the `.env` file is created from the contents on `.env.example`
 
 ### Application Layout
