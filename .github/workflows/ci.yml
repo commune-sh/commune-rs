@@ -49,16 +49,13 @@ jobs:
       - name: Create a copy of `.env.example`
         run: just dotenv
 
+      - name: Set environment variable
+        run: export DOCKER_USER="$(id -u):$(id -g)"
+
       - name: Use Test Homeserver
         run: |
           mkdir -p ./docker/synapse/media_store
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
-
-      - name: Check filesystem permissions
-        run: |
-          ls -la ./docker/synapse
-          echo $UID
-          echo $GID
 
       - name: Run Docker Containers
         run: |
