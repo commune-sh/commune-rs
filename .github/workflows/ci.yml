@@ -54,7 +54,7 @@ jobs:
 
       - name: Use Test Homeserver
         run: |
-          mkdir -p ./docker/synapse/media_store
+          mkdir -p ./docker/synapse
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
 
       - name: Run Docker Containers
@@ -77,7 +77,7 @@ jobs:
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token
-          grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env
+          grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env >> $GITHUB_ENV
 
       - name: E2E Tests
         env:

@@ -65,7 +65,7 @@ clear: stop
   docker volume rm commune_synapse_database || true
 
 # Runs all the tests from the `test` package. Optionally runs a single one if name pattern is provided
-e2e *args='': dotenv
+e2e *args='':
   cargo test --package test -- --nocapture --test-threads=1 $1
 
 # Builds the Server binary used in the Docker Image
