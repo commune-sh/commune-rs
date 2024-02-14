@@ -54,6 +54,12 @@ jobs:
           mkdir -p ./docker/synapse/media_store
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
 
+      - name: Check filesystem permissions
+        run: |
+          ls -la ./docker/synapse
+          echo $UID
+          echo $GID
+
       - name: Run Docker Containers
         run: |
           docker compose up -d --build
