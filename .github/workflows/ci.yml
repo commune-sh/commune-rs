@@ -50,7 +50,7 @@ jobs:
         run: just dotenv
 
       - name: Set environment variable
-        run: export DOCKER_USER="$(id -u):$(id -g)"
+        run: echo "DOCKER_USER='$(id -u):$(id -g)'" >> .env
 
       - name: Use Test Homeserver
         run: |
