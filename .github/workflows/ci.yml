@@ -49,13 +49,13 @@ jobs:
       - name: Create a copy of `.env.example`
         run: just dotenv
 
-      - name: Generate Synapse Configuration
-        run: |
-          just gen_synapse_conf
+      - name: Set environment variable
+        run: echo "DOCKER_USER='$(id -u):$(id -g)'" >> .env
 
       - name: Use Test Homeserver
         run: |
-          sudo cp -f ./crates/test/fixtures/synapse/homeserver.yaml ./docker/synapse/homeserver.yaml
+          mkdir -p ./docker/synapse
+          cp ./crates/test/fixtures/synapse/* ./docker/synapse
 
       - name: Run Docker Containers
         run: |
@@ -77,14 +77,13 @@ jobs:
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token
-          export COMMUNE_SYNAPSE_ADMIN_TOKEN=$(cat ./access_token.txt)
-          echo "COMMUNE_SYNAPSE_ADMIN_TOKEN=${COMMUNE_SYNAPSE_ADMIN_TOKEN}" >> $GITHUB_ENV
+          grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env >> $GITHUB_ENV
 
       - name: E2E Tests
         env:
           COMMUNE_SYNAPSE_ADMIN_TOKEN: ${{ env.COMMUNE_SYNAPSE_ADMIN_TOKEN }}
         run: |
-          cargo test -p test -- --test-threads=1
+          just e2e -- --show-output
 
       - name: Print Logs
         if: always()
