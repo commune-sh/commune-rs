@@ -51,8 +51,13 @@ jobs:
 
       - name: Use Test Homeserver
         run: |
-          mkdir -p ./docker/synapse
-          cp -f ./crates/test/fixtures/synapse/* ./docker/synapse
+          mkdir -p ./docker/synapse/media_store
+          cp ./crates/test/fixtures/synapse/* ./docker/synapse
+
+      - name: Set UID/GID
+        run: |
+          export UID=$(id -u)
+          export GID=$(id -g)
 
       - name: Run Docker Containers
         run: |
