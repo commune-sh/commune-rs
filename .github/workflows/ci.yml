@@ -51,8 +51,7 @@ jobs:
 
       - name: Use Test Homeserver
         run: |
-          mkdir -p ./docker/synapse/media_stroe
-          cp -f ./crates/test/fixtures/synapse/* ./docker/synapse/homeserver.yaml
+          cp -f ./crates/test/fixtures/synapse/* ./docker/synapse
 
       - name: Run Docker Containers
         run: |
