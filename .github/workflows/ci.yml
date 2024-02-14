@@ -51,6 +51,7 @@ jobs:
 
       - name: Use Test Homeserver
         run: |
+          mkdir -p ./docker/synapse
           cp -f ./crates/test/fixtures/synapse/* ./docker/synapse
 
       - name: Run Docker Containers
