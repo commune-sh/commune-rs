@@ -53,7 +53,7 @@ pub struct User {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CreateUserBody {
+pub struct UserCreateDto {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -67,7 +67,7 @@ pub struct CreateUserBody {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ListUsersQuery {
+pub struct ListUsersParams {
     pub user_id: Option<String>,
     pub name: Option<String>,
     pub guests: Option<bool>,
@@ -102,7 +102,7 @@ pub struct ListUsersResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateUserBody {
+pub struct UserUpdateDto {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -116,7 +116,7 @@ pub struct UpdateUserBody {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct LoginAsUserBody {
+pub struct LoginAsUserDto {
     pub valid_until_ms: Option<u64>,
 }
 
@@ -173,12 +173,12 @@ impl UserService {
     /// if [`UserId`] matches.
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
-    #[instrument(skip(client, body))]
-    pub async fn create(client: &Client, user_id: UserId, body: CreateUserBody) -> Result<User> {
+    #[instrument(skip(client, dto))]
+    pub async fn create(client: &Client, user_id: UserId, dto: UserCreateDto) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
-                &body,
+                &dto,
             )
             .await?;
 
@@ -196,8 +196,10 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-accounts
     #[instrument(skip(client))]
-    pub async fn list(client: &Client, query: ListUsersQuery) -> Result<ListUsersResponse> {
-        let resp = client.get_query("/_synapse/admin/v2/users", &query).await?;
+    pub async fn list(client: &Client, params: ListUsersParams) -> Result<ListUsersResponse> {
+        let resp = client
+            .get_query("/_synapse/admin/v2/users", &params)
+            .await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
@@ -212,11 +214,11 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client))]
-    pub async fn update(client: &Client, user_id: UserId, body: UpdateUserBody) -> Result<User> {
+    pub async fn update(client: &Client, user_id: UserId, dto: UserUpdateDto) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
-                &body,
+                &dto,
             )
             .await?;
 
@@ -247,7 +249,7 @@ impl UserService {
     pub async fn login_as_user(
         client: &Client,
         user_id: UserId,
-        body: LoginAsUserBody,
+        dto: LoginAsUserDto,
     ) -> Result<LoginAsUserResponse> {
         let resp = client
             .post_json(
@@ -255,7 +257,7 @@ impl UserService {
                     "/_synapse/admin/v1/users/{user_id}/login",
                     user_id = user_id
                 ),
-                &body,
+                &dto,
             )
             .await?;
 
