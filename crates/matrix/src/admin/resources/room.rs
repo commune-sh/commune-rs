@@ -9,44 +9,13 @@ use ruma_events::{AnyMessageLikeEvent, AnyStateEvent};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{error::MatrixError, http::Client};
+use crate::{error::MatrixError, http::Client, event_filter::RoomEventFilter};
 
 #[derive(Default)]
 pub struct RoomService;
 
 #[derive(Default, Debug, Serialize)]
-pub struct RoomEventFilter {
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub not_types: Vec<String>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub not_rooms: Vec<OwnedRoomId>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub limit: Option<u64>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub rooms: Vec<OwnedRoomId>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub not_senders: Vec<OwnedUserId>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub senders: Vec<OwnedUserId>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub types: Vec<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub include_urls: Option<bool>,
-
-    pub lazy_load_members: bool,
-
-    pub unread_thread_notifications: bool,
-}
-
-#[derive(Default, Debug, Serialize)]
-pub struct ListBody {
+pub struct ListQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub from: Option<u64>,
 
@@ -62,7 +31,7 @@ pub struct ListBody {
 }
 
 #[derive(Debug, Serialize)]
-pub struct MessagesBody {
+pub struct MessagesQuery {
     pub from: String,
 
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -78,7 +47,7 @@ pub struct MessagesBody {
 }
 
 #[derive(Default, Debug, Serialize)]
-pub struct TimestampToEventBody {
+pub struct TimestampToEventQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ts: Option<u64>,
 
@@ -86,7 +55,7 @@ pub struct TimestampToEventBody {
 }
 
 #[derive(Default, Debug, Serialize)]
-pub struct EventContextBody {
+pub struct EventContextQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
 
@@ -95,7 +64,7 @@ pub struct EventContextBody {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ReplaceRoomBody {
+pub struct ReplaceRoomQuery {
     #[serde(rename = "new_room_user_id")]
     pub admin: OwnedUserId,
 
@@ -107,9 +76,9 @@ pub struct ReplaceRoomBody {
 }
 
 #[derive(Default, Debug, Serialize)]
-pub struct DeleteBody {
+pub struct DeleteQuery {
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub new_room: Option<ReplaceRoomBody>,
+    pub new_room: Option<ReplaceRoomQuery>,
 
     pub block: bool,
 
@@ -253,7 +222,7 @@ impl RoomService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#list-room-api
     #[instrument(skip(client))]
-    pub async fn get_all(client: &Client, params: ListBody) -> Result<ListResponse> {
+    pub async fn get_all(client: &Client, params: ListQuery) -> Result<ListResponse> {
         let resp = client
             .get_query("/_synapse/admin/v1/rooms", &params)
             .await?;
@@ -318,7 +287,7 @@ impl RoomService {
     pub async fn get_timestamp_to_event(
         client: &Client,
         room_id: &RoomId,
-        params: TimestampToEventBody,
+        params: TimestampToEventQuery,
     ) -> Result<TimestampToEventResponse> {
         let resp = client
             .get_query(
@@ -397,7 +366,7 @@ impl RoomService {
     pub async fn delete_room(
         client: &Client,
         room_id: &RoomId,
-        params: DeleteBody,
+        params: DeleteQuery,
     ) -> Result<DeleteResponse> {
         let resp = client
             .delete_json(
@@ -424,7 +393,7 @@ impl RoomService {
     pub async fn get_room_events<M: DeserializeOwned>(
         client: &Client,
         room_id: &RoomId,
-        params: MessagesBody,
+        params: MessagesQuery,
     ) -> Result<GetEventsResponse<Raw<Vec<M>>>> {
         let resp = client
             .get_query(
@@ -454,7 +423,7 @@ impl RoomService {
         client: &Client,
         room_id: &RoomId,
         event_id: &EventId,
-        params: EventContextBody,
+        params: EventContextQuery,
     ) -> Result<EventContextResponse> {
         let resp = client
             .get_query(
