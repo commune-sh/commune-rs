@@ -51,7 +51,7 @@ impl RoomService {
         .await
         {
             Ok(room) => Ok(Room {
-                room_id: room.room_id,
+                room_id: room.room_id.to_string(),
             }),
             Err(err) => {
                 tracing::error!("Failed to create public room: {}", err);

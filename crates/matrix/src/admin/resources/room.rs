@@ -223,9 +223,7 @@ impl RoomService {
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#list-room-api
     #[instrument(skip(client))]
     pub async fn get_all(client: &Client, query: ListRoomQuery) -> Result<ListRoomResponse> {
-        let resp = client
-            .get_query("/_synapse/admin/v1/rooms", &query)
-            .await?;
+        let resp = client.get_query("/_synapse/admin/v1/rooms", &query).await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);

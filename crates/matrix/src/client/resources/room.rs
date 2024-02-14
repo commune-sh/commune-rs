@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, OwnedUserId, RoomId, RoomOrAliasId};
+use ruma_common::{serde::Raw, OwnedRoomId, OwnedUserId, RoomId, RoomOrAliasId};
 use ruma_events::{room::power_levels::RoomPowerLevelsEventContent, AnyInitialStateEvent};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -86,12 +86,12 @@ pub struct RoomKickOrBanBody {
 
 #[derive(Debug, Deserialize)]
 pub struct CreateRoomResponse {
-    pub room_id: String,
+    pub room_id: OwnedRoomId,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct JoinRoomResponse {
-    pub room_id: String,
+    pub room_id: OwnedRoomId,
 }
 
 #[derive(Debug, Deserialize)]

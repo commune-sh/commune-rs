@@ -53,7 +53,7 @@ pub struct User {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UserCreateBody {
+pub struct CreateUserBody {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -102,7 +102,7 @@ pub struct ListUsersResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UserUpdateBody {
+pub struct UpdateUserBody {
     pub password: String,
     pub logout_devices: bool,
     pub displayname: Option<String>,
@@ -174,7 +174,7 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client, body))]
-    pub async fn create(client: &Client, user_id: UserId, body: UserCreateBody) -> Result<User> {
+    pub async fn create(client: &Client, user_id: UserId, body: CreateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
@@ -197,9 +197,7 @@ impl UserService {
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-accounts
     #[instrument(skip(client))]
     pub async fn list(client: &Client, query: ListUsersQuery) -> Result<ListUsersResponse> {
-        let resp = client
-            .get_query("/_synapse/admin/v2/users", &query)
-            .await?;
+        let resp = client.get_query("/_synapse/admin/v2/users", &query).await?;
 
         if resp.status().is_success() {
             return Ok(resp.json().await?);
@@ -214,7 +212,7 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client))]
-    pub async fn update(client: &Client, user_id: UserId, body: UserUpdateBody) -> Result<User> {
+    pub async fn update(client: &Client, user_id: UserId, body: UpdateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),

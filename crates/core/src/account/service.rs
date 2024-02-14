@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use matrix::client::resources::session::Session;
+use matrix::{admin::resources::user::UserService, client::resources::session::Session};
 use tracing::instrument;
 use url::Url;
 use uuid::Uuid;
@@ -8,7 +8,7 @@ use validator::{Validate, ValidationError};
 
 use matrix::{
     admin::resources::{
-        user::{ListUsersParams, LoginAsUserDto, ThreePid, User as MatrixUser, UserCreateDto},
+        user::{CreateUserBody, ListUsersQuery, LoginAsUserBody, ThreePid},
         user_id::UserId,
     },
     Client as MatrixAdminClient,
@@ -118,9 +118,9 @@ impl AccountService {
     /// Matrix Server
     pub async fn is_email_available(&self, email: &str) -> Result<bool> {
         let user_id = UserId::new(email, self.admin.server_name());
-        let exists = MatrixUser::list(
+        let exists = UserService::list(
             &self.admin,
-            ListUsersParams {
+            ListUsersQuery {
                 user_id: Some(user_id.to_string()),
                 ..Default::default()
             },
@@ -212,10 +212,10 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        MatrixUser::create(
+        UserService::create(
             &self.admin,
             user_id.clone(),
-            UserCreateDto {
+            CreateUserBody {
                 displayname: Some(dto.username),
                 password: dto.password.to_string(),
                 logout_devices: false,
@@ -239,7 +239,7 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        let matrix_account = MatrixUser::query_user_account(&self.admin, user_id.clone())
+        let matrix_account = UserService::query_user_account(&self.admin, user_id.clone())
             .await
             .map_err(|err| {
                 tracing::error!(?err, "Failed to query user account");
@@ -266,7 +266,7 @@ impl AccountService {
     /// Creates an access token for the given user
     pub async fn issue_user_token(&self, user_id: UserId) -> Result<String> {
         let credentials =
-            MatrixUser::login_as_user(&self.admin, user_id.clone(), LoginAsUserDto::default())
+            UserService::login_as_user(&self.admin, user_id.clone(), LoginAsUserBody::default())
                 .await
                 .map_err(|err| {
                     tracing::error!(?err, ?user_id, "Failed to login as user");
@@ -283,7 +283,7 @@ impl AccountService {
                 tracing::error!(?err, "Failed to get session from matrix as client");
                 Error::Unknown
             })?;
-        let matrix_account = MatrixUser::query_user_account(&self.admin, session.user_id.clone())
+        let matrix_account = UserService::query_user_account(&self.admin, session.user_id.clone())
             .await
             .map_err(|err| {
                 tracing::error!(?err, "Failed to query user account");
