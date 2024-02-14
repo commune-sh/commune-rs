@@ -77,7 +77,7 @@ jobs:
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token
-          grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env >> $GITHUB_ENV
+          grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env | sed "s/'//g" >> $GITHUB_ENV
 
       - name: E2E Tests
         env:
