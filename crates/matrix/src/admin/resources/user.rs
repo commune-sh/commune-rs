@@ -12,6 +12,9 @@ use crate::{error::MatrixError, http::Client};
 
 use super::user_id::UserId;
 
+#[derive(Default)]
+pub struct UserService;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExternalId {
     pub auth_provider: String,
@@ -141,12 +144,12 @@ pub struct QueryUserDataResponse {
     pub user_type: Option<String>,
 }
 
-impl User {
+impl UserService {
     /// This API returns information about a specific user account.
     ///
     /// Refer: https://matrix-org.github.io/synapse/v1.88/admin_api/user_admin_api.html#query-user-account
     #[instrument(skip(client))]
-    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<Self> {
+    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<User> {
         let resp = client
             .get(format!(
                 "/_synapse/admin/v2/users/{user_id}",
@@ -171,7 +174,7 @@ impl User {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client, dto))]
-    pub async fn create(client: &Client, user_id: UserId, dto: UserCreateDto) -> Result<Self> {
+    pub async fn create(client: &Client, user_id: UserId, dto: UserCreateDto) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
@@ -211,7 +214,7 @@ impl User {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client))]
-    pub async fn update(client: &Client, user_id: UserId, dto: UserUpdateDto) -> Result<Self> {
+    pub async fn update(client: &Client, user_id: UserId, dto: UserUpdateDto) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
