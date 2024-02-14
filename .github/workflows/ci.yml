@@ -78,7 +78,6 @@ jobs:
         run: |
           just get_access_token
           grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env | sed "s/'//g" >> $GITHUB_ENV
-
       - name: E2E Tests
         env:
           COMMUNE_SYNAPSE_ADMIN_TOKEN: ${{ env.COMMUNE_SYNAPSE_ADMIN_TOKEN }}
