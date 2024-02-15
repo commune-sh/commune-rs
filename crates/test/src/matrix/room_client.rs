@@ -1,79 +1,31 @@
-use matrix::ruma_common::{OwnedRoomId, OwnedUserId};
-
 #[cfg(test)]
 mod tests {
-
     use matrix::{
         admin::resources::room::RoomService as AdminRoomService,
         client::resources::room::{
-            ForgetRoomBody, JoinRoomBody, JoinRoomResponse, LeaveRoomBody, Room as RoomService,
+            ForgetRoomBody, JoinRoomBody, JoinRoomResponse, LeaveRoomBody, RoomService,
             RoomKickOrBanBody,
         },
-        ruma_common::OwnedRoomOrAliasId,
+        ruma_common::{OwnedRoomId, OwnedRoomOrAliasId, OwnedUserId},
     };
     use tokio::sync::OnceCell;
 
-    use crate::matrix::util::{self, Test};
+    use crate::matrix::util::{self, Test, join_helper};
 
-    use super::*;
     static TEST: OnceCell<Test> = OnceCell::const_new();
-
-    async fn join_helper() -> Vec<(
-        OwnedRoomId,
-        Vec<OwnedUserId>,
-        Vec<anyhow::Result<JoinRoomResponse>>,
-    )> {
-        let Test {
-            samples, client, ..
-        } = TEST.get_or_init(util::init).await;
-
-        let mut result = Vec::with_capacity(samples.len());
-
-        for sample in samples {
-            let client = client.clone();
-
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
-            let mut resps = Vec::with_capacity(guests.len());
-
-            for guest in guests.iter() {
-                let client = client.clone();
-
-                let resp = RoomService::join(
-                    &client,
-                    guest.access_token.clone(),
-                    &OwnedRoomOrAliasId::from(sample.room_id.clone()),
-                    JoinRoomBody::default(),
-                )
-                .await;
-
-                resps.push(resp);
-            }
-
-            result.push((
-                sample.room_id.clone(),
-                guests.iter().map(|g| g.user_id.clone()).collect(),
-                resps,
-            ));
-        }
-
-        result
-    }
 
     #[tokio::test]
     async fn join_all_rooms() {
-        let Test { client: admin, .. } = TEST.get_or_init(util::init).await;
+        let Test { client, samples, .. } = TEST.get_or_init(util::init).await;
 
         // first join
-        let result = join_helper().await;
+        let result = join_helper(client, samples).await;
         let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
         tracing::info!(?rooms, "joining all guests");
 
         // check whether all guests are in the room and joined the expected room
         for (room_id, guests, resps) in result {
-            let mut resp = AdminRoomService::get_members(&admin, &room_id)
+            let mut resp = AdminRoomService::get_members(&client, &room_id)
                 .await
                 .unwrap();
             resp.members.sort();

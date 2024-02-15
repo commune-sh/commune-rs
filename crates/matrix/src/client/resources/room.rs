@@ -109,9 +109,9 @@ pub struct MatrixError {
     pub error: String,
 }
 
-pub struct Room;
+pub struct RoomService;
 
-impl Room {
+impl RoomService {
     /// Create a new room with various configuration options.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#creation

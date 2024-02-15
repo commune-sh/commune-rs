@@ -8,7 +8,7 @@ use matrix::{
         },
         user_id::UserId,
     },
-    client::resources::room::{CreateRoomBody, Room, RoomPreset},
+    client::resources::room::{CreateRoomBody, RoomService, RoomPreset},
     ruma_common::{OwnedRoomId, OwnedUserId},
     Client,
 };
@@ -164,3 +164,44 @@ pub async fn init() -> Test {
         client,
     }
 }
+
+pub async fn join_helper(client: &Client, samples: &[Sample]) -> Vec<(
+    OwnedRoomId,
+    Vec<OwnedUserId>,
+    Vec<anyhow::Result<JoinRoomResponse>>,
+)> {
+    let mut result = Vec::with_capacity(samples.len());
+
+    for sample in samples {
+        let client = client.clone();
+
+        let guests: Vec<_> = samples
+            .iter()
+            .filter(|g| g.user_id != sample.user_id)
+            .collect();
+        let mut resps = Vec::with_capacity(guests.len());
+
+        for guest in guests.iter() {
+            let client = client.clone();
+
+            let resp = RoomService::join(
+                &client,
+                guest.access_token.clone(),
+                &OwnedRoomOrAliasId::from(sample.room_id.clone()),
+                JoinRoomBody::default(),
+            )
+            .await;
+
+            resps.push(resp);
+        }
+
+        result.push((
+            sample.room_id.clone(),
+            guests.iter().map(|g| g.user_id.clone()).collect(),
+            resps,
+        ));
+    }
+
+    result
+}
+

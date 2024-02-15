@@ -1,18 +1,16 @@
-use matrix::admin::resources::room::{
-    ListRoomQuery, ListRoomResponse, RoomService as AdminRoomService,
-};
-
 #[cfg(test)]
 mod tests {
     use matrix::{
-        admin::resources::room::{MessagesQuery, OrderBy},
+        admin::resources::room::{
+            ListRoomQuery, ListRoomResponse, MessagesQuery, OrderBy,
+            RoomService as AdminRoomService,
+        },
         ruma_common::{RoomId, ServerName},
     };
+
     use tokio::sync::OnceCell;
 
     use crate::matrix::util::{self, Test};
-
-    use super::*;
 
     static TEST: OnceCell<Test> = OnceCell::const_new();
 
