@@ -9,11 +9,11 @@ use ruma_events::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::room::Direction, event_filter::RoomEventFilter, Client};
+use crate::{admin::resources::room::Direction, filter::RoomEventFilter, Client};
 
-pub struct Events;
+pub struct EventsService;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct GetMessagesQuery {
     pub from: Option<String>,
     pub to: Option<String>,
@@ -70,7 +70,7 @@ pub struct SendRedactionResponse {
     pub event_id: OwnedEventId,
 }
 
-impl Events {
+impl EventsService {
     #[instrument(skip(client, access_token))]
     pub async fn get_event(
         client: &Client,
