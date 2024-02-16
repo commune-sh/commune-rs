@@ -1,10 +1,10 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, TransactionId};
+use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, TransactionId, OwnedTransactionId};
 
 use ruma_events::{
     relation::RelationType, AnyStateEvent, AnyStateEventContent,
     AnyTimelineEvent, MessageLikeEventContent, MessageLikeEventType, StateEventContent,
-    StateEventType,
+    StateEventType, AnyMessageLikeEvent,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
@@ -46,7 +46,7 @@ pub struct GetRelationsQuery {
 
 #[derive(Debug, Deserialize)]
 pub struct GetMessagesResponse {
-    pub chunk: Vec<Raw<AnyTimelineEvent>>,
+    pub chunk: Vec<Raw<AnyMessageLikeEvent>>,
     pub start: String,
     pub end: String,
     pub state: Option<Vec<Raw<AnyStateEvent>>>,
@@ -213,7 +213,7 @@ impl EventsService {
         client: &Client,
         access_token: impl Into<String>,
         room_id: &RoomId,
-        txn_id: &TransactionId,
+        txn_id: OwnedTransactionId,
         body: T,
     ) -> Result<SendMessageResponse> {
         let mut tmp = (*client).clone();
@@ -278,7 +278,7 @@ impl EventsService {
         access_token: impl Into<String>,
         room_id: &RoomId,
         event_id: &EventId,
-        txn_id: &TransactionId,
+        txn_id: OwnedTransactionId,
         body: SendRedactionBody,
     ) -> Result<SendRedactionResponse> {
         let mut tmp = (*client).clone();
