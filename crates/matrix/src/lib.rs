@@ -6,7 +6,7 @@ mod http;
 
 mod error;
 
-mod event_filter;
+pub mod filter;
 
 pub use http::Client;
 

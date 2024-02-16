@@ -2,37 +2,51 @@ use anyhow::Result;
 use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, TransactionId};
 
 use ruma_events::{
-    relation::RelationType, AnyMessageLikeEvent, AnyStateEvent, AnyStateEventContent,
+    relation::RelationType, AnyStateEvent, AnyStateEventContent,
     AnyTimelineEvent, MessageLikeEventContent, MessageLikeEventType, StateEventContent,
     StateEventType,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::room::Direction, filter::RoomEventFilter, Client};
+use crate::{admin::resources::room::Direction, filter::RoomEventFilter, Client, error::MatrixError};
 
 pub struct EventsService;
 
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct GetMessagesQuery {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    pub dir: Option<Direction>,
-    pub filter: Option<RoomEventFilter>,
+
+    pub dir: Direction,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub filter: String,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct GetRelationsQuery {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    pub dir: Option<Direction>,
+
+    pub dir: Direction,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct GetMessagesResponse {
-    pub chunk: Vec<Raw<AnyMessageLikeEvent>>,
+    pub chunk: Vec<Raw<AnyTimelineEvent>>,
     pub start: String,
     pub end: String,
     pub state: Option<Vec<Raw<AnyStateEvent>>>,
@@ -103,10 +117,10 @@ impl EventsService {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .get(format!(
+            .get_query(format!(
                 "/_matrix/client/v3/rooms/{room_id}/messages",
                 room_id = room_id,
-            ))
+            ), &query)
             .await?;
 
         Ok(resp.json().await?)
@@ -217,7 +231,13 @@ impl EventsService {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     #[instrument(skip(client, access_token, body))]
@@ -243,7 +263,13 @@ impl EventsService {
 
         let resp = tmp.put_json(path, &body).await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     #[instrument(skip(client, access_token, body))]
@@ -270,6 +296,12 @@ impl EventsService {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 }

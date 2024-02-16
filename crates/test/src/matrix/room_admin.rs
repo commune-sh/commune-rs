@@ -19,11 +19,11 @@ mod tests {
         let Test {
             samples,
             server_name,
-            client,
+            admin,
         } = TEST.get_or_init(util::init).await;
 
         let ListRoomResponse { rooms: resp, .. } =
-            AdminRoomService::get_all(client, ListRoomQuery::default())
+            AdminRoomService::get_all(admin, ListRoomQuery::default())
                 .await
                 .unwrap();
 
@@ -49,7 +49,7 @@ mod tests {
         );
 
         let ListRoomResponse { rooms: resp, .. } = AdminRoomService::get_all(
-            client,
+            admin,
             ListRoomQuery {
                 order_by: OrderBy::Creator,
                 ..Default::default()
@@ -72,10 +72,10 @@ mod tests {
     #[tokio::test]
     #[should_panic]
     async fn get_all_rooms_err() {
-        let Test { client, .. } = TEST.get_or_init(util::init).await;
+        let Test { admin, .. } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_all(
-            client,
+            admin,
             ListRoomQuery {
                 from: Some(u64::MAX),
                 ..Default::default()
@@ -90,13 +90,13 @@ mod tests {
         let Test {
             samples,
             server_name,
-            client,
+            admin,
         } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
 
-        let resp = AdminRoomService::get_one(client, &rand.room_id)
+        let resp = AdminRoomService::get_one(admin, &rand.room_id)
             .await
             .unwrap();
 
@@ -129,12 +129,12 @@ mod tests {
     async fn get_room_details_err() {
         let Test {
             server_name,
-            client,
+            admin,
             ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_one(
-            client,
+            admin,
             &RoomId::new(&ServerName::parse(server_name).unwrap()),
         )
         .await
@@ -144,14 +144,14 @@ mod tests {
     #[tokio::test]
     async fn get_room_events() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
 
         let resp = AdminRoomService::get_room_events(
-            client,
+            admin,
             &rand.room_id,
             // no idea what the type is
             MessagesQuery {
@@ -174,12 +174,12 @@ mod tests {
     async fn get_room_events_err() {
         let Test {
             server_name,
-            client,
+            admin,
             ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_room_events(
-            client,
+            admin,
             <&RoomId>::try_from(server_name.as_str()).unwrap(),
             MessagesQuery {
                 from: "".into(),
@@ -196,13 +196,13 @@ mod tests {
     #[tokio::test]
     async fn get_state_events() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
 
-        let resp = AdminRoomService::get_state(client, &rand.room_id)
+        let resp = AdminRoomService::get_state(admin, &rand.room_id)
             .await
             .unwrap();
 
@@ -217,12 +217,12 @@ mod tests {
     async fn get_state_events_err() {
         let Test {
             server_name,
-            client,
+            admin,
             ..
         } = TEST.get_or_init(util::init).await;
 
         let _ =
-            AdminRoomService::get_state(client, <&RoomId>::try_from(server_name.as_str()).unwrap())
+            AdminRoomService::get_state(admin, <&RoomId>::try_from(server_name.as_str()).unwrap())
                 .await
                 .unwrap();
     }
@@ -230,13 +230,13 @@ mod tests {
     #[tokio::test]
     async fn get_members() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
 
-        let resp = AdminRoomService::get_members(client, &rand.room_id)
+        let resp = AdminRoomService::get_members(admin, &rand.room_id)
             .await
             .unwrap();
 
@@ -248,12 +248,12 @@ mod tests {
     async fn get_members_err() {
         let Test {
             server_name,
-            client,
+            admin,
             ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_members(
-            client,
+            admin,
             <&RoomId>::try_from(server_name.as_str()).unwrap(),
         )
         .await

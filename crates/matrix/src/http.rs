@@ -47,6 +47,11 @@ impl Client {
         Ok(())
     }
 
+    /// Clear the token for safety purposes.
+    pub fn clear_token(&mut self) {
+        self.token = None;
+    }
+
     pub async fn get(&self, path: impl AsRef<str>) -> Result<Response> {
         let url = self.build_url(path)?;
         let headers = self.build_headers()?;
@@ -67,23 +72,6 @@ impl Client {
         Ok(response)
     }
 
-    pub async fn post_json<T>(&self, path: impl AsRef<str>, body: &T) -> Result<Response>
-    where
-        T: Serialize,
-    {
-        let url = self.build_url(path)?;
-        let headers = self.build_headers()?;
-        let resp = self
-            .client
-            .post(url)
-            .json(body)
-            .headers(headers)
-            .send()
-            .await?;
-
-        Ok(resp)
-    }
-
     pub async fn put_json<T>(&self, path: impl AsRef<str>, body: &T) -> Result<Response>
     where
         T: Serialize,
@@ -93,6 +81,31 @@ impl Client {
         let resp = self
             .client
             .put(url)
+            .json(body)
+            .headers(headers)
+            .send()
+            .await?;
+
+        Ok(resp)
+    }
+
+    pub async fn post(&self, path: impl AsRef<str>) -> Result<Response> {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let resp = self.client.post(url).headers(headers).send().await?;
+
+        Ok(resp)
+    }
+
+    pub async fn post_json<T>(&self, path: impl AsRef<str>, body: &T) -> Result<Response>
+    where
+        T: Serialize,
+    {
+        let url = self.build_url(path)?;
+        let headers = self.build_headers()?;
+        let resp = self
+            .client
+            .post(url)
             .json(body)
             .headers(headers)
             .send()

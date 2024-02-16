@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use matrix::{
     client::resources::room::{
-        CreateRoomBody, Room as MatrixRoom, RoomCreationContent, RoomPreset,
+        CreateRoomBody, RoomService as MatrixRoomService, RoomCreationContent, RoomPreset,
     },
     Client as MatrixAdminClient,
 };
@@ -36,7 +36,7 @@ impl RoomService {
         access_token: &Secret,
         dto: CreateRoomDto,
     ) -> Result<Room> {
-        match MatrixRoom::create(
+        match MatrixRoomService::create(
             &self.admin,
             access_token.to_string(),
             CreateRoomBody {

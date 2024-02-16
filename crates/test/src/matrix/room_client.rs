@@ -3,10 +3,9 @@ mod tests {
     use matrix::{
         admin::resources::room::RoomService as AdminRoomService,
         client::resources::room::{
-            ForgetRoomBody, JoinRoomBody, JoinRoomResponse, LeaveRoomBody, RoomService,
-            RoomKickOrBanBody,
+            ForgetRoomBody, LeaveRoomBody,
+            RoomKickOrBanBody, RoomService,
         },
-        ruma_common::{OwnedRoomId, OwnedRoomOrAliasId, OwnedUserId},
     };
     use tokio::sync::OnceCell;
 
@@ -16,10 +15,14 @@ mod tests {
 
     #[tokio::test]
     async fn join_all_rooms() {
-        let Test { client, samples, .. } = TEST.get_or_init(util::init).await;
+        let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
+
+        let mut client = admin.clone();
+        client.clear_token();
 
         // first join
-        let result = join_helper(client, samples).await;
+        let result = join_helper(&client, samples).await;
+
         let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
         tracing::info!(?rooms, "joining all guests");
 
@@ -44,24 +47,21 @@ mod tests {
     #[tokio::test]
     async fn leave_all_rooms() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
-        let admin = client.clone();
+        let mut client = admin.clone();
+        client.clear_token();
 
         let mut result = Vec::with_capacity(samples.len());
 
         for sample in samples {
-            let client = client.clone();
-
             let guests: Vec<_> = samples
                 .iter()
                 .filter(|g| g.user_id != sample.user_id)
                 .collect();
 
             for guest in guests {
-                let client = client.clone();
-
                 RoomService::leave(
                     &client,
                     guest.access_token.clone(),
@@ -96,20 +96,19 @@ mod tests {
     #[tokio::test]
     async fn forget_all_rooms() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
-        for sample in samples {
-            let client = client.clone();
+        let mut client = admin.clone();
+        client.clear_token();
 
+        for sample in samples {
             let guests: Vec<_> = samples
                 .iter()
                 .filter(|g| g.user_id != sample.user_id)
                 .collect();
 
             for guest in guests {
-                let client = client.clone();
-
                 RoomService::forget(
                     &client,
                     guest.access_token.clone(),
@@ -122,7 +121,6 @@ mod tests {
         }
 
         // check whether all guests are still not present anymore the room
-        let admin = client.clone();
         for sample in samples {
             let room_id = &sample.room_id;
 
@@ -143,7 +141,6 @@ mod tests {
 
         // confirm a room can't be forgotten if we didn't leave first
         for sample in samples {
-            let client = client.clone();
             let room_id = &sample.room_id;
 
             let resp = RoomService::forget(
@@ -161,16 +158,18 @@ mod tests {
     #[tokio::test]
     async fn kick_all_guests() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
+        let mut client = admin.clone();
+        client.clear_token();
+
         // second join
-        let result = join_helper().await;
+        let result = join_helper(&client, samples).await;
         let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
         tracing::info!(?rooms, "joining all guests");
 
         // check whether all guests are in the room and joined the expected room
-        let admin = client.clone();
         for (room_id, guests, resps) in result.iter() {
             let mut resp = AdminRoomService::get_members(&admin, room_id)
                 .await
@@ -188,7 +187,6 @@ mod tests {
         }
 
         for sample in samples {
-            let client = client.clone();
             let room_id = &sample.room_id;
 
             let guests: Vec<_> = samples
@@ -197,8 +195,6 @@ mod tests {
                 .collect();
 
             for guest in guests {
-                let client = client.clone();
-
                 RoomService::kick(
                     &client,
                     guest.access_token.clone(),
@@ -234,16 +230,18 @@ mod tests {
     #[tokio::test]
     async fn ban_all_guests() {
         let Test {
-            samples, client, ..
+            samples, admin, ..
         } = TEST.get_or_init(util::init).await;
 
+        let mut client = admin.clone();
+        client.clear_token();
+
         // third join
-        let result = join_helper().await;
+        let result = join_helper(&client, samples).await;
         let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
         tracing::info!(?rooms, "joining all guests");
 
         // check whether all guests are in the room and joined the expected room
-        let admin = client.clone();
         for (room_id, guests, resps) in result.iter() {
             let mut resp = AdminRoomService::get_members(&admin, room_id)
                 .await
@@ -261,8 +259,6 @@ mod tests {
         }
 
         for sample in samples {
-            let client = client.clone();
-
             let guests: Vec<_> = samples
                 .iter()
                 .filter(|g| g.user_id != sample.user_id)
@@ -287,13 +283,13 @@ mod tests {
         }
 
         // fourth join
-        let result = join_helper().await;
+        let result = join_helper(&client, samples).await;
         let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
         tracing::info!(?rooms, "joining all guests");
 
         // check whether all guests got banned from the room
         // check whether their join request failed
-        for (room_id, _, resps) in result {
+        for (ref room_id, _, resps) in result {
             let resp = AdminRoomService::get_members(&admin, &room_id)
                 .await
                 .unwrap();
@@ -302,7 +298,7 @@ mod tests {
             assert_eq!(
                 &[samples
                     .iter()
-                    .find(|s| s.room_id == room_id)
+                    .find(|s| &s.room_id == room_id)
                     .map(|s| s.user_id.clone())
                     .unwrap()],
                 resp.members.as_slice()
@@ -312,15 +308,12 @@ mod tests {
         }
 
         for sample in samples {
-            let client = client.clone();
-
             let guests: Vec<_> = samples
                 .iter()
                 .filter(|g| g.user_id != sample.user_id)
                 .collect();
 
             for guest in guests {
-                let client = client.clone();
                 let room_id = &sample.room_id;
 
                 RoomService::unban(

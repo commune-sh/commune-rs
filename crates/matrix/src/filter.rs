@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ruma_common::{OwnedRoomId, OwnedUserId};
+use ruma_common::{OwnedRoomId, OwnedUserId, UserId};
 use ruma_events::TimelineEventType;
 use serde::{Deserialize, Serialize};
 
@@ -14,20 +14,32 @@ pub enum EventFormat {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Filter {
-    #[serde(rename = "account_data")]
-    account: Option<EventFilter>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "account_data")]
+    pub account: Option<EventFilter>,
 
     #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    event_fields: Vec<String>,
+    pub event_fields: Vec<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    event_format: Option<EventFormat>,
+    pub event_format: Option<EventFormat>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    presence: Option<EventFilter>,
+    pub presence: Option<EventFilter>,
 
-    #[serde(rename = "room")]
-    room: Option<RoomFilter>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "room")]
+    pub room: Option<RoomFilter>,
+}
+
+impl Filter {
+    pub fn room_events(filter: RoomEventFilter) -> Self {
+        Self {
+            room: Some(RoomFilter {
+                timeline: Some(filter),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -73,8 +85,26 @@ pub struct RoomFilter {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct RoomEventFilter {
-    #[serde(flatten)]
-    pub inner: EventFilter,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u64>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_rooms: Vec<OwnedRoomId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_senders: Vec<OwnedUserId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_types: Vec<TimelineEventType>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub rooms: Vec<OwnedRoomId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub senders: Vec<OwnedUserId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub types: Vec<TimelineEventType>,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "contains_url")]
     pub include_urls: Option<bool>,
@@ -82,20 +112,32 @@ pub struct RoomEventFilter {
     pub include_redundant_members: bool,
 
     pub lazy_load_members: bool,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub not_rooms: Vec<OwnedRoomId>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub rooms: Vec<OwnedRoomId>,
 
     pub unread_thread_notifications: bool,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct StateFilter {
-    #[serde(flatten)]
-    pub inner: EventFilter,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u64>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_rooms: Vec<OwnedRoomId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_senders: Vec<OwnedUserId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub not_types: Vec<TimelineEventType>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub rooms: Vec<OwnedRoomId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub senders: Vec<OwnedUserId>,
+
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub types: Vec<TimelineEventType>,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "contains_url")]
     pub include_urls: Option<bool>,
@@ -104,29 +146,32 @@ pub struct StateFilter {
 
     pub lazy_load_members: bool,
 
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub not_rooms: Vec<OwnedRoomId>,
-
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    pub rooms: Vec<OwnedRoomId>,
-
     pub unread_thread_notifications: bool,
 }
 
 pub struct FilterService;
 
+#[derive(Debug, Deserialize)]
+pub struct FilterResponse {
+    pub filter_id: String,
+}
+
 impl FilterService {
     pub async fn create(
         client: &Client,
         access_token: impl Into<String>,
+        user_id: &UserId,
         body: Filter,
-    ) -> Result<Filter> {
+    ) -> Result<FilterResponse> {
         let mut tmp = (*client).clone();
         tmp.set_token(access_token)?;
 
         let resp = tmp
             .post_json(
-                format!("/_matrix/client/v3/user/@admin:matrix.localhost/filter",),
+                format!(
+                    "/_matrix/client/v3/user/{user_id}/filter",
+                    user_id = user_id
+                ),
                 &body,
             )
             .await?;
@@ -143,6 +188,7 @@ impl FilterService {
     pub async fn get(
         client: &Client,
         access_token: impl Into<String>,
+        user_id: &UserId,
         filter_id: String,
     ) -> Result<String> {
         let mut tmp = (*client).clone();
@@ -150,7 +196,8 @@ impl FilterService {
 
         let resp = tmp
             .get(format!(
-                "/_matrix/client/v3/user/@admin:matrix.localhost/filter/{filter_id}"
+                "/_matrix/client/v3/user/{user_id}/filter/{filter_id}",
+                user_id = user_id
             ))
             .await?;
 

@@ -1,11 +1,24 @@
+use std::str::FromStr;
+
 use anyhow::Result;
+use mime::Mime;
 use ruma_common::{MxcUri, OwnedMxcUri};
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
 use tracing::instrument;
 
 use chrono::{serde::ts_microseconds_option, DateTime, Utc};
 
 use crate::error::MatrixError;
+
+fn parse_mime_opt<'de, D>(d: D) -> Result<Option<Mime>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::<&str>::deserialize(d)?
+        .map(<Mime as FromStr>::from_str)
+        .transpose()
+        .map_err(de::Error::custom)
+}
 
 #[derive(Debug, Serialize)]
 pub struct GetPreviewUrlQuery {
@@ -38,7 +51,7 @@ pub struct GetPreviewUrlResponse {
     #[serde(rename = "og:image:width")]
     pub width: Option<u64>,
 
-    #[serde(rename = "og:image:type")]
+    #[serde(rename = "og:image:type", deserialize_with = "parse_mime_opt")]
     pub kind: Option<mime::Mime>,
 
     #[serde(rename = "og:title")]
@@ -112,8 +125,8 @@ impl MxcService {
         Err(anyhow::anyhow!(error.inner.error))
     }
 
-    /// Retrieve a URL to download content from the content repository, optionally replacing the
-    /// name of the file.
+    /// Retrieve a URL to download content from the content repository,
+    /// optionally replacing the name of the file.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#get_matrixmediav3downloadservernamemediaid
     #[instrument(skip(client, access_token))]
@@ -144,7 +157,7 @@ impl MxcService {
         Ok(base_url)
     }
 
-    /// 
+    ///
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#get_matrixmediav3preview_url
     #[instrument(skip(client, access_token))]

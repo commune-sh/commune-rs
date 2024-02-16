@@ -18,7 +18,7 @@ ruma-macros = "0.12.0"
 # Workspace Dependencies
 anyhow = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
-mime = { workspace = true, features = ["serde1"] }
+mime = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 tokio = { workspace = true }

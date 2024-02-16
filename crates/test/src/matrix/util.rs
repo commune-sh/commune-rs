@@ -2,14 +2,14 @@ use std::str::FromStr;
 
 use matrix::{
     admin::resources::{
-        room::{DeleteQuery, ListRoomQuery, ListRoomResponse, RoomService as AdminRoomService},
+        room::{RoomService as AdminRoomService, ListRoomResponse, ListRoomQuery, DeleteQuery},
         user::{
-            CreateUserBody, LoginAsUserBody, LoginAsUserResponse, UserService as AdminUserService,
+            UserService as AdminUserService, CreateUserBody,
         },
         user_id::UserId,
     },
-    client::resources::room::{CreateRoomBody, RoomService, RoomPreset},
-    ruma_common::{OwnedRoomId, OwnedUserId},
+    client::resources::{room::{CreateRoomBody, RoomService, RoomPreset, JoinRoomResponse, JoinRoomBody, RoomVisibility}, login::{Login, LoginCredentials}},
+    ruma_common::{OwnedRoomId, OwnedUserId, OwnedRoomOrAliasId},
     Client,
 };
 
@@ -20,7 +20,7 @@ use crate::tools::environment::Environment;
 pub struct Test {
     pub samples: Vec<Sample>,
     pub server_name: String,
-    pub client: Client,
+    pub admin: Client,
 }
 
 pub struct Sample {
@@ -38,7 +38,8 @@ async fn create_accounts(
     let mut result = Vec::with_capacity(amount);
 
     for i in 0..amount {
-        let user_id = UserId::new(format!("{seed}-{i}"), server_name.clone());
+        let username = format!("{seed}-{i}");
+        let user_id = UserId::new(username.clone(), server_name.clone());
         let password = "verysecure".to_owned();
 
         let body = CreateUserBody {
@@ -57,9 +58,9 @@ async fn create_accounts(
             .await
             .unwrap();
 
-        let body = LoginAsUserBody::default();
-        let LoginAsUserResponse { access_token } =
-            AdminUserService::login_as_user(&client, user_id.clone(), body)
+        let password = "verysecure".to_owned();
+        let LoginCredentials { access_token } =
+            Login::login_credentials(client, username, password)
                 .await
                 .unwrap();
 
@@ -80,15 +81,17 @@ async fn create_rooms(client: &Client, accounts: &[(OwnedUserId, String)]) -> Ve
         let name = format!("{id}-room-name");
         let topic = format!("{id}-room-topic");
         let room_alias_name = format!("{id}-room-alias");
+        let visibility = Some(RoomVisibility::Public);
 
         let body = CreateRoomBody {
             name,
             topic,
             room_alias_name,
             preset,
+            visibility,
             ..Default::default()
         };
-        let resp = Room::create(client, access_token, body).await.unwrap();
+        let resp = RoomService::create(client, access_token, body).await.unwrap();
 
         result.push(resp.room_id);
     }
@@ -132,14 +135,14 @@ pub async fn init() -> Test {
 
     let server_name = env.config.synapse_server_name.clone();
     let admin_token = env.config.synapse_admin_token.clone();
-    let mut client = env.client.clone();
+    let mut admin = env.client.clone();
 
-    client.set_token(admin_token).unwrap();
-    remove_rooms(&client).await;
+    admin.set_token(admin_token).unwrap();
+    remove_rooms(&admin).await;
 
-    let accounts = create_accounts(&client, server_name.clone(), 4, seed).await;
+    let accounts = create_accounts(&admin, server_name.clone(), 4, seed).await;
     let rooms = create_rooms(
-        &client,
+        &admin,
         accounts
             .iter()
             .map(|(user_id, access_token)| (user_id.clone(), access_token.clone()))
@@ -161,7 +164,7 @@ pub async fn init() -> Test {
     Test {
         samples,
         server_name,
-        client,
+        admin,
     }
 }
 
@@ -173,8 +176,6 @@ pub async fn join_helper(client: &Client, samples: &[Sample]) -> Vec<(
     let mut result = Vec::with_capacity(samples.len());
 
     for sample in samples {
-        let client = client.clone();
-
         let guests: Vec<_> = samples
             .iter()
             .filter(|g| g.user_id != sample.user_id)
@@ -182,8 +183,6 @@ pub async fn join_helper(client: &Client, samples: &[Sample]) -> Vec<(
         let mut resps = Vec::with_capacity(guests.len());
 
         for guest in guests.iter() {
-            let client = client.clone();
-
             let resp = RoomService::join(
                 &client,
                 guest.access_token.clone(),
