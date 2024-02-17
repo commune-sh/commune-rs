@@ -91,24 +91,15 @@ mod tests {
             .unwrap();
 
         let (id, _) = user_id.localpart().rsplit_once("-").unwrap();
+        assert_eq!(Some(format!("{id}-room",)), resp.name);
         assert_eq!(
-            Some(format!(
-                "{id}-room",
-            )),
-            resp.name
-        );
-        assert_eq!(
-            Some(format!(
-                "#{id}-room-alias:{server_name}",
-            )),
+            Some(format!("#{id}-room-alias:{server_name}",)),
             resp.canonical_alias,
         );
 
         assert_eq!(Some(user_id.to_string()), resp.creator);
         assert_eq!(
-            Some(format!(
-                "{id}-room-topic",
-            )),
+            Some(format!("{id}-room-topic",)),
             resp.details.and_then(|d| d.topic),
         );
 

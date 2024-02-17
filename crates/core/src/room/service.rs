@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use matrix::{
     client::resources::room::{
-        CreateRoomBody, RoomService as MatrixRoomService, RoomCreationContent, RoomPreset,
+        CreateRoomBody, RoomCreationContent, RoomPreset, RoomService as MatrixRoomService,
     },
     Client as MatrixAdminClient,
 };

@@ -34,7 +34,6 @@ mod tests {
 
         assert!(joins.iter().all(Result::is_ok));
 
-
         future::try_join_all(
             sample
                 .guests()
@@ -64,17 +63,14 @@ mod tests {
         .await
         .unwrap();
 
-        let expected: Vec<_> = sample.guests()
-            .map(|(user_id, _)| {
-                format!(
-                    "hello, **my name is {}**",
-                    user_id
-                )
-            })
+        let expected: Vec<_> = sample
+            .guests()
+            .map(|(user_id, _)| format!("hello, **my name is {}**", user_id))
             .chain(iter::once(format!(
                 "and I am the admin of the room, {}",
                 owner_id
-            ))).collect();
+            )))
+            .collect();
 
         let filter = RoomEventFilter {
             types: vec![MessageLikeEventType::RoomMessage.into()],
@@ -83,21 +79,21 @@ mod tests {
 
         let filter = serde_json::to_string(&filter).unwrap();
 
-        let found = 
-            EventsService::get_messages(
-                &client,
-                owner_token,
-                &sample.room_id,
-                GetMessagesQuery {
-                    limit: Some(111),
-                    filter: filter.clone(),
-                    ..Default::default()
-                },
-            )
+        let found = EventsService::get_messages(
+            &client,
+            owner_token,
+            &sample.room_id,
+            GetMessagesQuery {
+                limit: Some(111),
+                filter: filter.clone(),
+                ..Default::default()
+            },
+        )
         .await
         .unwrap();
 
-        let found: Vec<_> = found.chunk
+        let found: Vec<_> = found
+            .chunk
             .into_iter()
             .map(|e| e.deserialize_as::<OriginalRoomMessageEvent>().unwrap())
             .map(|e| e.content.body().to_owned())
@@ -120,9 +116,7 @@ mod tests {
 
         // first join
         let joins = join_helper(&client, sample.guests(), &sample.room_id).await;
-        assert!(joins
-            .iter()
-            .all(Result::is_ok));
+        assert!(joins.iter().all(Result::is_ok));
 
         let root = EventsService::send_message(
             &client,
@@ -132,7 +126,7 @@ mod tests {
             RoomMessageEventContent::text_plain(format!(
                 "I am at the root of the tree, {}",
                 owner_id
-            ))
+            )),
         )
         .map_ok(|resp| resp.event_id)
         .await
@@ -143,9 +137,8 @@ mod tests {
         let mut history = Vec::from([vec![root]]);
 
         for i in 1..n {
-            let (user_id, access_token) = sample.guests()
-                .nth(i % sample.user_ids.len()-1)
-                .unwrap();
+            let (user_id, access_token) =
+                sample.guests().nth(i % sample.user_ids.len() - 1).unwrap();
 
             let prev = history.last().unwrap();
             let traverse = future::try_join_all((0..prev.len() * 2).map(|j| {

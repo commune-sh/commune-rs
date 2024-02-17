@@ -1,15 +1,15 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, OwnedTransactionId};
+use ruma_common::{serde::Raw, EventId, OwnedEventId, OwnedTransactionId, RoomId};
 
 use ruma_events::{
-    relation::RelationType, AnyStateEvent, AnyStateEventContent,
+    relation::RelationType, AnyMessageLikeEvent, AnyStateEvent, AnyStateEventContent,
     AnyTimelineEvent, MessageLikeEventContent, MessageLikeEventType, StateEventContent,
-    StateEventType, AnyMessageLikeEvent,
+    StateEventType,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::room::Direction, Client, error::MatrixError};
+use crate::{admin::resources::room::Direction, error::MatrixError, Client};
 
 pub struct EventsService;
 
@@ -117,10 +117,13 @@ impl EventsService {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .get_query(format!(
-                "/_matrix/client/v3/rooms/{room_id}/messages",
-                room_id = room_id,
-            ), &query)
+            .get_query(
+                format!(
+                    "/_matrix/client/v3/rooms/{room_id}/messages",
+                    room_id = room_id,
+                ),
+                &query,
+            )
             .await?;
 
         Ok(resp.json().await?)

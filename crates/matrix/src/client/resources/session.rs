@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ruma_common::{OwnedUserId};
+use ruma_common::OwnedUserId;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 

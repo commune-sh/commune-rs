@@ -36,7 +36,12 @@ impl Sample {
         self.user_ids.iter().zip(self.access_tokens.iter()).skip(1)
     }
     pub fn owner(&self) -> (&OwnedUserId, &String) {
-        self.user_ids.iter().zip(self.access_tokens.iter()).clone().next().unwrap()
+        self.user_ids
+            .iter()
+            .zip(self.access_tokens.iter())
+            .clone()
+            .next()
+            .unwrap()
     }
 }
 
@@ -131,7 +136,7 @@ pub async fn init() -> Test {
 
     let users_per_room = 4;
 
-    let seed =rand::thread_rng().gen();
+    let seed = rand::thread_rng().gen();
 
     let env = Environment::new().await;
 
@@ -143,7 +148,8 @@ pub async fn init() -> Test {
     remove_rooms(&admin).await;
 
     let accounts = future::join_all(
-        (0..rooms).map(|room| create_accounts(&admin, server_name.clone(), users_per_room, room, seed),)
+        (0..rooms)
+            .map(|room| create_accounts(&admin, server_name.clone(), users_per_room, room, seed)),
     )
     .await;
 
@@ -154,7 +160,7 @@ pub async fn init() -> Test {
             .iter()
             // make first user in the array the admin
             .map(|users| users[0].1.clone())
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>(),
     )
     .await;
 
@@ -181,15 +187,13 @@ pub async fn join_helper(
     users: impl Iterator<Item = (&OwnedUserId, &String)>,
     room_id: &RoomId,
 ) -> Vec<Result<JoinRoomResponse>> {
-    future::join_all(
-            users
-            .map(|(_, access_token)| {
-                RoomService::join(
-                    &client,
-                    access_token.clone(),
-                    room_id.into(),
-                    JoinRoomBody::default(),
-                )
+    future::join_all(users.map(|(_, access_token)| {
+        RoomService::join(
+            &client,
+            access_token.clone(),
+            room_id.into(),
+            JoinRoomBody::default(),
+        )
     }))
     .await
 }
