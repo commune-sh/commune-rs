@@ -54,7 +54,7 @@ pub struct GetMessagesResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
-pub struct GetStateResponse(Vec<Raw<AnyStateEvent>>);
+pub struct GetStateResponse(pub Vec<Raw<AnyStateEvent>>);
 
 #[derive(Debug, Deserialize)]
 pub struct GetRelationsResponse {
