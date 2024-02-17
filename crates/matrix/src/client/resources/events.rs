@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, TransactionId, OwnedTransactionId};
+use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, OwnedTransactionId};
 
 use ruma_events::{
     relation::RelationType, AnyStateEvent, AnyStateEventContent,
@@ -9,7 +9,7 @@ use ruma_events::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::room::Direction, filter::RoomEventFilter, Client, error::MatrixError};
+use crate::{admin::resources::room::Direction, Client, error::MatrixError};
 
 pub struct EventsService;
 

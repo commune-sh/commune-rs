@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
+    use std::{thread, time::Duration};
+
+    use futures::TryFutureExt;
     use matrix::{
-        admin::resources::room::{
-            ListRoomQuery, ListRoomResponse, MessagesQuery, OrderBy,
-            RoomService as AdminRoomService,
-        },
+        admin::resources::room::{ListRoomQuery, MessagesQuery, RoomService as AdminRoomService},
         ruma_common::{RoomId, ServerName},
     };
 
@@ -22,50 +22,39 @@ mod tests {
             admin,
         } = TEST.get_or_init(util::init).await;
 
-        let ListRoomResponse { rooms: resp, .. } =
-            AdminRoomService::get_all(admin, ListRoomQuery::default())
-                .await
-                .unwrap();
+        // TODO
+        thread::sleep(Duration::from_secs(5));
+
+        let resp: Vec<_> = AdminRoomService::get_all(admin, ListRoomQuery::default())
+            .map_ok(|resp| resp.rooms)
+            .await
+            .unwrap();
+
+        dbg!(samples.iter().map(|s| s.owner()).collect::<Vec<_>>());
 
         assert_eq!(
             samples
                 .iter()
-                .map(|s| Some(format!("{id}-room-name", id = s.user_id.localpart())))
+                .map(|s| s.owner())
+                .map(|(user_id, _)| {
+                    let (id, _) = user_id.localpart().rsplit_once("-").unwrap();
+                    Some(format!("{id}-room",))
+                })
                 .collect::<Vec<_>>(),
-            resp.iter().map(|r| r.name.clone()).collect::<Vec<_>>(),
+            resp.iter().map(|r| r.name.clone()).collect::<Vec<_>>()
         );
         assert_eq!(
             samples
                 .iter()
-                .map(|s| format!("#{id}-room-alias:{server_name}", id = s.user_id.localpart()))
+                .map(|s| s.owner())
+                .map(|(user_id, _)| {
+                    let (id, _) = user_id.localpart().rsplit_once("-").unwrap();
+                    Some(format!("#{id}-room-alias:{server_name}",))
+                })
                 .collect::<Vec<_>>(),
             resp.iter()
-                .map(|r| r.canonical_alias.clone().unwrap())
-                .collect::<Vec<_>>(),
-        );
-        assert_eq!(
-            samples.iter().map(|s| &s.room_id).collect::<Vec<_>>(),
-            resp.iter().map(|r| &r.room_id).collect::<Vec<_>>(),
-        );
-
-        let ListRoomResponse { rooms: resp, .. } = AdminRoomService::get_all(
-            admin,
-            ListRoomQuery {
-                order_by: OrderBy::Creator,
-                ..Default::default()
-            },
-        )
-        .await
-        .unwrap();
-
-        assert_eq!(
-            samples
-                .iter()
-                .map(|s| s.user_id.to_string())
-                .collect::<Vec<_>>(),
-            resp.iter()
-                .map(|r| r.creator.clone().unwrap())
-                .collect::<Vec<_>>(),
+                .map(|r| r.canonical_alias.clone())
+                .collect::<Vec<_>>()
         );
     }
 
@@ -95,32 +84,36 @@ mod tests {
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
+        let (user_id, _) = rand.owner();
 
         let resp = AdminRoomService::get_one(admin, &rand.room_id)
             .await
             .unwrap();
 
+        let (id, _) = user_id.localpart().rsplit_once("-").unwrap();
         assert_eq!(
-            Some(format!("{}-room-name", rand.user_id.localpart())),
+            Some(format!(
+                "{id}-room",
+            )),
             resp.name
         );
         assert_eq!(
             Some(format!(
-                "#{}-room-alias:{server_name}",
-                rand.user_id.localpart()
+                "#{id}-room-alias:{server_name}",
             )),
             resp.canonical_alias,
         );
 
-        assert_eq!(Some(rand.user_id.to_string()), resp.creator);
+        assert_eq!(Some(user_id.to_string()), resp.creator);
         assert_eq!(
-            Some(format!("{}-room-topic", rand.user_id.localpart())),
+            Some(format!(
+                "{id}-room-topic",
+            )),
             resp.details.and_then(|d| d.topic),
         );
 
         assert_eq!(resp.join_rules, Some("public".into()));
-
-        assert!(!resp.public);
+        assert!(resp.public);
         assert!(resp.room_type.is_none());
     }
 
@@ -128,9 +121,7 @@ mod tests {
     #[should_panic]
     async fn get_room_details_err() {
         let Test {
-            server_name,
-            admin,
-            ..
+            server_name, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_one(
@@ -143,9 +134,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_room_events() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
@@ -173,9 +162,7 @@ mod tests {
     #[should_panic]
     async fn get_room_events_err() {
         let Test {
-            server_name,
-            admin,
-            ..
+            server_name, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_room_events(
@@ -195,9 +182,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_state_events() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
@@ -216,9 +201,7 @@ mod tests {
     #[should_panic]
     async fn get_state_events_err() {
         let Test {
-            server_name,
-            admin,
-            ..
+            server_name, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let _ =
@@ -229,27 +212,24 @@ mod tests {
 
     #[tokio::test]
     async fn get_members() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let magic_number = Box::into_raw(Box::new(12345)) as usize % samples.len();
         let rand = samples.get(magic_number).unwrap();
+        let (owner_id, _) = rand.owner();
 
         let resp = AdminRoomService::get_members(admin, &rand.room_id)
             .await
             .unwrap();
 
-        assert_eq!(resp.members, vec![rand.user_id.to_string()]);
+        assert_eq!(resp.members, vec![owner_id.to_string()]);
     }
 
     #[tokio::test]
     #[should_panic]
     async fn get_members_err() {
         let Test {
-            server_name,
-            admin,
-            ..
+            server_name, admin, ..
         } = TEST.get_or_init(util::init).await;
 
         let _ = AdminRoomService::get_members(

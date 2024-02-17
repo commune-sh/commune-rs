@@ -1,14 +1,15 @@
 use anyhow::Result;
+use ruma_common::{OwnedUserId};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::user_id::UserId, error::MatrixError};
+use crate::error::MatrixError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Session {
     pub device_id: String,
     pub is_guest: bool,
-    pub user_id: UserId,
+    pub user_id: OwnedUserId,
 }
 
 impl Session {

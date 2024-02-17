@@ -1,16 +1,15 @@
 use std::sync::Arc;
 
-use matrix::{admin::resources::user::UserService, client::resources::session::Session};
+use matrix::{
+    admin::resources::user::UserService, client::resources::session::Session, ruma_common::UserId,
+};
 use tracing::instrument;
 use url::Url;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use matrix::{
-    admin::resources::{
-        user::{CreateUserBody, ListUsersQuery, LoginAsUserBody, ThreePid},
-        user_id::UserId,
-    },
+    admin::resources::user::{CreateUserBody, ListUsersQuery, LoginAsUserBody, ThreePid},
     Client as MatrixAdminClient,
 };
 
@@ -117,7 +116,13 @@ impl AccountService {
     /// Returs `true` if the given `email address` is NOT registered in the
     /// Matrix Server
     pub async fn is_email_available(&self, email: &str) -> Result<bool> {
-        let user_id = UserId::new(email, self.admin.server_name());
+        let user_id = format!("@{}:{}", email, self.admin.server_name());
+        let user_id = <&UserId>::try_from(user_id.as_str()).map_err(|err| {
+            // TODO
+            tracing::error!(?err, "Failed to parse username");
+            Error::Unknown
+        })?;
+
         let exists = UserService::list(
             &self.admin,
             ListUsersQuery {
@@ -206,7 +211,13 @@ impl AccountService {
             return Err(AccountErrorCode::EmailTaken(dto.email).into());
         }
 
-        let user_id = UserId::new(dto.username.clone(), self.admin.server_name().to_string());
+        let user_id = format!("@{}:{}", dto.username, self.admin.server_name());
+        let user_id = <&UserId>::try_from(user_id.as_str()).map_err(|err| {
+            // TODO
+            tracing::error!(?err, "Failed to parse username");
+            Error::Unknown
+        })?;
+
         let avatar_url = Url::parse(DEFAULT_AVATAR_URL).map_err(|err| {
             tracing::error!(?err, "Failed to parse default avatar url");
             Error::Unknown
@@ -214,7 +225,7 @@ impl AccountService {
 
         UserService::create(
             &self.admin,
-            user_id.clone(),
+            user_id,
             CreateUserBody {
                 displayname: Some(dto.username),
                 password: dto.password.to_string(),
@@ -239,14 +250,14 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        let matrix_account = UserService::query_user_account(&self.admin, user_id.clone())
+        let matrix_account = UserService::query_user_account(&self.admin, user_id)
             .await
             .map_err(|err| {
                 tracing::error!(?err, "Failed to query user account");
                 Error::Unknown
             })?;
         let account = Account {
-            user_id,
+            user_id: user_id.into(),
             username: matrix_account.name,
             email: matrix_account
                 .threepids
@@ -264,9 +275,9 @@ impl AccountService {
     }
 
     /// Creates an access token for the given user
-    pub async fn issue_user_token(&self, user_id: UserId) -> Result<String> {
+    pub async fn issue_user_token(&self, user_id: &UserId) -> Result<String> {
         let credentials =
-            UserService::login_as_user(&self.admin, user_id.clone(), LoginAsUserBody::default())
+            UserService::login_as_user(&self.admin, user_id, LoginAsUserBody::default())
                 .await
                 .map_err(|err| {
                     tracing::error!(?err, ?user_id, "Failed to login as user");
@@ -283,7 +294,7 @@ impl AccountService {
                 tracing::error!(?err, "Failed to get session from matrix as client");
                 Error::Unknown
             })?;
-        let matrix_account = UserService::query_user_account(&self.admin, session.user_id.clone())
+        let matrix_account = UserService::query_user_account(&self.admin, &session.user_id)
             .await
             .map_err(|err| {
                 tracing::error!(?err, "Failed to query user account");

@@ -1,15 +1,17 @@
-use std::str::FromStr;
-
+use anyhow::Result;
+use futures::{future, TryFutureExt};
 use matrix::{
     admin::resources::{
-        room::{RoomService as AdminRoomService, ListRoomResponse, ListRoomQuery, DeleteQuery},
-        user::{
-            UserService as AdminUserService, CreateUserBody,
-        },
-        user_id::UserId,
+        room::{DeleteQuery, ListRoomQuery, ListRoomResponse, RoomService as AdminRoomService},
+        user::{CreateUserBody, UserService as AdminUserService},
     },
-    client::resources::{room::{CreateRoomBody, RoomService, RoomPreset, JoinRoomResponse, JoinRoomBody, RoomVisibility}, login::{Login, LoginCredentials}},
-    ruma_common::{OwnedRoomId, OwnedUserId, OwnedRoomOrAliasId},
+    client::resources::{
+        login::Login,
+        room::{
+            CreateRoomBody, JoinRoomBody, JoinRoomResponse, RoomPreset, RoomService, RoomVisibility,
+        },
+    },
+    ruma_common::{OwnedRoomId, OwnedUserId, RoomId},
     Client,
 };
 
@@ -24,79 +26,78 @@ pub struct Test {
 }
 
 pub struct Sample {
-    pub user_id: OwnedUserId,
+    pub user_ids: Vec<OwnedUserId>,
     pub room_id: OwnedRoomId,
-    pub access_token: String,
+    pub access_tokens: Vec<String>,
+}
+
+impl Sample {
+    pub fn guests(&self) -> impl Iterator<Item = (&OwnedUserId, &String)> {
+        self.user_ids.iter().zip(self.access_tokens.iter()).skip(1)
+    }
+    pub fn owner(&self) -> (&OwnedUserId, &String) {
+        self.user_ids.iter().zip(self.access_tokens.iter()).clone().next().unwrap()
+    }
 }
 
 async fn create_accounts(
     client: &Client,
     server_name: String,
     amount: usize,
+    room: usize,
     seed: u64,
 ) -> Vec<(OwnedUserId, String)> {
-    let mut result = Vec::with_capacity(amount);
+    let users: Vec<_> = (0..amount)
+        .map(|i| OwnedUserId::try_from(format!("@{seed}-{room}-{i}:{}", server_name)).unwrap())
+        .collect();
 
-    for i in 0..amount {
-        let username = format!("{seed}-{i}");
-        let user_id = UserId::new(username.clone(), server_name.clone());
-        let password = "verysecure".to_owned();
-
-        let body = CreateUserBody {
-            password,
-            logout_devices: false,
-            displayname: None,
-            avatar_url: None,
-            threepids: vec![],
-            external_ids: vec![],
-            admin: false,
-            deactivated: false,
-            user_type: None,
-            locked: false,
-        };
-        AdminUserService::create(&client, user_id.clone(), body)
-            .await
-            .unwrap();
-
-        let password = "verysecure".to_owned();
-        let LoginCredentials { access_token } =
-            Login::login_credentials(client, username, password)
-                .await
-                .unwrap();
-
-        let user_id = OwnedUserId::from_str(&user_id.to_string()).unwrap();
-        result.push((user_id, access_token));
-    }
-
-    result
+    future::try_join_all((0..amount).map(|i| {
+        AdminUserService::create(
+            &client,
+            &users.get(i).unwrap(),
+            CreateUserBody {
+                password: "verysecure".to_owned(),
+                logout_devices: false,
+                displayname: None,
+                avatar_url: None,
+                threepids: vec![],
+                external_ids: vec![],
+                admin: false,
+                deactivated: false,
+                user_type: None,
+                locked: false,
+            },
+        )
+        .and_then(|resp| {
+            Login::login_credentials(client, resp.name, "verysecure".to_owned())
+                .map_ok(|resp| resp.access_token)
+        })
+    }))
+    .await
+    .map(|r| users.into_iter().zip(r).collect())
+    .unwrap()
 }
 
-async fn create_rooms(client: &Client, accounts: &[(OwnedUserId, String)]) -> Vec<OwnedRoomId> {
-    let mut result = Vec::with_capacity(accounts.len());
+async fn create_rooms(client: &Client, seed: u64, tokens: &[String]) -> Vec<OwnedRoomId> {
+    future::try_join_all((0..tokens.len()).map(|i| {
+        let access_token = &tokens[i];
 
-    for (user_id, access_token) in accounts {
-        let id = user_id.localpart();
-        let preset = Some(RoomPreset::PublicChat);
-
-        let name = format!("{id}-room-name");
-        let topic = format!("{id}-room-topic");
-        let room_alias_name = format!("{id}-room-alias");
-        let visibility = Some(RoomVisibility::Public);
-
-        let body = CreateRoomBody {
-            name,
-            topic,
-            room_alias_name,
-            preset,
-            visibility,
-            ..Default::default()
-        };
-        let resp = RoomService::create(client, access_token, body).await.unwrap();
-
-        result.push(resp.room_id);
-    }
-
-    result
+        RoomService::create(
+            client,
+            access_token.to_owned(),
+            CreateRoomBody {
+                name: format!("{seed}-{i}-room"),
+                topic: format!("{seed}-{i}-room-topic"),
+                room_alias_name: format!("{seed}-{i}-room-alias"),
+                preset: Some(RoomPreset::PublicChat),
+                visibility: Some(RoomVisibility::Public),
+                ..Default::default()
+            },
+        )
+        .map_ok(|resp| resp.room_id)
+    }))
+    .await
+    .unwrap()
 }
 
 async fn remove_rooms(client: &Client) {
@@ -104,14 +105,10 @@ async fn remove_rooms(client: &Client) {
         AdminRoomService::get_all(client, ListRoomQuery::default())
             .await
             .unwrap();
-    let room_names: Vec<_> = rooms
-        .iter()
-        .map(|r| r.name.clone().unwrap_or(r.room_id.to_string()))
-        .collect();
 
-    tracing::info!(?room_names, "purging all rooms!");
+    tracing::info!("purging all rooms!");
 
-    for room in rooms {
+    future::try_join_all(rooms.iter().map(|room| {
         AdminRoomService::delete_room(
             client,
             room.room_id.as_ref(),
@@ -121,15 +118,20 @@ async fn remove_rooms(client: &Client) {
                 purge: true,
             },
         )
-        .await
-        .unwrap();
-    }
+    }))
+    .await
+    .unwrap();
 }
 
 pub async fn init() -> Test {
     let _ = tracing_subscriber::fmt::try_init();
 
-    let seed = rand::thread_rng().gen();
+    // set this higher or equal to the number of tests
+    let rooms = 8;
+
+    let users_per_room = 4;
+
+    let seed =rand::thread_rng().gen();
 
     let env = Environment::new().await;
 
@@ -140,24 +142,30 @@ pub async fn init() -> Test {
     admin.set_token(admin_token).unwrap();
     remove_rooms(&admin).await;
 
-    let accounts = create_accounts(&admin, server_name.clone(), 4, seed).await;
+    let accounts = future::join_all(
+        (0..rooms).map(|room| create_accounts(&admin, server_name.clone(), users_per_room, room, seed),)
+    )
+    .await;
+
     let rooms = create_rooms(
         &admin,
-        accounts
+        seed,
+        &accounts
             .iter()
-            .map(|(user_id, access_token)| (user_id.clone(), access_token.clone()))
+            // make first user in the array the admin
+            .map(|users| users[0].1.clone())
             .collect::<Vec<_>>()
-            .as_slice(),
     )
     .await;
 
     let samples = accounts
         .into_iter()
         .zip(rooms.into_iter())
-        .map(|((user_id, access_token), room_id)| Sample {
-            user_id,
+        .map(|(users, room_id)| (users.into_iter().unzip(), room_id))
+        .map(|((user_ids, access_tokens), room_id)| Sample {
+            user_ids,
             room_id,
-            access_token,
+            access_tokens,
         })
         .collect();
 
@@ -168,39 +176,20 @@ pub async fn init() -> Test {
     }
 }
 
-pub async fn join_helper(client: &Client, samples: &[Sample]) -> Vec<(
-    OwnedRoomId,
-    Vec<OwnedUserId>,
-    Vec<anyhow::Result<JoinRoomResponse>>,
-)> {
-    let mut result = Vec::with_capacity(samples.len());
-
-    for sample in samples {
-        let guests: Vec<_> = samples
-            .iter()
-            .filter(|g| g.user_id != sample.user_id)
-            .collect();
-        let mut resps = Vec::with_capacity(guests.len());
-
-        for guest in guests.iter() {
-            let resp = RoomService::join(
-                &client,
-                guest.access_token.clone(),
-                &OwnedRoomOrAliasId::from(sample.room_id.clone()),
-                JoinRoomBody::default(),
-            )
-            .await;
-
-            resps.push(resp);
-        }
-
-        result.push((
-            sample.room_id.clone(),
-            guests.iter().map(|g| g.user_id.clone()).collect(),
-            resps,
-        ));
-    }
-
-    result
+pub async fn join_helper(
+    client: &Client,
+    users: impl Iterator<Item = (&OwnedUserId, &String)>,
+    room_id: &RoomId,
+) -> Vec<Result<JoinRoomResponse>> {
+    future::join_all(
+            users
+            .map(|(_, access_token)| {
+                RoomService::join(
+                    &client,
+                    access_token.clone(),
+                    room_id.into(),
+                    JoinRoomBody::default(),
+                )
+    }))
+    .await
 }
-

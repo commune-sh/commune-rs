@@ -25,7 +25,7 @@ pub async fn handler(
             let access_token = services
                 .commune
                 .account
-                .issue_user_token(account.user_id.clone())
+                .issue_user_token(&account.user_id)
                 .await
                 .unwrap();
             let payload = AccountRegisterResponse {

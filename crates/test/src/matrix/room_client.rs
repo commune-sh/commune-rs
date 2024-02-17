@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod tests {
+    use futures::{future, FutureExt};
     use matrix::{
         admin::resources::room::RoomService as AdminRoomService,
-        client::resources::room::{
-            ForgetRoomBody, LeaveRoomBody,
-            RoomKickOrBanBody, RoomService,
-        },
+        client::resources::room::{ForgetRoomBody, LeaveRoomBody, RoomKickOrBanBody, RoomService},
     };
     use tokio::sync::OnceCell;
 
-    use crate::matrix::util::{self, Test, join_helper};
+    use crate::matrix::util::{self, join_helper, Test};
 
     static TEST: OnceCell<Test> = OnceCell::const_new();
 
@@ -21,63 +19,50 @@ mod tests {
         client.clear_token();
 
         // first join
-        let result = join_helper(&client, samples).await;
+        let result = future::join_all(samples.iter().map(|s| {
+            join_helper(&client, s.guests(), &s.room_id)
+                .map(|resp| (&s.room_id, s.guests().map(|(id, _)| id), resp))
+        }))
+        .await;
 
-        let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
-        tracing::info!(?rooms, "joining all guests");
+        tracing::info!("joining all guests");
 
         // check whether all guests are in the room and joined the expected room
         for (room_id, guests, resps) in result {
-            let mut resp = AdminRoomService::get_members(&client, &room_id)
+            let mut resp = AdminRoomService::get_members(&admin, room_id)
                 .await
                 .unwrap();
             resp.members.sort();
 
-            assert!(resps.iter().all(|r| r.is_ok()));
-            let resps: Vec<_> = resps.into_iter().flatten().collect();
-
-            assert!(resps.iter().all(|r| r.room_id == *room_id));
-
-            for guest in guests {
-                assert!(resp.members.contains(&guest));
-            }
+            assert!(resps.iter().all(Result::is_ok));
+            assert!(resps.iter().flatten().all(|r| &r.room_id == room_id));
+            assert!(guests.cloned().all(|guest| resp.members.contains(&guest)));
         }
     }
 
     #[tokio::test]
     async fn leave_all_rooms() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let mut client = admin.clone();
         client.clear_token();
 
-        let mut result = Vec::with_capacity(samples.len());
-
         for sample in samples {
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
-
-            for guest in guests {
+            for (_, access_token) in sample.guests() {
                 RoomService::leave(
                     &client,
-                    guest.access_token.clone(),
+                    access_token,
                     &sample.room_id,
                     LeaveRoomBody::default(),
                 )
                 .await
                 .unwrap();
             }
-
-            result.push(sample.room_id.clone());
         }
 
         // check whether all guests left the room
-        for room_id in result {
-            let resp = AdminRoomService::get_members(&admin, &room_id)
+        for sample in samples {
+            let resp = AdminRoomService::get_members(&admin, &sample.room_id)
                 .await
                 .unwrap();
 
@@ -85,8 +70,9 @@ mod tests {
             assert_eq!(
                 &[samples
                     .iter()
-                    .find(|s| s.room_id == room_id)
-                    .map(|s| s.user_id.clone())
+                    .find(|s| s.room_id == sample.room_id)
+                    .map(|s| s.owner())
+                    .map(|(id, _)| id.to_owned())
                     .unwrap()],
                 resp.members.as_slice()
             );
@@ -95,23 +81,16 @@ mod tests {
 
     #[tokio::test]
     async fn forget_all_rooms() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let mut client = admin.clone();
         client.clear_token();
 
         for sample in samples {
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
-
-            for guest in guests {
+            for (_, access_token) in sample.guests() {
                 RoomService::forget(
                     &client,
-                    guest.access_token.clone(),
+                    access_token,
                     &sample.room_id,
                     ForgetRoomBody::default(),
                 )
@@ -133,7 +112,8 @@ mod tests {
                 &[samples
                     .iter()
                     .find(|s| &s.room_id == room_id)
-                    .map(|s| s.user_id.clone())
+                    .map(|s| s.owner())
+                    .map(|(id, _)| id.to_owned())
                     .unwrap()],
                 resp.members.as_slice()
             );
@@ -142,14 +122,11 @@ mod tests {
         // confirm a room can't be forgotten if we didn't leave first
         for sample in samples {
             let room_id = &sample.room_id;
+            let (_, access_token) = sample.owner();
 
-            let resp = RoomService::forget(
-                &client,
-                sample.access_token.clone(),
-                room_id,
-                ForgetRoomBody::default(),
-            )
-            .await;
+            let resp =
+                RoomService::forget(&client, access_token, room_id, ForgetRoomBody::default())
+                    .await;
 
             assert!(resp.is_err());
         }
@@ -157,51 +134,41 @@ mod tests {
 
     #[tokio::test]
     async fn kick_all_guests() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let mut client = admin.clone();
         client.clear_token();
 
         // second join
-        let result = join_helper(&client, samples).await;
-        let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
-        tracing::info!(?rooms, "joining all guests");
+        let result = future::join_all(samples.iter().map(|s| {
+            join_helper(&client, s.guests(), &s.room_id)
+                .map(|resp| (&s.room_id, s.guests().map(|(id, _)| id), resp))
+        }))
+        .await;
+
+        tracing::info!("joining all guests");
 
         // check whether all guests are in the room and joined the expected room
-        for (room_id, guests, resps) in result.iter() {
+        for (room_id, guests, resps) in result {
             let mut resp = AdminRoomService::get_members(&admin, room_id)
                 .await
                 .unwrap();
             resp.members.sort();
 
-            assert!(resps.iter().all(|r| r.is_ok()));
-            let resps: Vec<_> = resps.iter().flatten().collect();
-
-            assert!(resps.iter().all(|r| r.room_id == *room_id));
-
-            for guest in guests {
-                assert!(resp.members.contains(guest));
-            }
+            assert!(resps.iter().all(Result::is_ok));
+            assert!(resps.iter().flatten().all(|r| &r.room_id == room_id));
+            assert!(guests.cloned().all(|guest| resp.members.contains(&guest)));
         }
 
         for sample in samples {
-            let room_id = &sample.room_id;
-
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
-
-            for guest in guests {
+            for (user_id, access_token) in sample.guests() {
                 RoomService::kick(
                     &client,
-                    guest.access_token.clone(),
-                    room_id,
+                    access_token,
+                    &sample.room_id,
                     RoomKickOrBanBody {
                         reason: Default::default(),
-                        user_id: guest.user_id.clone(),
+                        user_id: user_id.clone(),
                     },
                 )
                 .await
@@ -210,8 +177,8 @@ mod tests {
         }
 
         // check whether all guests left the room
-        for (room_id, _, _) in result {
-            let resp = AdminRoomService::get_members(&admin, &room_id)
+        for sample in samples {
+            let resp = AdminRoomService::get_members(&admin, &sample.room_id)
                 .await
                 .unwrap();
 
@@ -219,8 +186,9 @@ mod tests {
             assert_eq!(
                 &[samples
                     .iter()
-                    .find(|s| s.room_id == room_id)
-                    .map(|s| s.user_id.clone())
+                    .find(|s| s.room_id == sample.room_id)
+                    .map(|s| s.owner())
+                    .map(|(id, _)| id.to_owned())
                     .unwrap()],
                 resp.members.as_slice()
             );
@@ -229,52 +197,43 @@ mod tests {
 
     #[tokio::test]
     async fn ban_all_guests() {
-        let Test {
-            samples, admin, ..
-        } = TEST.get_or_init(util::init).await;
+        let Test { samples, admin, .. } = TEST.get_or_init(util::init).await;
 
         let mut client = admin.clone();
         client.clear_token();
 
         // third join
-        let result = join_helper(&client, samples).await;
-        let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
-        tracing::info!(?rooms, "joining all guests");
+        let result = future::join_all(samples.iter().map(|s| {
+            join_helper(&client, s.guests(), &s.room_id)
+                .map(|resp| (&s.room_id, s.guests().map(|(id, _)| id), resp))
+        }))
+        .await;
+
+        tracing::info!("joining all guests");
 
         // check whether all guests are in the room and joined the expected room
-        for (room_id, guests, resps) in result.iter() {
+        for (room_id, guests, resps) in result {
             let mut resp = AdminRoomService::get_members(&admin, room_id)
                 .await
                 .unwrap();
             resp.members.sort();
 
-            assert!(resps.iter().all(|r| r.is_ok()));
-            let resps: Vec<_> = resps.iter().flatten().collect();
-
-            assert!(resps.iter().all(|r| r.room_id == *room_id));
-
-            for guest in guests {
-                assert!(resp.members.contains(guest));
-            }
+            assert!(resps.iter().all(Result::is_ok));
+            assert!(resps.iter().flatten().all(|r| &r.room_id == room_id));
+            assert!(guests.cloned().all(|guest| resp.members.contains(&guest)));
         }
 
         for sample in samples {
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
+            let (_, owner_token) = sample.owner();
 
-            for guest in guests {
-                let client = client.clone();
-                let room_id = &sample.room_id;
-
+            for (user_id, _) in sample.guests() {
                 RoomService::ban(
                     &client,
-                    sample.access_token.clone(),
-                    room_id,
+                    owner_token,
+                    &sample.room_id,
                     RoomKickOrBanBody {
                         reason: Default::default(),
-                        user_id: guest.user_id.clone(),
+                        user_id: user_id.clone(),
                     },
                 )
                 .await
@@ -283,13 +242,17 @@ mod tests {
         }
 
         // fourth join
-        let result = join_helper(&client, samples).await;
-        let rooms: Vec<_> = result.iter().map(|r| &r.0).collect();
-        tracing::info!(?rooms, "joining all guests");
+        let result = future::join_all(samples.iter().map(|s| {
+            join_helper(&client, s.guests(), &s.room_id)
+                .map(|resp| (&s.room_id, s.guests().map(|(id, _)| id), resp))
+        }))
+        .await;
+
+        tracing::info!("joining all guests");
 
         // check whether all guests got banned from the room
         // check whether their join request failed
-        for (ref room_id, _, resps) in result {
+        for (room_id, _, resps) in result {
             let resp = AdminRoomService::get_members(&admin, &room_id)
                 .await
                 .unwrap();
@@ -299,7 +262,8 @@ mod tests {
                 &[samples
                     .iter()
                     .find(|s| &s.room_id == room_id)
-                    .map(|s| s.user_id.clone())
+                    .map(|s| s.owner())
+                    .map(|(id, _)| id.to_owned())
                     .unwrap()],
                 resp.members.as_slice()
             );
@@ -308,21 +272,16 @@ mod tests {
         }
 
         for sample in samples {
-            let guests: Vec<_> = samples
-                .iter()
-                .filter(|g| g.user_id != sample.user_id)
-                .collect();
+            let (_, owner_token) = sample.owner();
 
-            for guest in guests {
-                let room_id = &sample.room_id;
-
+            for (user_id, _) in sample.guests() {
                 RoomService::unban(
                     &client,
-                    sample.access_token.clone(),
-                    room_id,
+                    owner_token,
+                    &sample.room_id,
                     RoomKickOrBanBody {
                         reason: Default::default(),
-                        user_id: guest.user_id.clone(),
+                        user_id: user_id.clone(),
                     },
                 )
                 .await
