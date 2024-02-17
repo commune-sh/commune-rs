@@ -170,7 +170,7 @@ impl MxcService {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .get_query(format!("/_matrix/media/v3/preview_url",), &query)
+            .get_query("/_matrix/media/v3/preview_url".to_string(), &query)
             .await?;
 
         if resp.status().is_success() {
