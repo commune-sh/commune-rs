@@ -9,7 +9,7 @@ use ruma_events::{AnyMessageLikeEvent, AnyStateEvent, AnyTimelineEvent};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{error::MatrixError, event_filter::RoomEventFilter, http::Client};
+use crate::{error::MatrixError, filter::RoomEventFilter, http::Client};
 
 #[derive(Default)]
 pub struct RoomService;
@@ -444,7 +444,7 @@ impl RoomService {
     }
 }
 
-#[derive(Default, Debug, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub enum Direction {
     #[serde(rename = "f")]
     #[default]

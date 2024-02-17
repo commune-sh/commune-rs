@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ruma_common::{serde::Raw, EventId, OwnedEventId, RoomId, TransactionId};
+use ruma_common::{serde::Raw, EventId, OwnedEventId, OwnedTransactionId, RoomId};
 
 use ruma_events::{
     relation::RelationType, AnyMessageLikeEvent, AnyStateEvent, AnyStateEventContent,
@@ -9,25 +9,39 @@ use ruma_events::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{admin::resources::room::Direction, event_filter::RoomEventFilter, Client};
+use crate::{admin::resources::room::Direction, error::MatrixError, Client};
 
-pub struct Events;
+pub struct EventsService;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct GetMessagesQuery {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    pub dir: Option<Direction>,
-    pub filter: Option<RoomEventFilter>,
+
+    pub dir: Direction,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub filter: String,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct GetRelationsQuery {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    pub dir: Option<Direction>,
+
+    pub dir: Direction,
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,7 +54,7 @@ pub struct GetMessagesResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
-pub struct GetStateResponse(Vec<Raw<AnyStateEvent>>);
+pub struct GetStateResponse(pub Vec<Raw<AnyStateEvent>>);
 
 #[derive(Debug, Deserialize)]
 pub struct GetRelationsResponse {
@@ -70,7 +84,7 @@ pub struct SendRedactionResponse {
     pub event_id: OwnedEventId,
 }
 
-impl Events {
+impl EventsService {
     #[instrument(skip(client, access_token))]
     pub async fn get_event(
         client: &Client,
@@ -103,10 +117,13 @@ impl Events {
         tmp.set_token(access_token)?;
 
         let resp = tmp
-            .get(format!(
-                "/_matrix/client/v3/rooms/{room_id}/messages",
-                room_id = room_id,
-            ))
+            .get_query(
+                format!(
+                    "/_matrix/client/v3/rooms/{room_id}/messages",
+                    room_id = room_id,
+                ),
+                &query,
+            )
             .await?;
 
         Ok(resp.json().await?)
@@ -199,7 +216,7 @@ impl Events {
         client: &Client,
         access_token: impl Into<String>,
         room_id: &RoomId,
-        txn_id: &TransactionId,
+        txn_id: OwnedTransactionId,
         body: T,
     ) -> Result<SendMessageResponse> {
         let mut tmp = (*client).clone();
@@ -217,7 +234,13 @@ impl Events {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     #[instrument(skip(client, access_token, body))]
@@ -243,7 +266,13 @@ impl Events {
 
         let resp = tmp.put_json(path, &body).await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 
     #[instrument(skip(client, access_token, body))]
@@ -252,7 +281,7 @@ impl Events {
         access_token: impl Into<String>,
         room_id: &RoomId,
         event_id: &EventId,
-        txn_id: &TransactionId,
+        txn_id: OwnedTransactionId,
         body: SendRedactionBody,
     ) -> Result<SendRedactionResponse> {
         let mut tmp = (*client).clone();
@@ -270,6 +299,12 @@ impl Events {
             )
             .await?;
 
-        Ok(resp.json().await?)
+        if resp.status().is_success() {
+            return Ok(resp.json().await?);
+        }
+
+        let error = resp.json::<MatrixError>().await?;
+
+        Err(anyhow::anyhow!(error.error))
     }
 }

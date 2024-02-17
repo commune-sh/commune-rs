@@ -1,10 +1,10 @@
 use url::Url;
 
-use matrix::admin::resources::user_id::UserId;
+use matrix::ruma_common::OwnedUserId;
 
 #[derive(Debug, Clone)]
 pub struct Account {
-    pub user_id: UserId,
+    pub user_id: OwnedUserId,
     pub username: String,
     pub email: String,
     pub display_name: String,

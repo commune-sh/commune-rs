@@ -4,13 +4,12 @@
 //! for a server admin: see Admin API.
 
 use anyhow::Result;
+use ruma_common::UserId;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use url::Url;
 
 use crate::{error::MatrixError, http::Client};
-
-use super::user_id::UserId;
 
 #[derive(Default)]
 pub struct UserService;
@@ -149,7 +148,7 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/v1.88/admin_api/user_admin_api.html#query-user-account
     #[instrument(skip(client))]
-    pub async fn query_user_account(client: &Client, user_id: UserId) -> Result<User> {
+    pub async fn query_user_account(client: &Client, user_id: &UserId) -> Result<User> {
         let resp = client
             .get(format!(
                 "/_synapse/admin/v2/users/{user_id}",
@@ -174,7 +173,7 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client, body))]
-    pub async fn create(client: &Client, user_id: UserId, body: CreateUserBody) -> Result<User> {
+    pub async fn create(client: &Client, user_id: &UserId, body: CreateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
@@ -212,7 +211,7 @@ impl UserService {
     ///
     /// Refer: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
     #[instrument(skip(client))]
-    pub async fn update(client: &Client, user_id: UserId, body: UpdateUserBody) -> Result<User> {
+    pub async fn update(client: &Client, user_id: &UserId, body: UpdateUserBody) -> Result<User> {
         let resp = client
             .put_json(
                 format!("/_synapse/admin/v2/users/{user_id}", user_id = user_id),
@@ -246,7 +245,7 @@ impl UserService {
     #[instrument(skip(client))]
     pub async fn login_as_user(
         client: &Client,
-        user_id: UserId,
+        user_id: &UserId,
         body: LoginAsUserBody,
     ) -> Result<LoginAsUserResponse> {
         let resp = client

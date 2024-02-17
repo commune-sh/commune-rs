@@ -4,6 +4,8 @@ use ruma_events::{room::power_levels::RoomPowerLevelsEventContent, AnyInitialSta
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
+use crate::error::MatrixError;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RoomPreset {
@@ -103,15 +105,9 @@ pub struct ForgetRoomResponse {}
 #[derive(Debug, Deserialize)]
 pub struct RoomKickOrBanResponse {}
 
-#[derive(Debug, Deserialize)]
-pub struct MatrixError {
-    pub errcode: String,
-    pub error: String,
-}
+pub struct RoomService;
 
-pub struct Room;
-
-impl Room {
+impl RoomService {
     /// Create a new room with various configuration options.
     ///
     /// Refer: https://spec.matrix.org/v1.9/client-server-api/#creation
