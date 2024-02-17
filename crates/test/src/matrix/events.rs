@@ -4,16 +4,21 @@ mod tests {
 
     use futures::{future, TryFutureExt};
     use matrix::{
-        client::resources::events::{EventsService, GetMessagesQuery},
+        client::resources::events::{EventsService, GetMessagesQuery, SendRedactionBody},
         filter::RoomEventFilter,
-        ruma_common::TransactionId,
+        ruma_common::{RoomVersionId, TransactionId},
         ruma_events::{
-            relation::InReplyTo,
-            room::message::{
-                AddMentions, ForwardThread, OriginalRoomMessageEvent, Relation,
-                RoomMessageEventContent,
+            reaction::{OriginalReactionEvent, ReactionEventContent},
+            relation::{Annotation, InReplyTo},
+            room::{
+                message::{
+                    AddMentions, ForwardThread, OriginalRoomMessageEvent, Relation,
+                    RoomMessageEvent, RoomMessageEventContent,
+                },
+                redaction::OriginalRoomRedactionEvent,
+                topic::{OriginalRoomTopicEvent, RoomTopicEventContent},
             },
-            MessageLikeEventType,
+            MessageLikeEvent, MessageLikeEventType,
         },
     };
     use tokio::sync::OnceCell;
@@ -74,20 +79,17 @@ mod tests {
             )))
             .collect();
 
-        let filter = RoomEventFilter {
-            types: vec![MessageLikeEventType::RoomMessage.into()],
-            ..Default::default()
-        };
-
-        let filter = serde_json::to_string(&filter).unwrap();
-
         let found = EventsService::get_messages(
             &client,
             owner_token,
             &sample.room_id,
             GetMessagesQuery {
                 limit: Some(111),
-                filter: filter.clone(),
+                filter: serde_json::to_string(&RoomEventFilter {
+                    types: vec![MessageLikeEventType::RoomMessage.into()],
+                    ..Default::default()
+                })
+                .unwrap(),
                 ..Default::default()
             },
         )
@@ -101,16 +103,13 @@ mod tests {
             .map(|e| e.content.body().to_owned())
             .collect();
 
-        dbg!(&found, &expected);
-
         assert!(expected.iter().all(|s| found.contains(s)));
     }
 
-    // TODO
     #[tokio::test]
     async fn reply_to_message() {
         let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
-        let sample = samples.get(1).unwrap();
+        let sample = samples.get(2).unwrap();
         let (owner_id, owner_token) = sample.owner();
 
         let mut client = admin.clone();
@@ -134,21 +133,22 @@ mod tests {
         .await
         .unwrap();
 
-        let n = 5;
+        let recursion = 5;
+        let children = 2;
 
         let mut history = Vec::from([vec![root]]);
 
-        for i in 1..n {
+        for level in 1..recursion {
             let guests: Vec<_> = sample.guests().collect();
-            let (_, access_token) = guests.get((n - 1) % guests.len()).unwrap();
+            let (_, access_token) = guests.get((recursion - 1) % guests.len()).unwrap();
 
             let prev = history.last().unwrap();
-            let traverse = future::try_join_all((0..prev.len() * 2).map(|j| {
+            let traverse = future::try_join_all((0..prev.len() * children).map(|i| {
                 EventsService::get_event(
                     &client,
                     *access_token,
                     &sample.room_id,
-                    prev.get(j / 2).unwrap(),
+                    prev.get(i / children).unwrap(),
                 )
                 .map_ok(|resp| resp.deserialize_as::<OriginalRoomMessageEvent>().unwrap())
                 .and_then(|event| {
@@ -157,7 +157,7 @@ mod tests {
                         *access_token,
                         &sample.room_id,
                         TransactionId::new(),
-                        RoomMessageEventContent::text_markdown(format!("level {i}",))
+                        RoomMessageEventContent::text_markdown(format!("level {level}"))
                             .make_reply_to(&event, ForwardThread::No, AddMentions::Yes),
                     )
                 })
@@ -171,14 +171,13 @@ mod tests {
             tracing::info!(?traverse);
         }
 
-        let filter = RoomEventFilter {
+        let filter = serde_json::to_string(&RoomEventFilter {
             types: vec![MessageLikeEventType::RoomMessage.into()],
             ..Default::default()
-        };
+        })
+        .unwrap();
 
-        let filter = serde_json::to_string(&filter).unwrap();
-
-        let found = EventsService::get_messages(
+        let found: Vec<_> = EventsService::get_messages(
             &client,
             owner_token,
             &sample.room_id,
@@ -188,9 +187,9 @@ mod tests {
                 ..Default::default()
             },
         )
-        .map_ok(move |resp| {
+        .map_ok(|resp| {
             resp.chunk
-                .iter()
+                .into_iter()
                 .map(|e| e.deserialize_as::<OriginalRoomMessageEvent>().unwrap())
                 .map(|e| {
                     (
@@ -199,13 +198,15 @@ mod tests {
                         e.content.relates_to,
                     )
                 })
-                .collect::<Vec<_>>()
+                .collect()
         })
         .await
         .unwrap();
 
-        let v: Vec<_> = (0..5).map(|m| 2u32.pow(m as u32) as usize - 1).collect();
-        dbg!(&found);
+        // this is just `map (n -> n - 1) [1, 2 , 4, 8, ...]`
+        let v: Vec<_> = (0..recursion)
+            .map(|i| children.pow(i as u32) as usize - 1)
+            .collect();
 
         let tree: Vec<_> = v
             .windows(2)
@@ -215,11 +216,10 @@ mod tests {
 
         assert!(tree
             .windows(2)
-            .all(|events| { events[0].len() * 2 == events[1].len() }));
+            .all(|events| events[0].len() * 2 == events[1].len()));
 
-        dbg!(&tree);
-
-        let ok = tree.windows(2)
+        let ok = tree
+            .windows(2)
             .map(|arr| (arr[0].clone(), arr[1].clone()))
             .all(|(parents, children)| {
                 children
@@ -239,7 +239,238 @@ mod tests {
         assert!(ok);
     }
 
-    // redactions
-    //
-    // annotations
+    #[tokio::test]
+    async fn redact_message() {
+        let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
+        let sample = samples.get(3).unwrap();
+        let (owner_id, owner_token) = sample.owner();
+
+        let mut client = admin.clone();
+        client.clear_token();
+
+        // first join
+        let joins = join_helper(&client, sample.guests(), &sample.room_id).await;
+
+        assert!(joins.iter().all(Result::is_ok));
+
+        let messages = future::try_join_all(
+            sample
+                .guests()
+                .map(|(user_id, access_token)| {
+                    EventsService::send_message(
+                        &client,
+                        access_token,
+                        &sample.room_id,
+                        TransactionId::new(),
+                        RoomMessageEventContent::text_markdown(format!(
+                            "hello, **my name is {}**",
+                            user_id
+                        )),
+                    )
+                })
+                .chain(iter::once(EventsService::send_message(
+                    &client,
+                    owner_token,
+                    &sample.room_id,
+                    TransactionId::new(),
+                    RoomMessageEventContent::text_plain(format!(
+                        "and I am the admin of the room, {}",
+                        owner_id
+                    )),
+                ))),
+        )
+        .await
+        .unwrap();
+
+        future::try_join_all(messages[..sample.user_ids.len() - 1].iter().map(|resp| {
+            EventsService::send_redaction(
+                &client,
+                owner_token,
+                &sample.room_id,
+                &resp.event_id,
+                TransactionId::new(),
+                SendRedactionBody {
+                    reason: format!("I don't like your tone"),
+                },
+            )
+        }))
+        .await
+        .unwrap();
+
+        let messages: Vec<_> = EventsService::get_messages(
+            &client,
+            owner_token,
+            &sample.room_id,
+            GetMessagesQuery {
+                limit: Some(111),
+                filter: serde_json::to_string(&RoomEventFilter {
+                    types: vec![MessageLikeEventType::RoomMessage.into()],
+                    not_senders: vec![owner_id.to_owned()],
+                    ..Default::default()
+                })
+                .unwrap(),
+                ..Default::default()
+            },
+        )
+        .map_ok(|resp| {
+            resp.chunk
+                .into_iter()
+                .map(|e| e.deserialize_as::<RoomMessageEvent>().unwrap())
+                .collect()
+        })
+        .await
+        .unwrap();
+
+        let redactions: Vec<_> = EventsService::get_messages(
+            &client,
+            owner_token,
+            &sample.room_id,
+            GetMessagesQuery {
+                limit: Some(111),
+                filter: serde_json::to_string(&RoomEventFilter {
+                    types: vec![MessageLikeEventType::RoomRedaction.into()],
+                    ..Default::default()
+                })
+                .unwrap(),
+                ..Default::default()
+            },
+        )
+        .map_ok(|resp| {
+            resp.chunk
+                .into_iter()
+                .map(|e| e.deserialize_as::<OriginalRoomRedactionEvent>().unwrap())
+                .collect()
+        })
+        .await
+        .unwrap();
+
+        assert!(messages[..sample.user_ids.len() - 1]
+            .iter()
+            .all(|m| m.as_original().is_none()));
+
+        assert!(messages[..sample.user_ids.len() - 1]
+            .iter()
+            .all(|m| redactions
+                .iter()
+                .find(|r| r.redacts(&RoomVersionId::V11) == m.event_id() && &r.sender == owner_id)
+                .is_some()));
+
+        assert!(messages[..sample.user_ids.len() - 1]
+            .iter()
+            .all(|m| match m {
+                MessageLikeEvent::Redacted(_) => true,
+                _ => false,
+            }));
+    }
+
+    #[tokio::test]
+    async fn annotate_message() {
+        let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
+        let sample = samples.get(3).unwrap();
+        let (owner_id, owner_token) = sample.owner();
+
+        let mut client = admin.clone();
+        client.clear_token();
+
+        // first join
+        let joins = join_helper(&client, sample.guests(), &sample.room_id).await;
+
+        assert!(joins.iter().all(Result::is_ok));
+
+        let message = EventsService::send_message(
+            &client,
+            owner_token,
+            &sample.room_id,
+            TransactionId::new(),
+            RoomMessageEventContent::text_plain(format!(
+                "and I am the admin of the room, {}",
+                owner_id
+            )),
+        )
+        .await
+        .unwrap();
+
+        future::try_join_all(sample.guests().map(|(_, access_token)| {
+            EventsService::send_message(
+                &client,
+                access_token,
+                &sample.room_id,
+                TransactionId::new(),
+                ReactionEventContent::new(Annotation::new(
+                    message.event_id.to_owned(),
+                    "owo".to_owned(),
+                )),
+            )
+        }))
+        .await
+        .unwrap();
+
+        let annotations: Vec<_> = EventsService::get_messages(
+            &client,
+            owner_token,
+            &sample.room_id,
+            GetMessagesQuery {
+                limit: Some(111),
+                filter: serde_json::to_string(&RoomEventFilter {
+                    types: vec![MessageLikeEventType::Reaction.into()],
+                    ..Default::default()
+                })
+                .unwrap(),
+                ..Default::default()
+            },
+        )
+        .map_ok(|resp| {
+            resp.chunk
+                .into_iter()
+                .map(|e| e.deserialize_as::<OriginalReactionEvent>().unwrap())
+                .collect()
+        })
+        .await
+        .unwrap();
+
+        assert!(annotations
+            .iter()
+            .all(|m| m.content.relates_to.event_id == message.event_id
+                && m.content.relates_to.key == "owo".to_owned()));
+    }
+
+    #[tokio::test]
+    async fn send_state() {
+        let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
+        let sample = samples.get(4).unwrap();
+        let (_, owner_token) = sample.owner();
+
+        let mut client = admin.clone();
+        client.clear_token();
+
+        // first join
+        let joins = join_helper(&client, sample.guests(), &sample.room_id).await;
+
+        assert!(joins.iter().all(Result::is_ok));
+
+        let _ = EventsService::send_state(
+            &client,
+            owner_token,
+            &sample.room_id,
+            None,
+            RoomTopicEventContent::new("secret banana party".to_owned()),
+        )
+        .await
+        .unwrap();
+
+        let state: Vec<_> = EventsService::get_state(&client, owner_token, &sample.room_id)
+            .map_ok(|resp| {
+                resp.0
+                    .iter()
+                    .filter_map(|e| e.deserialize_as::<OriginalRoomTopicEvent>().ok())
+                    .collect()
+            })
+            .await
+            .unwrap();
+
+        assert!(state
+            .iter()
+            .find(|s| s.content.topic == "secret banana party".to_owned())
+            .is_some());
+    }
 }
