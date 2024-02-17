@@ -3,6 +3,7 @@ use fake::{
     Fake,
 };
 
+use matrix::ruma_common::OwnedUserId;
 use reqwest::StatusCode;
 use scraper::Selector;
 use uuid::Uuid;
@@ -13,7 +14,6 @@ use commune_server::router::api::v1::account::{
     verify_code::{AccountVerifyCodePayload, VerifyCodeResponse},
     verify_code_email::{AccountVerifyCodeEmailPayload, VerifyCodeEmailResponse},
 };
-use matrix::admin::resources::user_id::UserId;
 
 use crate::tools::{http::HttpClient, maildev::MailDevClient};
 
@@ -80,7 +80,9 @@ async fn register_account_with_success() {
         "should return 201 for created"
     );
     assert_eq!(
-        UserId::new(request_payload.username, "matrix.localhost".into()).to_string(),
+        OwnedUserId::try_from(format!("@{}:matrix.localhost", request_payload.username))
+            .map(|user_id| user_id.to_string())
+            .unwrap(),
         response_payload.credentials.username,
         "should return the same username"
     )
