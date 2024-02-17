@@ -8,8 +8,10 @@ mod tests {
         filter::RoomEventFilter,
         ruma_common::TransactionId,
         ruma_events::{
+            relation::InReplyTo,
             room::message::{
-                AddMentions, ForwardThread, OriginalRoomMessageEvent, RoomMessageEventContent,
+                AddMentions, ForwardThread, OriginalRoomMessageEvent, Relation,
+                RoomMessageEventContent,
             },
             MessageLikeEventType,
         },
@@ -105,10 +107,10 @@ mod tests {
     }
 
     // TODO
-    // #[tokio::test]
+    #[tokio::test]
     async fn reply_to_message() {
         let Test { admin, samples, .. } = TEST.get_or_init(util::init).await;
-        let sample = samples.get(0).unwrap();
+        let sample = samples.get(1).unwrap();
         let (owner_id, owner_token) = sample.owner();
 
         let mut client = admin.clone();
@@ -137,14 +139,14 @@ mod tests {
         let mut history = Vec::from([vec![root]]);
 
         for i in 1..n {
-            let (user_id, access_token) =
-                sample.guests().nth(i % sample.user_ids.len() - 1).unwrap();
+            let guests: Vec<_> = sample.guests().collect();
+            let (_, access_token) = guests.get((n - 1) % guests.len()).unwrap();
 
             let prev = history.last().unwrap();
             let traverse = future::try_join_all((0..prev.len() * 2).map(|j| {
                 EventsService::get_event(
                     &client,
-                    access_token,
+                    *access_token,
                     &sample.room_id,
                     prev.get(j / 2).unwrap(),
                 )
@@ -152,7 +154,7 @@ mod tests {
                 .and_then(|event| {
                     EventsService::send_message(
                         &client,
-                        access_token,
+                        *access_token,
                         &sample.room_id,
                         TransactionId::new(),
                         RoomMessageEventContent::text_markdown(format!("level {i}",))
@@ -186,12 +188,58 @@ mod tests {
                 ..Default::default()
             },
         )
-        .map_ok(move |resp| resp.chunk)
+        .map_ok(move |resp| {
+            resp.chunk
+                .iter()
+                .map(|e| e.deserialize_as::<OriginalRoomMessageEvent>().unwrap())
+                .map(|e| {
+                    (
+                        e.event_id,
+                        e.content.body().to_owned(),
+                        e.content.relates_to,
+                    )
+                })
+                .collect::<Vec<_>>()
+        })
         .await
         .unwrap();
 
-        assert!(history
+        let v: Vec<_> = (0..5).map(|m| 2u32.pow(m as u32) as usize - 1).collect();
+        dbg!(&found);
+
+        let tree: Vec<_> = v
             .windows(2)
-            .all(|events| events[0].len() * 2 == events[1].len()));
+            .map(|arr| (arr[0], arr[1]))
+            .map(|(i, j)| found[i..j].to_vec())
+            .collect();
+
+        assert!(tree
+            .windows(2)
+            .all(|events| { events[0].len() * 2 == events[1].len() }));
+
+        dbg!(&tree);
+
+        let ok = tree.windows(2)
+            .map(|arr| (arr[0].clone(), arr[1].clone()))
+            .all(|(parents, children)| {
+                children
+                    .iter()
+                    .map(|(_, _, relation)| relation.clone().unwrap())
+                    .all(|relation| match relation {
+                        Relation::Reply {
+                            in_reply_to: InReplyTo { event_id, .. },
+                        } => parents
+                            .iter()
+                            .find(|(parent_id, _, _)| parent_id == &event_id)
+                            .is_some(),
+                        _ => panic!(),
+                    })
+            });
+
+        assert!(ok);
     }
+
+    // redactions
+    //
+    // annotations
 }
