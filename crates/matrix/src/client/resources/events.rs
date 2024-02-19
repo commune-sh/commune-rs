@@ -11,7 +11,7 @@ use tracing::instrument;
 
 use crate::{admin::resources::room::Direction, error::MatrixError, Client};
 
-pub struct EventsService;
+pub struct EventsHandle;
 
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct GetMessagesQuery {
@@ -84,7 +84,7 @@ pub struct SendRedactionResponse {
     pub event_id: OwnedEventId,
 }
 
-impl EventsService {
+impl EventsHandle {
     #[instrument(skip(client, access_token))]
     pub async fn get_event(
         client: &Client,
