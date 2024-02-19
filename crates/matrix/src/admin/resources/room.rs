@@ -30,8 +30,9 @@ pub struct ListRoomQuery {
     pub search_term: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct MessagesQuery {
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub from: String,
 
     #[serde(skip_serializing_if = "String::is_empty")]
