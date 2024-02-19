@@ -2,10 +2,11 @@
 mod tests {
     use std::{thread, time::Duration};
 
-    use futures::TryFutureExt;
+    use futures::{future, TryFutureExt};
     use matrix::{
         admin::resources::room::{ListRoomQuery, MessagesQuery, RoomService as AdminRoomService},
         ruma_common::{RoomId, ServerName},
+        ruma_events::{room::name::OriginalRoomNameEvent, AnyTimelineEvent, TimelineEventType},
     };
 
     use tokio::sync::OnceCell;
@@ -22,15 +23,32 @@ mod tests {
             admin,
         } = TEST.get_or_init(util::init).await;
 
-        // TODO
-        thread::sleep(Duration::from_secs(5));
-
         let resp: Vec<_> = AdminRoomService::get_all(admin, ListRoomQuery::default())
             .map_ok(|resp| resp.rooms)
             .await
             .unwrap();
 
-        dbg!(samples.iter().map(|s| s.owner()).collect::<Vec<_>>());
+        while let Some(_) = future::try_join_all(resp.iter().map(|r| {
+            AdminRoomService::get_room_events(admin, &r.room_id, Default::default())
+                .map_ok(|resp| resp.chunk.deserialize().unwrap())
+        }))
+        .await
+        .map(|ok| {
+            ok.into_iter().find(|chunk| {
+                chunk
+                    .iter()
+                    .all(|event| event.event_type() != TimelineEventType::RoomName)
+            })
+        })
+        .unwrap()
+        {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
+
+        let resp: Vec<_> = AdminRoomService::get_all(admin, ListRoomQuery::default())
+            .map_ok(|resp| resp.rooms)
+            .await
+            .unwrap();
 
         assert_eq!(
             samples
