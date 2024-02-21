@@ -11,7 +11,7 @@ default:
 # Creates the `.env` file if it doesn't exist
 dotenv:
   cp -n .env.example .env || true
-  mkdir -p docker/synapse
+  mkdir -p docker/synapse || true
 
 # Dump database to a file
 backup_db:

@@ -49,9 +49,6 @@ jobs:
       - name: Create a copy of `.env.example`
         run: just dotenv
 
-      - name: Set environment variable
-        run: sed -i "s/DOCKER_USER='.*'/DOCKER_USER='$(id -u):$(id -g)'/" .env
-
       - name: Use Test Homeserver
         run: |
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
