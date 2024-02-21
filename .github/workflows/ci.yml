@@ -50,11 +50,10 @@ jobs:
         run: just dotenv
 
       - name: Set environment variable
-        run: echo "DOCKER_USER='$(id -u):$(id -g)'" >> .env
+        run: sed -i "s/DOCKER_USER='.*'/DOCKER_USER='$(id -u):$(id -g)'/" .env
 
       - name: Use Test Homeserver
         run: |
-          mkdir -p ./docker/synapse
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
 
       - name: Run Docker Containers

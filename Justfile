@@ -2,6 +2,7 @@ set positional-arguments
 
 commit_sha := `git rev-parse --verify --short=7 HEAD`
 target_release := "x86_64-unknown-linux-musl"
+docker_user := `echo "$(id -u):$(id -g)"`
 
 # Lists all available commands
 default:
@@ -10,6 +11,7 @@ default:
 # Creates the `.env` file if it doesn't exist
 dotenv:
   cp -n .env.example .env || true
+  mkdir -p docker/synapse
 
 # Dump database to a file
 backup_db:
@@ -29,7 +31,7 @@ nuke_db:
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
   docker run -i --rm \
-    -u $(id -u):$(id -g) \
+    -u {{docker_user}} \
     -v ./docker/synapse:/data \
     --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
@@ -38,7 +40,7 @@ gen_synapse_conf: dotenv
 gen_synapse_admin: dotenv
   docker compose exec -i synapse \
     register_new_matrix_user http://localhost:8008 \
-    -u $(id -u):$(id -g) \
+    -u {{docker_user}} \
     -c /data/homeserver.yaml \
     -u admin \
     -p admin \
