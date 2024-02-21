@@ -15,17 +15,17 @@ dotenv:
 
 # Dump database to a file
 backup_db:
-  docker compose exec -T synapse_database \
+  DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
     pg_dumpall -c -U synapse_user > ./dump.sql
 
 # Restore database from a file
 restore_db:
-  cat ./dump.sql | docker compose exec -T synapse_database \
+  cat ./dump.sql | DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
     psql -U synapse_user -d synapse
 
 # Nuke database
 nuke_db:
-  docker compose exec -T synapse_database \
+    DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
     psql -U synapse_user -d synapse -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 # Generates the synapse configuration file and saves it
@@ -55,16 +55,16 @@ get_access_token:
 
 # Runs backend dependency services
 backend: dotenv
-  docker compose up --build
+  DOCKER_USER={{docker_user}} docker compose up --build
 
 # Stops backend dependency services
 stop:
-  docker compose down
+  DOCKER_USER={{docker_user}} docker compose down
 
 # Removes oll Docker related config, volumes and containers for this project
 clear: stop
-  docker compose rm --all --force --volumes --stop
-  docker volume rm commune_synapse_database || true
+  DOCKER_USER={{docker_user}} docker compose rm --all --force --volumes --stop
+  DOCKER_USER={{docker_user}} docker volume rm commune_synapse_database || true
 
 # Runs all the tests from the `test` package. Optionally runs a single one if name pattern is provided
 e2e *args='':
