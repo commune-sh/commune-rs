@@ -2,36 +2,38 @@ set positional-arguments
 
 commit_sha := `git rev-parse --verify --short=7 HEAD`
 target_release := "x86_64-unknown-linux-musl"
-docker_user := `echo "$(id -u):$(id -g)"`
 
 # Lists all available commands
 default:
   just --list
 
 # Creates the `.env` file if it doesn't exist
+# This indicates the first invocation of `just` so we also
+# create the docker folders while we're at it
 dotenv:
-  cp -n .env.example .env || true
+  export DOCKER_USER="$(id -u):$(id -g)" && \
+  cp -n .env.example .env || true && \
   mkdir -p docker/synapse || true
 
 # Dump database to a file
 backup_db:
-  DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
+  docker compose exec -T synapse_database \
     pg_dumpall -c -U synapse_user > ./dump.sql
 
 # Restore database from a file
 restore_db:
-  cat ./dump.sql | DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
+  cat ./dump.sql | docker compose exec -T synapse_database \
     psql -U synapse_user -d synapse
 
 # Nuke database
 nuke_db:
-    DOCKER_USER={{docker_user}} docker compose exec -T synapse_database \
+  docker compose exec -T synapse_database \
     psql -U synapse_user -d synapse -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
   docker run -i --rm \
-    -u {{docker_user}} \
+    -u "$(id -u):$(id -g)" \
     -v ./docker/synapse:/data \
     --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
@@ -40,7 +42,6 @@ gen_synapse_conf: dotenv
 gen_synapse_admin: dotenv
   docker compose exec -i synapse \
     register_new_matrix_user http://localhost:8008 \
-    -u {{docker_user}} \
     -c /data/homeserver.yaml \
     -u admin \
     -p admin \
@@ -55,16 +56,16 @@ get_access_token:
 
 # Runs backend dependency services
 backend: dotenv
-  DOCKER_USER={{docker_user}} docker compose up --build
+  docker compose up --build
 
 # Stops backend dependency services
 stop:
-  DOCKER_USER={{docker_user}} docker compose down
+  docker compose down
 
 # Removes oll Docker related config, volumes and containers for this project
 clear: stop
-  DOCKER_USER={{docker_user}} docker compose rm --all --force --volumes --stop
-  DOCKER_USER={{docker_user}} docker volume rm commune_synapse_database || true
+  docker compose rm --all --force --volumes --stop
+  docker volume rm commune_synapse_database || true
 
 # Runs all the tests from the `test` package. Optionally runs a single one if name pattern is provided
 e2e *args='':
