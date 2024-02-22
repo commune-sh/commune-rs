@@ -8,8 +8,12 @@ default:
   just --list
 
 # Creates the `.env` file if it doesn't exist
+# This indicates the first invocation of `just` so we also
+# create the docker folders while we're at it
 dotenv:
-  cp -n .env.example .env || true
+  export DOCKER_USER="$(id -u):$(id -g)" && \
+  cp -n .env.example .env || true && \
+  mkdir -p docker/synapse || true
 
 # Dump database to a file
 backup_db:
@@ -29,7 +33,7 @@ nuke_db:
 # Generates the synapse configuration file and saves it
 gen_synapse_conf: dotenv
   docker run -i --rm \
-    -u $(id -u):$(id -g) \
+    -u "$(id -u):$(id -g)" \
     -v ./docker/synapse:/data \
     --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
@@ -38,7 +42,6 @@ gen_synapse_conf: dotenv
 gen_synapse_admin: dotenv
   docker compose exec -i synapse \
     register_new_matrix_user http://localhost:8008 \
-    -u $(id -u):$(id -g) \
     -c /data/homeserver.yaml \
     -u admin \
     -p admin \

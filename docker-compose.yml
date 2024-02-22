@@ -27,7 +27,7 @@ services:
 
   synapse:
     image: 'ghcr.io/element-hq/synapse:v1.100.0'
-    user: '${DOCKER_USER}'
+    user: "${DOCKER_USER}"
     ports:
       - '8008:8008'
       - '8448:8448'
