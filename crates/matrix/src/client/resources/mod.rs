@@ -4,3 +4,4 @@ pub mod login;
 pub mod mxc;
 pub mod room;
 pub mod session;
+pub mod thirdparty;

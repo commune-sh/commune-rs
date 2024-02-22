@@ -11,13 +11,13 @@ path = "src/lib.rs"
 [dependencies]
 handlebars = "5.0.0"
 lettre = "0.11"
-rand = "0.8.5"
 redis = { version = "0.24.0", features = ["aio", "tokio-comp"] }
 thiserror = "1.0.50"
 validator = { version = "0.16", features = ["derive"] }
 
 # Workspace
 http = { workspace = true }
+rand = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tracing = { workspace = true }

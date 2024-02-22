@@ -5,14 +5,16 @@ use tracing::instrument;
 
 use crate::error::MatrixError;
 
+pub struct SessionHandle;
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Session {
+pub struct GetSessionResponse {
     pub device_id: String,
     pub is_guest: bool,
     pub user_id: OwnedUserId,
 }
 
-impl Session {
+impl SessionHandle {
     /// Gets information about the owner of a given access token.
     ///
     /// Note that, as with the rest of the Client-Server API, Application
@@ -26,7 +28,7 @@ impl Session {
     pub async fn get(
         client: &crate::http::Client,
         access_token: impl Into<String>,
-    ) -> Result<Self> {
+    ) -> Result<GetSessionResponse> {
         // Clones the client in order to temporally set a token for the `GET`
         // request
         let mut tmp = (*client).clone();

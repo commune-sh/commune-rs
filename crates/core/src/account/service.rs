@@ -1,15 +1,16 @@
 use std::sync::Arc;
 
 use matrix::{
-    admin::resources::user::UserService, client::resources::session::Session, ruma_common::UserId,
+    admin::resources::user::UserService,
+    client::resources::{session::SessionHandle, thirdparty::ThirdPartyHandle},
+    ruma_common::UserId,
 };
 use tracing::instrument;
-use url::Url;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use matrix::{
-    admin::resources::user::{CreateUserBody, ListUsersQuery, LoginAsUserBody, ThreePid},
+    admin::resources::user::{CreateUserBody, LoginAsUserBody, ThreePid},
     Client as MatrixAdminClient,
 };
 
@@ -22,7 +23,6 @@ use crate::{
 
 use super::{error::AccountErrorCode, model::Account};
 
-const DEFAULT_AVATAR_URL: &str = "https://via.placeholder.com/150";
 const MIN_USERNAME_LENGTH: usize = 1;
 const MAX_USERNAME_LENGTH: usize = 255;
 const MIN_PASSWORD_LENGTH: usize = 8;
@@ -115,28 +115,15 @@ impl AccountService {
 
     /// Returs `true` if the given `email address` is NOT registered in the
     /// Matrix Server
-    pub async fn is_email_available(&self, email: &str) -> Result<bool> {
-        let user_id = format!("@{}:{}", email, self.admin.server_name());
-        let user_id = <&UserId>::try_from(user_id.as_str()).map_err(|err| {
-            // TODO
-            tracing::error!(?err, "Failed to parse username");
-            Error::Unknown
-        })?;
+    pub async fn is_email_available(&self, email: impl AsRef<str>) -> Result<bool> {
+        ThirdPartyHandle::request_email_token(&self.admin, email.as_ref(), None)
+            .await
+            .map_err(|err| {
+                tracing::error!(?err, "Failed to request 3PID token for email");
 
-        let exists = UserService::list(
-            &self.admin,
-            ListUsersQuery {
-                user_id: Some(user_id.to_string()),
-                ..Default::default()
-            },
-        )
-        .await
-        .map_err(|err| {
-            tracing::error!(?err, "Failed to list users");
-            Error::Unknown
-        })?;
-
-        Ok(exists.users.is_empty())
+                Error::Unknown
+            })
+            .map(|ok| ok.expect("Homeserver does not allow 3PID"))
     }
 
     /// Sends a verification code to the given email address
@@ -218,11 +205,6 @@ impl AccountService {
             Error::Unknown
         })?;
 
-        let avatar_url = Url::parse(DEFAULT_AVATAR_URL).map_err(|err| {
-            tracing::error!(?err, "Failed to parse default avatar url");
-            Error::Unknown
-        })?;
-
         UserService::create(
             &self.admin,
             user_id,
@@ -230,7 +212,7 @@ impl AccountService {
                 displayname: Some(dto.username),
                 password: dto.password.to_string(),
                 logout_devices: false,
-                avatar_url: Some(avatar_url),
+                avatar_url: None,
                 threepids: vec![ThreePid {
                     medium: "email".to_string(),
                     address: dto.email.clone(),
@@ -288,7 +270,7 @@ impl AccountService {
     }
 
     pub async fn whoami(&self, access_token: &Secret) -> Result<Account> {
-        let session = Session::get(&self.admin, access_token.to_string())
+        let session = SessionHandle::get(&self.admin, access_token.to_string())
             .await
             .map_err(|err| {
                 tracing::error!(?err, "Failed to get session from matrix as client");

@@ -11,7 +11,6 @@ path = "src/lib.rs"
 [dependencies]
 fake = { version = "2.9.2", features = ["derive"] }
 futures = "0.3.30"
-rand = "0.8.5"
 scraper = "0.18.1"
 
 # Workspace Dependencies
@@ -22,6 +21,7 @@ reqwest = { workspace = true }
 openssl = { workspace = true, features = ["vendored"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+rand = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }
 uuid = { workspace = true, features = ["serde"] }
