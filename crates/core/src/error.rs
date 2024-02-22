@@ -1,5 +1,6 @@
 use http::StatusCode;
 use thiserror::Error;
+use matrix::ruma_common::IdParseError;
 
 use crate::{
     account::error::AccountErrorCode, auth::error::AuthErrorCode, mail::error::MailErrorCode,
@@ -25,6 +26,8 @@ pub enum Error {
     Mail(#[from] MailErrorCode),
     #[error("An error occured while starting up. {0}")]
     Startup(String),
+    #[error("{0}")]
+    Validation(#[from] IdParseError),
     #[error("Unknown Error Occured")]
     Unknown,
 }
@@ -42,6 +45,7 @@ impl HttpStatusCode for Error {
             Error::User(err) => err.status_code(),
             Error::Mail(err) => err.status_code(),
             Error::Room(err) => err.status_code(),
+            Error::Validation(_) => StatusCode::BAD_REQUEST,
             Error::Startup(_) | Error::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -52,6 +56,7 @@ impl HttpStatusCode for Error {
             Error::User(err) => err.error_code(),
             Error::Mail(err) => err.error_code(),
             Error::Room(err) => err.error_code(),
+            Error::Validation(_) => "BAD_REQUEST",
             Error::Startup(_) => "SERVER_STARTUP_ERROR",
             Error::Unknown => "UNKNOWN_ERROR",
         }

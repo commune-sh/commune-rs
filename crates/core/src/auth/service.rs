@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use matrix::{
-    client::resources::login::{Login, LoginFlows as LoginFlowsResponse},
+    client::resources::login::{LoginFlowResponse, LoginHandle},
+    ruma_common::OwnedUserId,
     Client as MatrixAdminClient,
 };
 use redis::AsyncCommands;
@@ -17,13 +18,9 @@ const REDIS_VERIFICATION_CODE_PREFIX: &str = "commune::verification_code::";
 /// TTL for the verification code in Redis
 const REDIS_VERIFICATION_CODE_SECS: u64 = 60 * 5;
 
-pub struct LoginCredentials {
+pub struct PasswordLoginDto {
     pub username: String,
     pub password: Secret,
-}
-
-pub struct LoginCredentialsResponse {
-    pub access_token: Secret,
 }
 
 pub struct AuthService {
@@ -36,29 +33,31 @@ impl AuthService {
         Self { admin, redis }
     }
 
-    pub async fn login(&self, credentials: LoginCredentials) -> Result<LoginCredentialsResponse> {
-        let login_response = Login::login_credentials(
-            &self.admin,
-            credentials.username,
-            credentials.password.inner(),
-        )
-        .await
-        // ???
-        .unwrap();
+    pub async fn login(&self, credentials: PasswordLoginDto) -> Result<Secret> {
+        let user_id = OwnedUserId::try_from(credentials.username.as_str()).or(
+            OwnedUserId::try_from(format!(
+                "@{}:{}",
+                credentials.username.as_str(),
+                self.admin.server_name()
+            )),
+        )?;
 
-        Ok(LoginCredentialsResponse {
-            access_token: Secret::new(login_response.access_token),
-        })
+        let login_response =
+            LoginHandle::login(&self.admin, &user_id, credentials.password.inner())
+                .await
+                .unwrap();
+
+        Ok(Secret::new(login_response.access_token))
     }
 
-    pub async fn get_login_flows(&self) -> Result<LoginFlowsResponse> {
-        match Login::get_login_flows(&self.admin).await {
-            Ok(flows) => Ok(flows),
-            Err(err) => {
-                tracing::error!("Failed to get login flows: {}", err);
-                Err(Error::Unknown)
-            }
-        }
+    pub async fn get_login_flows(&self) -> Result<LoginFlowResponse> {
+        LoginHandle::get_login_flows(&self.admin)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to get login flows: {}", e);
+
+                Error::Unknown
+            })
     }
 
     pub async fn send_verification_code(
