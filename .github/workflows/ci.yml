@@ -32,6 +32,12 @@ jobs:
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Wait for Healthy Container
+        uses: raschmitt/wait-for-healthy-container@v1.0.1
+        with:
+          container-name: commune-rs-synapse-1
+          timeout: 30
+
       - name: Check formatting
         run: cargo fmt --check
 
@@ -56,6 +62,7 @@ jobs:
       - name: Use Test Homeserver
         run: |
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
+          cat ./docker/synapse/homeserver.yaml
 
       - name: Build Docker Containers
         run: |
@@ -63,7 +70,7 @@ jobs:
 
       - name: Run Docker Containers (and wait for Synapse)
         run: |
-          just backend -d --wait --wait-timeout 30
+          just backend -d
 
       - name: Create Admin User
         env:
