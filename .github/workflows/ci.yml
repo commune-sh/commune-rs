@@ -62,6 +62,8 @@ jobs:
           just backend -d --wait --wait-timeout 30
 
       - name: Create Admin User
+        env:
+          DOCKER_USER: ${{ env.DOCKER_USER }}
         run: just gen_synapse_admin
 
       - name: Provide Database Backup & Test it
