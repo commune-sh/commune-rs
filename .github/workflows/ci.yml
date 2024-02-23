@@ -46,6 +46,10 @@ jobs:
         with:
           just-version: '1.13.0'
 
+      - name: Retrieve User Permissions
+        run: |
+          echo DOCKER_USER=$(id -u):$(id -g) >> $GITHUB_ENV
+
       - name: Create Homeserver Configuration For Synapse
         run: just gen_synapse_conf
 
