@@ -55,8 +55,8 @@ get_access_token:
   )'/" .env
 
 # Runs backend dependency services
-backend: dotenv
-  docker compose up --build
+backend *args='': dotenv
+  docker compose up --build $1
 
 # Stops backend dependency services
 stop:

@@ -46,34 +46,42 @@ jobs:
         with:
           just-version: '1.13.0'
 
-      - name: Create a copy of `.env.example`
-        run: just dotenv
+      - name: Retrieve User Permissions
+        run: |
+          echo DOCKER_USER=$(id -u):$(id -g) >> $GITHUB_ENV
+
+      - name: Create Homeserver Configuration For Synapse
+        run: just gen_synapse_conf
 
       - name: Use Test Homeserver
         run: |
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
+          cat ./docker/synapse/homeserver.yaml
+
+      - name: Build Docker Containers
+        run: |
+          just backend --no-start
 
       - name: Run Docker Containers
         run: |
-          docker compose up -d --build
-          sleep 20
+          just backend -d
+
+      - name: Wait for Healthy Container
+        uses: raschmitt/wait-for-healthy-container@v1.0.1
+        with:
+          container-name: commune-rs-synapse-1
+          timeout: 30
 
       - name: Create Admin User
+        env:
+          DOCKER_USER: ${{ env.DOCKER_USER }}
         run: just gen_synapse_admin
-
-      - name: Check Synapse is Running
-        run: curl -sSf http://localhost:8008 > /dev/null
-
-      - name: Provide Database Backup & Test it
-        run: |
-          just backup_db
-          just nuke_db
-          just restore_db
 
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token
           grep 'COMMUNE_SYNAPSE_ADMIN_TOKEN' .env | sed "s/'//g" >> $GITHUB_ENV
+
       - name: E2E Tests
         env:
           COMMUNE_SYNAPSE_ADMIN_TOKEN: ${{ env.COMMUNE_SYNAPSE_ADMIN_TOKEN }}

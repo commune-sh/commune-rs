@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
-    use std::{thread, time::Duration};
+    use std::time::Duration;
 
     use futures::{future, TryFutureExt};
     use matrix::{
         admin::resources::room::{ListRoomQuery, MessagesQuery, RoomService as AdminRoomService},
         ruma_common::{RoomId, ServerName},
-        ruma_events::{room::name::OriginalRoomNameEvent, AnyTimelineEvent, TimelineEventType},
+        ruma_events::TimelineEventType,
     };
 
     use tokio::sync::OnceCell;
