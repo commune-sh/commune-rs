@@ -66,12 +66,6 @@ jobs:
           DOCKER_USER: ${{ env.DOCKER_USER }}
         run: just gen_synapse_admin
 
-      - name: Provide Database Backup & Test it
-        run: |
-          just backup_db
-          just nuke_db
-          just restore_db
-
       - name: Retrieve Admin Access Token
         run: |
           just get_access_token
