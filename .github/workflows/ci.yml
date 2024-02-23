@@ -57,7 +57,11 @@ jobs:
         run: |
           cp ./crates/test/fixtures/synapse/* ./docker/synapse
 
-      - name: Run Docker Containers
+      - name: Build Docker Containers
+        run: |
+          just backend --no-start
+
+      - name: Run Docker Containers (and wait for Synapse)
         run: |
           just backend -d --wait --wait-timeout 30
 
