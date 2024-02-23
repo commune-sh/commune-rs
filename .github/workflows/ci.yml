@@ -32,12 +32,6 @@ jobs:
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Wait for Healthy Container
-        uses: raschmitt/wait-for-healthy-container@v1.0.1
-        with:
-          container-name: commune-rs-synapse-1
-          timeout: 30
-
       - name: Check formatting
         run: cargo fmt --check
 
@@ -68,9 +62,15 @@ jobs:
         run: |
           just backend --no-start
 
-      - name: Run Docker Containers (and wait for Synapse)
+      - name: Run Docker Containers
         run: |
           just backend -d
+
+      - name: Wait for Healthy Container
+        uses: raschmitt/wait-for-healthy-container@v1.0.1
+        with:
+          container-name: commune-rs-synapse-1
+          timeout: 30
 
       - name: Create Admin User
         env:
