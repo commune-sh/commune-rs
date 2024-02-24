@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/core", "crates/matrix", "crates/server", "crates/test"]
 default-members = ["crates/server"]
-resolver = "1"
+resolver = "2"
 
 [workspace.dependencies]
 async-trait = "0.1.74"

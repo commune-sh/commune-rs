@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 ruma-events = { version = "0.27.11", features = ["html", "markdown"] }
-ruma-common = { version = "0.12.0", features = ["api", "rand"], default_features = false }
+ruma-common = { version = "0.12.0", default_features = false, features = ["api", "rand"] }
 ruma-macros = "0.12.0"
 
 # Workspace Dependencies
@@ -18,3 +18,7 @@ serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
+
+[features]
+client = []
+server = []
