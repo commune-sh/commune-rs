@@ -1,9 +1,9 @@
 use ruma_common::{
-    api::{request, response, Metadata, Direction},
-    thirdparty::ThirdPartyIdentifier,
-    OwnedMxcUri, OwnedUserId, metadata,
+    api::{request, response, Direction, Metadata},
+    metadata, OwnedUserId,
 };
-use ruma_macros::{request, response};
+
+use super::User;
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -52,25 +52,12 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    pub name: OwnedUserId,
+    #[serde(flatten)]
+    users: Vec<User>,
 
-    pub displayname: Option<String>,
+    next_token: String,
 
-    pub threepids: Vec<ThirdPartyIdentifier>,
-
-    pub avatar_url: Option<OwnedMxcUri>,
-
-    pub admin: bool,
-
-    pub deactivated: bool,
-
-    pub erased: bool,
-
-    pub shadow_banned: bool,
-
-    pub creation_ts: u64,
-
-    pub locked: bool,
+    total: u64,
 }
 
 #[derive(Clone, Debug, Default)]
