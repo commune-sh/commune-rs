@@ -10,7 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 ruma-events = { version = "0.27.11", features = ["html", "markdown"] }
-ruma-common = { version = "0.12.1", features = ["rand"] }
+ruma-common = { version = "0.12.0", features = ["api", "rand"], default_features = false }
 ruma-macros = "0.12.0"
 
 # Workspace Dependencies
