@@ -33,3 +33,6 @@ uuid = { workspace = true, features= ["serde"] }
 core = { path = "../core" }
 chrono = { version = "0.4.34", features = ["serde"] }
 mime = { git = "https://github.com/hyperium/mime", version = "0.4.0-a.0" }
+ruma-api = "0.20.1"
+ruma-common = { version = "0.12.1", default-features = false, features = ["api", "rand"] }
+api = "0.2.0"

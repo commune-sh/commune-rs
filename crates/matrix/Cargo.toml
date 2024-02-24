@@ -5,14 +5,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-async-trait = "0.1.74"
-hex = "0.4.3"
-hmac = "0.12.1"
-serde_path_to_error = "0.1.14"
-serde_qs = "0.12.0"
-sha1 = "0.10.6"
 ruma-events = { version = "0.27.11", features = ["html", "markdown"] }
-ruma-common = { version = "0.12.1", features = ["rand"] }
+ruma-common = { version = "0.12.0", features = ["api", "rand"], default_features = false }
 ruma-macros = "0.12.0"
 
 # Workspace Dependencies
