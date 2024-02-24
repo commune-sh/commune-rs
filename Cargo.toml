@@ -9,8 +9,8 @@ repository = "https://github.com/commune-os/commune-rs"
 rust-version = "1.75.0"
 
 [workspace]
-default-members = ["crates/server"]
 members = ["crates/core", "crates/matrix", "crates/server", "crates/test"]
+default-members = ["crates/server"]
 resolver = "2"
 
 [workspace.dependencies]
