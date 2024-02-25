@@ -52,7 +52,6 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    #[serde(flatten)]
     users: Vec<User>,
 
     next_token: String,

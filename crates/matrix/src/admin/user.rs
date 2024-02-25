@@ -1,7 +1,12 @@
+//! reference: https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html
+//!
+//! This module contains handlers for managing user accounts.
+
 use ruma_common::{thirdparty::ThirdPartyIdentifier, OwnedMxcUri, OwnedUserId};
 use serde::{Deserialize, Serialize};
 
 pub mod get_user;
+pub mod get_user_by_3pid;
 pub mod get_users;
 pub mod set_user;
 
