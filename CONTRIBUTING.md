@@ -1,114 +1,31 @@
-# Contributing to Rust Commune
+There are many ways to contribute to Commune. We're currently still in the alpha phase of porting [commune-server](https://github.com/commune-os/commune-server).
+Although it's proven to be a useful reference, breaking changes are expected as a frontend rewrite is on its way as well.
 
-There are many ways to contribute to Commune Rust, including writing code,
-openning issues, helping people, reproduce, or fix bugs that people have filed
-and improving documentation.
 
-## Development Environment
-
-Commune Rust is written in The Rust Programming Language, you will have to
-setup Rust in your machine to run the project locally.
-
-Tools like [**Justfile**][justfile] are recommended to improve DX and reduce
-learning curve by running commands easily.
-
-[docker]: https://www.docker.com/get-started/
-[justfile]: https://github.com/casey/just
-[rust]: https://rustup.rs
+Opening pull requests, suggesting new features, writing tests, etc. are more than welcomed and deeply appreciated.
+If you need guidance feel free to join our Matrix room [#commune-dev:kurosaki.cx](https://matrix.to/#/#commune-dev:kurosaki.cx) or jump by on our [Discord](https://discord.gg/W9mbH5F36J). We do not recommend the usage of Discord since it's proprietary software with questionable practices when it comes to privacy but we have to yet plan a bridge setup.
 
 
 ### Getting Started
 
-1. Create a copy of `.env.example` on `.env`
+The setup instructions are the same as for a regular installation, except that we prepared
+a special [homeserver.yaml](crates/test/fixtures/synapse/homeserver.yaml) which is used for testing.
+Copy this over to `docker/synapse/homeserver.yaml` and you're ready to go!
 
-```bash
-cp .env.example .env
-```
-
-2. Generate `Synapse` server configuration
-
-```bash
-just gen_synapse_conf
-```
-
-3. Run Synapse Server (and other containerized services) using Docker Compose
-via:
-
-```bash
-just backend
-```
-
-**When you are ready**
-
-Teardown services using `just stop`.
-If you want to perform a complete cleanup use `just clear`.
-
-> **Warning** `just clear` will remove all containers and images.
 
 ### Testing
 
-This application has 2 layers for tests:
+Unit tests Are inlined inside crates and should be used to test the behavior of types such
+as (de)serialization, validation and idempotency. These are simply ran by invoking `cargo test -p <crate name>`.
 
-- `Unit`: Are usually inlined inside crates, and dont depend on any integration
-- `E2E`: Lives in `test` crate and counts with the services that run the application
 
-#### Unit
+Integration (e2e) tests are defined in the `test` crate and should confirm that all components
+communicate with each other the right way. As this is more code-intense, there's been an effort
+to define several helper functions in [util.rs](crates/test/src/util.rs) to reduce repetiveness.
 
-Unit tests can be executed via `cargo test -p <crate name>`, this will run
-every unit test.
 
-#### E2E
+### Application Architecture
 
-You must run Docker services as for development. In order to avoid messing up
-the development environment, its recommended to use the synapse setup from
-`crates/test/fixtures/synapse` replacing it with `docker/synapse`.
+### Styling Conventions
 
-> Make sure the `.env` file is created from the contents on `.env.example`
-
-### Application Layout
-
-<div align="center">
-  <img src="./docs/diagrams/diagram.png" />
-  <small>Application Layout Overview</small>
-</div>
-
-The client, any HTTP Client, comunicates with the Commune Server which may or
-may not communicate with Matrix's server _Synapse_ which runs along with its
-database in a Docker container.
-
-#### Email Development
-
-Use [MJML Editor][mjml] and then render into HTML. Make sure variables use
-Handlebars syntax (e.g. `{{name}}`).
-
-For local testing you can use something like:
-
-```bash
-curl -s http://localhost:1080/email | grep -o -E "This is your verification code.{0,7}" | tail -1 | sed 's/^.*://' | awk '{$1=$1;print}
-```
-
-To get the very last email's verification code.
-
->  **Warning** Note that changes on email content will break this script
-
-[mjml]: https://mjml.io/try-it-live/99k8regCo_
-
-#### Redis
-
-A Redis instance is used to keep in-memory short-lived data used certain server
-operations such as storing verification codes.
-
-For this purpose Redis is served as part of the development stack on Docker.
-
-The `redis/redis-stack` image contains both Redis Stack server and RedisInsight,
-you can use RedisInsight by pointing your browser to `localhost:8001`.
-
-#### Synapse
-
-There is an official [Synapse][1] image available at https://hub.docker.com/r/matrixdotorg/synapse
-or at `ghcr.io/matrix-org/synapse` which can be used with the `docker-compose`
-file available at [contrib/docker][2]. Further information on this including
-configuration options is available in the README on hub.docker.com.
-
-[1]: https://matrix-org.github.io/synapse/latest/setup/installation.html#docker-images-and-ansible-playbooks
-[2]: https://github.com/matrix-org/synapse/tree/develop/contrib/docker
+### Submitting PRs
