@@ -1,4 +1,15 @@
+[workspace.package]
+description = "Rust implementation of the Commune server."
+edition = "2018"
+homepage = "https://commune.sh"
+license = "Apache-2.0"
+name = "commune"
+readme = "README.md"
+repository = "https://github.com/commune-os/commune-rs"
+rust-version = "1.75.0"
+
 [workspace]
+<<<<<<< Updated upstream
 members = [
     "crates/core",
     "crates/matrix",
@@ -7,21 +18,79 @@ members = [
 ]
 default-members = ["crates/server"]
 resolver = "1"
+=======
+default-members = ["crates/server"]
+members = ["crates/core", "crates/matrix", "crates/server", "crates/test"]
+resolver = "2"
+>>>>>>> Stashed changes
 
 [workspace.dependencies]
 anyhow = "1.0.75"
+async-trait = "0.1.74"
 axum = { version = "0.7.4", features = ["tokio"] }
 chrono = { version = "0.4.34", features = ["serde"] }
 dotenv = "0.15.0"
+hex = "0.4.3"
+hmac = "0.12.1"
 http = "0.2.11"
 mime = "0.3.17"
 openssl = { version = "0.10.63", features = ["vendored"] }
 openssl-sys = { version = "0.9.99", features = ["vendored"] }
+<<<<<<< Updated upstream
 reqwest = { version = "0.11.22", default-features = false, features = ["blocking", "json", "rustls", "multipart"] }
+=======
+reqwest = { version = "0.11.22", default-features = false, features = [
+  "blocking",
+  "json",
+  "multipart",
+  "rustls",
+] }
+>>>>>>> Stashed changes
 serde = "1.0.192"
 serde_json = "1.0.108"
+serde_path_to_error = "0.1.14"
+serde_qs = "0.12.0"
+sha1 = "0.10.6"
 tokio = "1.34.0"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
-uuid = { version = "1.6.1", features = ["v4"] }
 url = "2.4.1"
+uuid = { version = "1.6.1", features = ["v4"] }
+
+[workspace.lints]
+unreachable_pub = "warn"
+unsafe_code = "forbid"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+dbg_macro = "warn"
+keyword_idents = "warn"
+large_types_passed_by_value = "warn"
+mismatching_type_param_order = "warn"
+needless_collect = "warn"
+needless_pass_by_value = "warn"
+print_stdout = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_type_annotation = "warn"
+str_to_string = "warn"
+to_string_in_format_args = "warn"
+unsafe_code = "forbid"
+unused_async = "warn"
+unused_results = "warn"
+unwrap_used = "warn"
+wildcard_imports = "warn"
+
+[profile.dev]
+opt-level = 0
+incremental = true
+lto = 'off'
+
+[profile.release]
+lto = 'thin'
+incremental = true
+
+[profile.release.build-override]
+opt-level = 3
+[profile.release.package."*"]
+opt-level = 3
