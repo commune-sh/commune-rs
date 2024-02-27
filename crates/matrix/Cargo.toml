@@ -10,18 +10,22 @@ path = "src/lib.rs"
 
 [dependencies]
 ruma-events = { version = "0.27.11", features = ["html", "markdown"] }
-ruma-common = { version = "0.12.0", default_features = false, features = ["api", "rand"] }
+ruma-common = { version = "0.12.0", default_features = false, features = [
+  "api",
+  "rand",
+] }
 ruma-macros = "0.12.0"
 
 # Workspace Dependencies
-anyhow = { workspace = true }
-chrono = { workspace = true, features = ["serde"] }
 mime = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+sha1 = { workspace = true }
 url = { workspace = true, features = ["serde"] }
+hex = { workspace = true }
+hmac = { workspace = true }
 
 [features]
 client = []
