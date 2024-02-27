@@ -1,6 +1,6 @@
-//! reference: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html
-//!
 //! This module contains handlers for managing rooms.
+//!
+//! reference: https://matrix-org.github.io/synapse/latest/admin_api/rooms.html
 
 use ruma_common::{
     room::RoomType, EventEncryptionAlgorithm, OwnedMxcUri, OwnedRoomAliasId, OwnedRoomId,

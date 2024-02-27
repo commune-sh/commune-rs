@@ -19,7 +19,7 @@ pub struct Request {}
 
 #[response(error = crate::Error)]
 pub struct Response {
-    body: Vec<LoginFlow>,
+    pub body: Vec<LoginFlow>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
