@@ -1,14 +1,14 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, OwnedRoomId, OwnedUserId,
+    metadata, OwnedRoomId, OwnedUserId, serde::Raw,
 };
-use ruma_events::room::power_levels::RoomPowerLevels;
+use ruma_events::{room::power_levels::RoomPowerLevels, AnyInitialStateEvent};
 use serde::Serialize;
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
     method: POST,
-    rate_limited: false,
+    rate_limited: true,
     authentication: AccessToken,
     history: {
         1.9 => "/_matrix/client/v3/createRoom",
@@ -20,8 +20,9 @@ pub struct Request {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub creation_content: Option<RoomCreationContent>,
 
-    // #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    // pub initial_state: Vec<Raw<AnyInitialStateEvent>>, // TODO
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub initial_state: Vec<Raw<AnyInitialStateEvent>>,
+
     #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub invite: Vec<OwnedUserId>,
 
@@ -39,8 +40,8 @@ pub struct Request {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub preset: RoomPreset,
 
-    #[serde(rename = "alias", skip_serializing_if = "String::is_empty")]
-    pub room_alias_name: String,
+    #[serde(rename = "room_alias_name", skip_serializing_if = "String::is_empty")]
+    pub alias: String,
 
     #[serde(skip_serializing_if = "String::is_empty")]
     pub topic: String,
@@ -48,10 +49,10 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    room_id: OwnedRoomId,
+   pub room_id: OwnedRoomId,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct RoomCreationContent {
     #[serde(rename = "m.federate")]
     pub federate: bool,
@@ -67,4 +68,3 @@ pub enum RoomPreset {
     #[default]
     TrustedPrivateChat,
 }
-
