@@ -9,11 +9,11 @@ use ruma_common::{
 use ruma_events::room::{history_visibility::HistoryVisibility, join_rules::JoinRule};
 use serde::Deserialize;
 
-mod delete_room;
-mod get_members;
+pub mod delete_room;
+pub mod get_members;
 pub mod get_room;
 pub mod get_rooms;
-mod get_state;
+pub mod get_state;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Room {

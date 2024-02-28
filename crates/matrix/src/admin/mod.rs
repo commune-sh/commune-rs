@@ -2,6 +2,6 @@
 //!
 //! reference: https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/index.html
 
-mod room;
-mod session;
-mod user;
+pub mod room;
+pub mod session;
+pub mod user;
