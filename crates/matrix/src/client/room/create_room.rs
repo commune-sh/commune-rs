@@ -11,7 +11,7 @@ const METADATA: Metadata = metadata! {
     rate_limited: true,
     authentication: AccessToken,
     history: {
-        1.9 => "/_matrix/client/v3/createRoom",
+        unstable => "/_matrix/client/v3/createRoom",
     }
 };
 

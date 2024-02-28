@@ -18,5 +18,5 @@ pub struct Request {}
 
 #[response(error = crate::Error)]
 pub struct Response {
-    nonce: String,
+    pub nonce: String,
 }

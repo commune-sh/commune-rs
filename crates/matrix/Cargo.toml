@@ -9,12 +9,16 @@ name = "matrix"
 path = "src/lib.rs"
 
 [dependencies]
-ruma-events = { version = "0.27.11", features = ["html", "markdown"] }
+ruma-events = { version = "0.27.11", default_features = false, features = [
+  "html",
+  "markdown",
+] }
 ruma-common = { version = "0.12.0", default_features = false, features = [
   "api",
   "rand",
 ] }
-ruma-macros = "0.12.0"
+ruma-macros = { version = "0.12.0", default_features = false }
+ruma-client = { version = "0.12.0", default_features = false }
 
 # Workspace Dependencies
 mime = { workspace = true }
@@ -26,6 +30,9 @@ sha1 = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 hex = { workspace = true }
 hmac = { workspace = true }
+http.workspace = true
+bytes = "1.5.0"
+async-trait = "0.1.77"
 
 [features]
 client = []

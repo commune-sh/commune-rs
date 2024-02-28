@@ -1,5 +1,5 @@
 use ruma_common::{
-    api::{request, response, Metadata, Direction},
+    api::{request, response, Direction, Metadata},
     metadata,
 };
 use serde::Serialize;
@@ -39,16 +39,16 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    rooms: Vec<Room>,
+    pub rooms: Vec<Room>,
 
-    offset: u64,
+    pub offset: u64,
 
     #[serde(rename = "total_rooms")]
-    total: u64,
+    pub total: u64,
 
-    next_batch: Option<String>,
+    pub next_batch: Option<String>,
 
-    prev_batch: Option<String>,
+    pub prev_batch: Option<String>,
 }
 
 #[derive(Clone, Default, Debug, Serialize)]

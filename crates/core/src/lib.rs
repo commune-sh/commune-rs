@@ -1,4 +1,7 @@
-pub mod account;
+//! This library deals with our core logic, such as authorizing user interactions,
+//! forwarding regular events and constructing custom requests.
+
+pub mod session;
 pub mod auth;
 pub mod error;
 pub mod mail;
@@ -9,13 +12,10 @@ pub use error::{Error, HttpStatusCode, Result};
 
 use mail::service::MailService;
 use room::service::RoomService;
+use tokio::sync::mpsc::Receiver;
 use url::Url;
 
 use std::{fmt::Debug, str::FromStr, sync::Arc};
-
-use matrix::Client as MatrixAdminClient;
-
-use self::{account::service::AccountService, auth::service::AuthService};
 
 pub mod env {
     pub const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
@@ -92,9 +92,7 @@ impl CommuneConfig {
 }
 
 pub struct Commune {
-    pub account: Arc<AccountService>,
-    pub auth: Arc<AuthService>,
-    pub room: Arc<RoomService>,
+
 }
 
 impl Commune {

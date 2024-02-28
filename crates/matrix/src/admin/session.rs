@@ -4,8 +4,8 @@
 
 use hmac::Mac;
 
-mod get_nonce;
-mod register;
+pub mod get_nonce;
+pub mod register;
 
 #[derive(Clone, Debug)]
 pub struct Hmac {
@@ -13,7 +13,7 @@ pub struct Hmac {
 }
 
 impl Hmac {
-    fn new(
+    pub fn new(
         shared_secret: &str,
         nonce: &str,
         username: &str,
@@ -39,7 +39,7 @@ impl Hmac {
         })
     }
 
-    fn get(&self) -> String {
+    pub fn get(&self) -> String {
         hex::encode(&self.inner)
     }
 }

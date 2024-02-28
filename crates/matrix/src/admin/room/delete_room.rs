@@ -22,19 +22,17 @@ pub struct Request {
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub new_room: Option<NewRoomParams>,
 
-    #[serde(skip_serializing_if = "ruma_common::serde::is_default")]
     pub block: bool,
 
     #[serde(skip_serializing_if = "ruma_common::serde::is_true")]
     pub purge: bool,
 
-    #[serde(skip_serializing_if = "ruma_common::serde::is_default")]
     pub force_purge: bool,
 }
 
 #[response(error = crate::Error)]
 pub struct Response {
-    delete_id: String,
+    pub delete_id: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
