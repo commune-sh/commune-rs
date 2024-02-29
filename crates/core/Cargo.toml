@@ -25,3 +25,4 @@ tokio = { workspace = true, features = ["full"] }
 
 # Local Dependencies
 matrix = { path = "../matrix" }
+figment = { version = "0.10.14", features = ["toml"] }

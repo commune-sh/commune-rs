@@ -1,6 +1,8 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, OwnedRoomId, OwnedUserId, serde::Raw,
+    metadata,
+    serde::Raw,
+    OwnedRoomId, OwnedUserId,
 };
 use ruma_events::{room::power_levels::RoomPowerLevels, AnyInitialStateEvent};
 use serde::Serialize;
@@ -49,7 +51,7 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-   pub room_id: OwnedRoomId,
+    pub room_id: OwnedRoomId,
 }
 
 #[derive(Clone, Debug, Serialize)]

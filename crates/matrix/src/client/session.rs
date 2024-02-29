@@ -2,8 +2,8 @@
 //!
 //! reference: https://spec.matrix.org/unstable/client-server-api/#client-authentication
 
-mod get_flows;
-mod login;
-mod register;
-mod username_available;
-mod whoami;
+pub mod get_flows;
+pub mod login;
+pub mod register;
+pub mod username_available;
+pub mod whoami;

@@ -2,11 +2,11 @@
 //!
 //! reference: https://spec.matrix.org/unstable/client-server-api/#rooms
 
-mod ban_from_room;
-mod create_room;
-mod forget_room;
-mod get_rooms;
-mod join_room;
-mod kick_from_room;
-mod leave_room;
-mod unban_from_room;
+pub mod ban_from_room;
+pub mod create_room;
+pub mod forget_room;
+pub mod get_rooms;
+pub mod join_room;
+pub mod kick_from_room;
+pub mod leave_room;
+pub mod unban_from_room;

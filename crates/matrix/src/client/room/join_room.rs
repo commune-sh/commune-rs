@@ -1,6 +1,6 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, OwnedRoomOrAliasId, OwnedRoomId,
+    metadata, OwnedRoomId, OwnedRoomOrAliasId,
 };
 
 #[allow(dead_code)]
@@ -24,5 +24,5 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-   pub room_id: OwnedRoomId,
+    pub room_id: OwnedRoomId,
 }

@@ -1,6 +1,6 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, OwnedUserId, OwnedRoomId,
+    metadata, OwnedRoomId, OwnedUserId,
 };
 
 #[allow(dead_code)]

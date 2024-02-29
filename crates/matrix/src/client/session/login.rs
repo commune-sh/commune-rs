@@ -1,8 +1,10 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, OwnedMxcUri, thirdparty::Medium, OwnedDeviceId, OwnedUserId,
+    metadata,
+    thirdparty::Medium,
+    OwnedDeviceId, OwnedMxcUri, OwnedUserId,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {

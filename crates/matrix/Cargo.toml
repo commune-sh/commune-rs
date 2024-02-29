@@ -16,6 +16,7 @@ ruma-events = { version = "0.27.11", default_features = false, features = [
 ruma-common = { version = "0.12.0", default_features = false, features = [
   "api",
   "rand",
+  "unstable-exhaustive-types"
 ] }
 ruma-macros = { version = "0.12.0", default_features = false }
 ruma-client = { version = "0.12.0", default_features = false }

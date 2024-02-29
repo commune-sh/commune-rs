@@ -14,6 +14,10 @@ default-members = ["crates/server"]
 resolver = "2"
 
 [workspace.dependencies]
+server = { workspace = true, path = "crates/server" }
+matrix = { workspace = true, path = "crates/matrix" }
+commune = { workspace = true, path = "crates/core" }
+
 async-trait = "0.1.74"
 hex = "0.4.3"
 hmac = "0.12.1"

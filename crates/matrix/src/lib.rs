@@ -1,8 +1,10 @@
 //! This library deals with forwarding Matrix requests to the server.
-//! Comments have been used sparingly as the specification contains all the technical details.
+//! Comments have been used sparingly as the specification contains all the
+//! technical details.
 
-//! We rely on `ruma` to abstract away the boilerplate introduced by HTTP requests,
-//! without sacrificing flexibility by defining our own request and response types.
+//! We rely on `ruma` to abstract away the boilerplate introduced by HTTP
+//! requests, without sacrificing flexibility by defining our own request and
+//! response types.
 //!
 //! reference: https://docs.ruma.io/ruma_common/api/index.html
 
@@ -11,23 +13,46 @@ pub mod client;
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
-use ruma_client::{DefaultConstructibleHttpClient, HttpClient, HttpClientExt};
+use ruma_client::{HttpClient, HttpClientExt, ResponseResult};
 
 #[allow(unused_imports)]
 use ruma_common::api::error::MatrixError as Error;
 
+use ruma_common::api::{OutgoingRequest, SendAccessToken};
+
+pub use ruma_common;
+pub use ruma_events;
+
 #[derive(Debug)]
 pub struct Handle {
     inner: reqwest::Client,
+    homeserver_url: url::Url,
 }
 
 impl Handle {
-    pub async fn new() {
-      self.send_matrix_request(, access_token, for_versions, request)
+    pub fn new(homeserver_url: &url::Url) -> Self {
+        Self {
+            inner: reqwest::Client::new(),
+            homeserver_url: homeserver_url.to_owned(),
+        }
     }
 
-    pub async fn dispatch(&self) {
-      self.send_matrix_request(, access_token, for_versions, request)
+    pub async fn dispatch<R: OutgoingRequest>(
+        &self,
+        access_token: Option<&str>,
+        request: R,
+    ) -> ResponseResult<Handle, R> {
+        self.send_matrix_request::<R>(
+            self.homeserver_url.as_str(),
+            access_token
+                .map(SendAccessToken::IfRequired)
+                .unwrap_or(SendAccessToken::None),
+            &[],
+            request,
+        )
+        .await
+        .try_into()
+        .unwrap()
     }
 }
 
@@ -57,13 +82,5 @@ impl HttpClient for Handle {
         Ok(http_builder
             .body(res.bytes().await?)
             .expect("http::Response construction to work"))
-    }
-}
-
-impl DefaultConstructibleHttpClient for Handle {
-    fn default() -> Self {
-        Self {
-            inner: reqwest::Client::new(),
-        }
     }
 }

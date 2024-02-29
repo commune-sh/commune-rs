@@ -1,6 +1,7 @@
 use ruma_common::{
     api::{request, response, Metadata},
-    metadata, thirdparty::Medium,
+    metadata,
+    thirdparty::Medium,
 };
 
 use super::User;
