@@ -22,16 +22,16 @@ impl Auth {
     ) -> Result<AccessToken, Error> {
         use session::login::*;
 
-        let req = Request {
-            kind: LoginType::Password {
+        let req = Request::new(
+            LoginType::Password {
                 password: password.inner().to_owned(),
             },
-            identifier: Some(Identifier::User {
+            Some(Identifier::User {
                 user: username.to_owned(),
             }),
-            device_name: "commune beta".to_owned(),
-            refresh_token: Some(true),
-        };
+            "commune beta".to_owned(),
+            Some(true),
+        );
 
         let resp: Response = self.handle.dispatch(None, req).await.unwrap().into();
 

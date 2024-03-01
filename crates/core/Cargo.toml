@@ -24,5 +24,5 @@ url = { workspace = true, features = ["serde"] }
 tokio = { workspace = true, features = ["full"] }
 
 # Local Dependencies
-matrix = { path = "../matrix" }
+matrix = { path = "../matrix", features = ["client", "server"] }
 figment = { version = "0.10.14", features = ["toml"] }

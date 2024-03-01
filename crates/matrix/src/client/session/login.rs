@@ -34,6 +34,22 @@ pub struct Request {
     pub refresh_token: Option<bool>,
 }
 
+impl Request {
+    pub fn new(
+        kind: LoginType,
+        identifier: Option<Identifier>,
+        device_name: String,
+        refresh_token: Option<bool>,
+    ) -> Self {
+        Self {
+            kind,
+            identifier,
+            device_name,
+            refresh_token,
+        }
+    }
+}
+
 #[response(error = crate::Error)]
 pub struct Response {
     pub access_token: String,
@@ -50,6 +66,26 @@ pub struct Response {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub well_known: Option<WellKnown>,
+}
+
+impl Response {
+    pub fn new(
+        access_token: String,
+        device_id: OwnedDeviceId,
+        expires_in_ms: Option<u64>,
+        refresh_token: Option<String>,
+        user_id: OwnedUserId,
+        well_known: Option<WellKnown>,
+    ) -> Self {
+        Self {
+            access_token,
+            device_id,
+            expires_in_ms,
+            refresh_token,
+            user_id,
+            well_known,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
