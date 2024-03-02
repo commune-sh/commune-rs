@@ -3,11 +3,12 @@
 //! reference: https://matrix-org.github.io/synapse/latest/admin_api/register_api.html
 
 use hmac::Mac;
+use serde::Serialize;
 
 pub mod get_nonce;
 pub mod register;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Hmac {
     inner: Vec<u8>,
 }

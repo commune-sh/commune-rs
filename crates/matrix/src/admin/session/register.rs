@@ -23,7 +23,7 @@ pub struct Request {
 
     pub password: String,
 
-    #[serde(skip_deserializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub displayname: String,
 
     pub admin: bool,

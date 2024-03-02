@@ -2,6 +2,7 @@ use ruma_common::{
     api::{request, response, Direction, Metadata},
     metadata, OwnedUserId,
 };
+use serde::Serialize;
 
 use super::User;
 
@@ -59,7 +60,7 @@ pub struct Response {
     total: u64,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 #[allow(dead_code)]
 pub enum OrderBy {
     #[default]

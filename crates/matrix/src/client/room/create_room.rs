@@ -1,10 +1,12 @@
+use std::collections::BTreeMap;
+
 use ruma_common::{
     api::{request, response, Metadata},
     metadata,
     serde::Raw,
-    OwnedRoomId, OwnedUserId,
+    OwnedRoomId, OwnedUserId, power_levels::NotificationPowerLevels,
 };
-use ruma_events::{room::power_levels::RoomPowerLevels, AnyInitialStateEvent};
+use ruma_events::{AnyInitialStateEvent, TimelineEventType};
 use serde::Serialize;
 
 #[allow(dead_code)]
@@ -39,7 +41,6 @@ pub struct Request {
     )]
     pub power_override: Option<RoomPowerLevels>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub preset: RoomPreset,
 
     #[serde(rename = "room_alias_name", skip_serializing_if = "String::is_empty")]
@@ -69,4 +70,27 @@ pub enum RoomPreset {
 
     #[default]
     TrustedPrivateChat,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RoomPowerLevels {
+    pub ban: u64,
+
+    pub events: BTreeMap<TimelineEventType, u64>,
+
+    pub events_default: u64,
+
+    pub invite: u64,
+
+    pub kick: u64,
+
+    pub redact: u64,
+
+    pub state_default: u64,
+
+    pub users: BTreeMap<OwnedUserId, u64>,
+
+    pub users_default: u64,
+
+    pub notifications: NotificationPowerLevels,
 }
