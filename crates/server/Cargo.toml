@@ -24,8 +24,8 @@ serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-url = { workspace = true, features= ["serde"] }
-uuid = { workspace = true, features= ["serde"] }
+url = { workspace = true, features = ["serde"] }
+uuid = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
 core = { path = "../core" }
