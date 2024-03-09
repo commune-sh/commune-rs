@@ -10,19 +10,18 @@ path = "src/lib.rs"
 
 [dependencies]
 # Workspace Dependencies
-handlebars = { workspace = true }
-lettre = { workspace = true }
+anyhow = { workspace = true }
 rand = { workspace = true }
 thiserror = { workspace = true }
 validator = { workspace = true, features = ["derive"] }
 http = { workspace = true }
+mail-send = {workspace = true}
+maud  = {workspace = true}
 serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
 tracing = { workspace = true }
-uuid = { workspace = true, features = ["serde"] }
+figment = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 tokio = { workspace = true, features = ["full"] }
 
 # Local Dependencies
-matrix = { path = "../matrix", features = ["client", "server"] }
-figment = { version = "0.10.14", features = ["toml"] }
+matrix = { path = "../matrix", features = ["client"] }

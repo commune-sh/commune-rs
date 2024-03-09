@@ -1,5 +1,5 @@
 [package]
-name = "server"
+name = "router"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -9,14 +9,13 @@ name = "commune-server"
 path = "src/bin/main.rs"
 
 [lib]
-name = "server"
+name = "router"
 path = "src/lib.rs"
 
 [dependencies]
 # Workspace Dependencies
 axum = { workspace = true, features = ["tokio"] }
 anyhow = { workspace = true }
-dotenv = { workspace = true }
 http = { workspace = true }
 # openssl = { workspace = true, features = ["vendored"] }
 # openssl-sys = { workspace = true, features = ["vendored"] }
@@ -25,7 +24,6 @@ tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 url = { workspace = true, features = ["serde"] }
-uuid = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
 core = { path = "../core" }

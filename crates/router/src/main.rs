@@ -1,14 +1,13 @@
 use std::net::SocketAddr;
 
 use anyhow::Result;
-use dotenv::dotenv;
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    if dotenv().ok().is_some() {
-        println!("Loaded variables from .env file");
-    }
+    // if dotenv().ok().is_some() {
+    //     println!("Loaded variables from .env file");
+    // }
 
     tracing_subscriber::fmt::init();
 
@@ -17,7 +16,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Listening on {}", addr);
 
-    commune_server::serve(tcp).await?;
+    router::serve(tcp).await?;
 
     Ok(())
 }

@@ -1,18 +1,29 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use matrix::client::session;
+use rand::Rng;
 
-use crate::{util::secret::Secret, Error};
+use crate::{util::secret::Secret, Config, Error};
 
 pub mod error;
-pub mod model;
-pub mod service;
+
+pub type AccessToken = Secret;
 
 pub struct Auth {
     handle: Arc<matrix::Handle>,
+    config: Arc<Config>,
+    cache: HashMap<String, Vec<u8>>,
 }
 
-pub type AccessToken = Secret;
+impl Auth {
+    fn new(handle: Arc<matrix::Handle>, config: Arc<Config>) -> Self {
+        Auth {
+            handle,
+            config,
+            cache: HashMap::new(),
+        }
+    }
+}
 
 impl Auth {
     pub async fn login_with_password(
@@ -33,7 +44,38 @@ impl Auth {
             Some(true),
         );
 
-        let resp: Response = self.handle.dispatch(None, req).await.unwrap().into();
+        let resp: Response = self.handle.dispatch(None, req).await.unwrap();
+
+        Ok(AccessToken::new(resp.access_token))
+    }
+
+    pub async fn register(&self, username: &str, password: Secret) -> Result<AccessToken, Error> {
+        use session::register::*;
+
+        let req = Request::new(username, password.inner(), "commune beta");
+
+        let resp: Response = self.handle.dispatch(None, req).await.unwrap();
+
+        Ok(AccessToken::new(resp.access_token))
+    }
+
+    pub async fn verify_email(
+        &self,
+        username: &str,
+        password: Secret,
+        email: &str,
+    ) -> Result<AccessToken, Error> {
+        use session::register::*;
+
+        let verification_code: String = rand::thread_rng()
+            .gen::<[u32; 6]>()
+            .iter()
+            .map(|i| char::from_digit(i % 10, 10))
+            .collect();
+
+        let req = Request::new(username, password.inner(), "commune beta");
+
+        let resp: Response = self.handle.dispatch(None, req).await.unwrap();
 
         Ok(AccessToken::new(resp.access_token))
     }

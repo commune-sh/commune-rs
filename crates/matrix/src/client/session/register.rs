@@ -29,6 +29,17 @@ pub struct Request {
     pub refresh_token: Option<bool>,
 }
 
+impl Request {
+    pub fn new(username: &str, password: &str, device_name: &str) -> Self {
+        Self {
+            username: username.to_owned(),
+            password: password.to_owned(),
+            device_name: device_name.to_owned(),
+            refresh_token: Some(true),
+        }
+    }
+}
+
 #[response(error = crate::Error)]
 pub struct Response {
     pub access_token: String,

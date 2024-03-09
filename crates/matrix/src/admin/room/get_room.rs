@@ -1,8 +1,8 @@
+use super::Room;
 use ruma_common::{
     api::{request, response, Metadata},
     metadata, OwnedRoomId,
 };
-use super::Room;
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {

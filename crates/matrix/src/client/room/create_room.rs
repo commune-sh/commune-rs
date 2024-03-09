@@ -3,8 +3,9 @@ use std::collections::BTreeMap;
 use ruma_common::{
     api::{request, response, Metadata},
     metadata,
+    power_levels::NotificationPowerLevels,
     serde::Raw,
-    OwnedRoomId, OwnedUserId, power_levels::NotificationPowerLevels,
+    OwnedRoomId, OwnedUserId,
 };
 use ruma_events::{AnyInitialStateEvent, TimelineEventType};
 use serde::Serialize;

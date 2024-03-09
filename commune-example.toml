@@ -1,0 +1,10 @@
+[server]
+listener = "local" # | "global"
+ports = [1212, 2424]
+tls = true
+# `X-Forwarded-For` header
+xff = false
+
+[registration]
+enabled = false
+verify_email = false

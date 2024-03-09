@@ -15,13 +15,12 @@ use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
 use ruma_client::{HttpClient, HttpClientExt, ResponseResult};
 
-#[allow(unused_imports)]
-use ruma_common::api::error::MatrixError as Error;
-
 use ruma_common::api::{OutgoingRequest, SendAccessToken};
 
 pub use ruma_common;
 pub use ruma_events;
+
+pub type Error = ruma_common::api::error::MatrixError;
 
 #[derive(Debug)]
 pub struct Handle {
