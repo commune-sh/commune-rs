@@ -33,13 +33,13 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    chunk: Vec<Room>,
+    pub chunk: Vec<Room>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    next_batch: Option<String>,
+    pub next_batch: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    prev_batch: Option<String>,
+    pub prev_batch: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

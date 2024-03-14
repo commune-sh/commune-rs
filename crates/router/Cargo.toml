@@ -6,7 +6,7 @@ publish = false
 
 [[bin]]
 name = "commune-server"
-path = "src/bin/main.rs"
+path = "src/main.rs"
 
 [lib]
 name = "router"
@@ -14,7 +14,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # Workspace Dependencies
-axum = { workspace = true, features = ["tokio"] }
+axum = { workspace = true, features = ["tokio", "macros"] }
 anyhow = { workspace = true }
 http = { workspace = true }
 # openssl = { workspace = true, features = ["vendored"] }
@@ -27,3 +27,4 @@ url = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
 core = { path = "../core" }
+figment = { workspace = true, features = ["toml", "env"] }

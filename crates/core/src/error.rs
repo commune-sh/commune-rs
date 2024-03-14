@@ -1,12 +1,13 @@
+use axum::{http::StatusCode, response::IntoResponse};
 use thiserror::Error;
 
-pub(crate) type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
     #[error("forwarding a Matrix request failed: {0}")]
-    Matrix(#[from] matrix::Error),
+    Matrix(#[from] matrix::HandleError),
 
     #[error("an IO operation failed: {0}")]
     IO(#[from] std::io::Error),
@@ -16,4 +17,10 @@ pub enum Error {
 
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),
+}
+
+impl IntoResponse for Error {
+    fn into_response(self) -> axum::response::Response {
+        (StatusCode::BAD_REQUEST, self.to_string()).into_response()
+    }
 }

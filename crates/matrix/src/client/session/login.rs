@@ -51,6 +51,7 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
+#[derive(Serialize)]
 pub struct Response {
     pub access_token: String,
 
@@ -131,12 +132,12 @@ pub enum Identifier {
     Phone { country: String, phone: String },
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BaseUrl {
     pub base_url: url::Url,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WellKnown {
     #[serde(rename = "m.homeserver")]
     pub homeserver: BaseUrl,

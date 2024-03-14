@@ -49,37 +49,6 @@ impl Auth {
         Ok(AccessToken::new(resp.access_token))
     }
 
-    pub async fn register(&self, username: &str, password: Secret) -> Result<AccessToken, Error> {
-        use session::register::*;
-
-        let req = Request::new(username, password.inner(), "commune beta");
-
-        let resp: Response = self.handle.dispatch(None, req).await.unwrap();
-
-        Ok(AccessToken::new(resp.access_token))
-    }
-
-    pub async fn verify_email(
-        &self,
-        username: &str,
-        password: Secret,
-        email: &str,
-    ) -> Result<AccessToken, Error> {
-        use session::register::*;
-
-        let verification_code: String = rand::thread_rng()
-            .gen::<[u32; 6]>()
-            .iter()
-            .map(|i| char::from_digit(i % 10, 10))
-            .collect();
-
-        let req = Request::new(username, password.inner(), "commune beta");
-
-        let resp: Response = self.handle.dispatch(None, req).await.unwrap();
-
-        Ok(AccessToken::new(resp.access_token))
-    }
-
     // pub async fn get_login_flows(&self) -> Result<LoginFlowsResponse> {
     //     match Login::get_login_flows(&self.admin).await {
     //         Ok(flows) => Ok(flows),

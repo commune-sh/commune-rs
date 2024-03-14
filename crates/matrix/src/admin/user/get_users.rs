@@ -53,11 +53,11 @@ pub struct Request {
 
 #[response(error = crate::Error)]
 pub struct Response {
-    users: Vec<User>,
+    pub users: Vec<User>,
 
-    next_token: String,
+    pub next_token: String,
 
-    total: u64,
+    pub total: u64,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]

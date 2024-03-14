@@ -12,8 +12,7 @@ path = "src/lib.rs"
 # Workspace Dependencies
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["tokio"] }
-reqwest = { workspace = true }
-# openssl = { workspace = true, features = ["vendored"] }
+reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 url = { workspace = true }
@@ -23,4 +22,4 @@ tracing-subscriber = { workspace = true }
 # Local Dependencies
 core = { path = "../core" }
 matrix = { path = "../matrix" }
-server = { path = "../server" }
+router = { path = "../router" }

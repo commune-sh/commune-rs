@@ -1,11 +1,11 @@
 version: '3'
 
 services:
-  maildev:
-    image: 'maildev/maildev'
-    ports:
-      - '1080:1080'
-      - '1025:1025'
+  # maildev:
+  #   image: 'maildev/maildev'
+  #   ports:
+  #     - '1080:1080'
+  #     - '1025:1025'
 
   redis:
     image: 'redis/redis-stack'
@@ -13,14 +13,14 @@ services:
       - '6379:6379'
       - '8001:8001'
     volumes:
-      - redis-state:/data
+      - redis-db:/data
 
-  synapse_database:
+  synapse-db:
     image: 'postgres:16'
     ports:
       - '5432:5432'
     volumes:
-      - synapse_database:/var/lib/postgresql/data
+      - synapse-db:/var/lib/postgresql/data
     env_file:
       - .env
     restart: always
@@ -38,8 +38,8 @@ services:
     restart: always
     network_mode: 'host'
     depends_on:
-      - synapse_database
+      - synapse-db
 
 volumes:
-  redis-state:
-  synapse_database:
+  redis-db:
+  synapse-db:

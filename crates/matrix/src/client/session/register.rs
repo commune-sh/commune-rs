@@ -2,6 +2,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata, OwnedDeviceId, OwnedUserId,
 };
+use serde::{Serialize, Deserialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -41,6 +42,7 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
+#[derive(Deserialize, Serialize)]
 pub struct Response {
     pub access_token: String,
 

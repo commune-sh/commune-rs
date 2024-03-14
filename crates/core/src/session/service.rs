@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use matrix::{
-    admin::resources::user::UserService, client::resources::session::Session, ruma_common::UserId,
+    admin::resources::user::UserService, client::resources::session::Session, ruma_common::UserId, Handle,
 };
 use tracing::instrument;
 use url::Url;
@@ -99,8 +99,7 @@ impl CreateAccountDto {
 }
 
 pub struct AccountService {
-    admin: Arc<MatrixAdminClient>,
-    auth: Arc<AuthService>,
+    matrix: Arc<Handle>,
     mail: Arc<MailService>,
 }
 

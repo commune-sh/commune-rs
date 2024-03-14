@@ -2,36 +2,50 @@
 //! interactions, forwarding regular events and constructing custom requests.
 
 // pub mod auth;
-pub mod error;
 pub mod config;
+pub mod error;
 pub mod mail;
+pub mod session;
 // pub mod room;
-// pub mod session;
 pub mod util;
 
-use std::sync::Arc;
+use std::sync::{RwLock, Arc};
 
-pub(crate) use error::Result;
+use config::Config;
+use figment::{
+    providers::{Env, Format, Toml},
+    Figment,
+};
 
-use tokio::sync::OnceCell;
-use util::secret::Secret;
+static COMMUNE: RwLock<Option<&'static Commune>> = RwLock::new(None);
 
 pub struct Commune {
-    pub admin_token: Arc<Secret>,
+    pub config: Config,
     pub handle: Arc<matrix::Handle>,
 }
 
-impl Commune {
-    pub fn new() -> Result<Self> {
-        let config = CONFIG
-        let handle = matrix::Handle::new(&config.synapse_host);
+pub fn init() {
+    let mut commune = COMMUNE.write().unwrap();
 
-        Ok(Self {
-            handle: Arc::new(handle),
-            admin_token: Arc::new(config.synapse_admin_token),
-        })
-    }
+    let config = Figment::new()
+        .merge(Toml::file(
+            Env::var("COMMUNE_CONFIG").unwrap_or("./commune-example.toml".to_owned()),
+        ))
+        .extract::<Config>()
+        .unwrap();
+
+    let handle = Arc::new(matrix::Handle::new(&config.matrix.host));
+
+    *commune = Some(Box::leak(Box::new(Commune { config, handle })));
 }
+
+pub fn commune() -> &'static Commune {
+    COMMUNE
+        .read()
+        .unwrap()
+        .expect("commune should be initialized at this point")
+}
+
 //         admin
 //             .set_token(&config.synapse_admin_token)
 //             .map_err(|err| {

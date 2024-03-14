@@ -9,17 +9,10 @@ name = "matrix"
 path = "src/lib.rs"
 
 [dependencies]
-ruma-events = { version = "0.27.11", default_features = false, features = [
-  "html",
-  "markdown",
-] }
-ruma-common = { version = "0.12.0", default_features = false, features = [
-  "api",
-  "rand",
-  "unstable-exhaustive-types",
-] }
-ruma-macros = { version = "0.12.0", default_features = false }
-ruma-client = { version = "0.12.0", default_features = false }
+ruma-events = { workspace = true }
+ruma-common = { workspace = true }
+ruma-macros = { workspace = true }
+ruma-client = { workspace = true }
 
 # Workspace Dependencies
 mime = { workspace = true }

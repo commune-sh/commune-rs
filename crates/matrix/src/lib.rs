@@ -21,6 +21,7 @@ pub use ruma_common;
 pub use ruma_events;
 
 pub type Error = ruma_common::api::error::MatrixError;
+pub type HandleError = ruma_client::Error<reqwest::Error, Error>;
 
 #[derive(Debug)]
 pub struct Handle {
@@ -50,8 +51,6 @@ impl Handle {
             request,
         )
         .await
-        .try_into()
-        .unwrap()
     }
 }
 

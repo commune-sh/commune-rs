@@ -9,8 +9,7 @@ repository = "https://github.com/commune-os/commune-rs"
 rust-version = "1.75.0"
 
 [workspace]
-# members = ["crates/core", "crates/matrix", "crates/router", "crates/test"]
-members = ["crates/core", "crates/matrix", "crates/router"]
+members = ["crates/core", "crates/matrix", "crates/router", "crates/test"]
 default-members = ["crates/router"]
 resolver = "2"
 
@@ -21,7 +20,7 @@ hex = "0.4.3"
 hmac = "0.12.1"
 sha1 = "0.10.6"
 anyhow = "1.0.75"
-axum = { version = "0.7.4", features = ["tokio"] }
+axum = { version = "0.7.4", features = ["tokio", "macros"] }
 http = "0.2.11"
 mime = "0.3.17"
 mail-send = "0.4.7"
@@ -47,6 +46,17 @@ validator = { version = "0.16", features = ["derive"] }
 router = { workspace = true, path = "crates/router" }
 matrix = { workspace = true, path = "crates/matrix" }
 commune = { workspace = true, path = "crates/core" }
+
+ruma-events = { version = "0.27.11", default_features = false, features = [
+  "html",
+  "markdown",
+] }
+ruma-common = { version = "0.12.0", default_features = false, features = [
+  "api",
+  "rand",
+] }
+ruma-macros = { version = "0.12.0", default_features = false }
+ruma-client = { version = "0.12.0", default_features = false }
 
 [workspace.lints.rust]
 unreachable_pub = "warn"
