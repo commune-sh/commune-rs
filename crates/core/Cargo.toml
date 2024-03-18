@@ -16,8 +16,8 @@ rand = { workspace = true }
 thiserror = { workspace = true }
 validator = { workspace = true, features = ["derive"] }
 http = { workspace = true }
-mail-send = {workspace = true}
-maud  = {workspace = true}
+mail-send = { workspace = true }
+maud = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
 figment = { workspace = true }

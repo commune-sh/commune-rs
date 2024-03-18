@@ -10,7 +10,7 @@ pub mod api;
 
 pub async fn routes() -> Router {
     Router::new()
-        .route("/", get(|| async { "hello commune!" }))
+        .route("/", get(|| async { "hello from commune!" }))
         .nest(
             "/_commune/client/r0",
             Router::new()

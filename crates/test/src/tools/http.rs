@@ -6,7 +6,7 @@ use tokio::net::TcpListener;
 
 use commune_server::serve;
 
-pub(crate) struct HttpClient {
+pub(crate) struct HTTP {
     pub client: Client,
     pub addr: SocketAddr,
 }

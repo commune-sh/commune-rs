@@ -1,35 +1,13 @@
-use std::time::Duration;
-
 use commune::util::secret::Secret;
+
+use crate::env::Env;
 
 #[tokio::test]
 async fn register() {
-    tracing_subscriber::fmt().init();
-
-    commune::init();
-
-    let public_loopback = commune::commune().config.public_loopback;
-    let port = commune::commune().config.port;
-
-    tokio::spawn(async move {
-        router::serve(public_loopback, port.unwrap())
-            .await
-            .expect("failed to start server");
-    });
-
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .unwrap();
-
-    let addr = url::Url::parse(&format!(
-        "http://127.0.0.1:{}/_commune/client/r0/register",
-        port.unwrap()
-    ))
-    .unwrap();
+    let client = Env::new().await;
 
     let resp = client
-        .post(addr)
+        .post("/_commune/client/r0/register")
         .json(&router::api::session::register::Payload {
             username: "steve".to_owned(),
             password: Secret::new("verysecure"),
