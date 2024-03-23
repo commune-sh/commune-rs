@@ -1,4 +1,5 @@
 use commune::util::secret::Secret;
+use rand::Rng;
 
 use crate::env::Env;
 
@@ -9,21 +10,19 @@ async fn register() {
     let resp = client
         .post("/_commune/client/r0/register")
         .json(&router::api::session::register::Payload {
-            username: "steve".to_owned(),
+            username: format!("steve-{}", rand::thread_rng().gen::<u8>()),
             password: Secret::new("verysecure"),
         })
         .send()
         .await
         .unwrap();
 
-    dbg!(resp.status());
+    tracing::info!(?resp);
 
-    if resp.status().is_success() {
-        let resp = resp
-            .json::<matrix::client::session::register::Response>()
-            .await
-            .unwrap();
+    let resp = resp
+        .json::<matrix::client::session::register::Response>()
+        .await
+        .unwrap();
 
-        assert!(!resp.access_token.is_empty());
-    }
+    assert!(!resp.access_token.is_empty());
 }

@@ -19,6 +19,7 @@ use ruma_common::api::{OutgoingRequest, SendAccessToken};
 
 pub use ruma_common;
 pub use ruma_events;
+pub use ruma_client;
 
 pub type Error = ruma_common::api::error::MatrixError;
 pub type HandleError = ruma_client::Error<reqwest::Error, Error>;
