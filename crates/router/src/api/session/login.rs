@@ -3,20 +3,34 @@ use axum::{
     Json,
 };
 use commune::util::secret::Secret;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Payload {
     username: String,
     password: Secret,
 }
 
-pub async fn handler(
-    Json(payload): Json<Payload>,
-) -> Response {
+impl Payload {
+    pub fn new<S: Into<String>>(username: S, password: S) -> Self {
+        Self {
+            username: username.into(),
+            password: Secret::new(password.into()),
+        }
+    }
+}
+
+#[axum::debug_handler]
+pub async fn handler(Json(payload): Json<Payload>) -> Response {
     use commune::session::login::service;
 
-    match service(&commune::commune().handle, &payload.username, &payload.password).await {
+    match service(
+        &commune::commune().handle,
+        &payload.username,
+        &payload.password,
+    )
+    .await
+    {
         Ok(resp) => Json(resp).into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to login user");

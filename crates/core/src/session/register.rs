@@ -2,7 +2,7 @@ use http::StatusCode;
 use matrix::{
     client::{
         session::register::*,
-        uiaa::{ AuthType, UiaaRequest, UiaaResponse},
+        uiaa::{AuthType, UiaaRequest, UiaaResponse},
     },
     ruma_client::Error::FromHttpResponse,
     ruma_common::api::error::{FromHttpResponseError, MatrixError, MatrixErrorBody},

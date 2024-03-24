@@ -18,25 +18,25 @@ const METADATA: Metadata = metadata! {
 
 #[request(error = crate::Error)]
 pub struct Request {
-    pub username: String,
+    username: String,
 
-    pub password: String,
+    password: String,
 
     #[serde(
         rename = "initial_device_display_name",
         skip_serializing_if = "String::is_empty"
     )]
-    pub device_name: String,
+    device_name: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub refresh_token: Option<bool>,
+    refresh_token: Option<bool>,
 
     /// Note that this information is not used to define how the registered user should be
     /// authenticated, but is instead used to authenticate the register call itself.
     /// It should be left empty, or omitted, unless an earlier call returned an response
     /// with status code 401.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub auth: Option<UiaaRequest>,
+    auth: Option<UiaaRequest>,
 }
 
 impl Request {

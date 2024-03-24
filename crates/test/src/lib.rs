@@ -14,4 +14,7 @@
 mod register;
 
 #[cfg(test)]
+mod login;
+
+#[cfg(test)]
 mod env;
