@@ -25,9 +25,11 @@ sha1 = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 hex = { workspace = true }
 hmac = { workspace = true }
-http.workspace = true
-bytes = "1.5.0"
-async-trait = "0.1.77"
+http = { workspace = true }
+bytes = { workspace = true }
+async-trait = { workspace = true }
+async-stream = { workspace = true }
+futures = { workspace = true }
 
 [features]
 client = []

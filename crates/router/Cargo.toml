@@ -28,3 +28,4 @@ url = { workspace = true, features = ["serde"] }
 # Local Dependencies
 core = { path = "../core" }
 figment = { workspace = true, features = ["toml", "env"] }
+async-stream = "0.3.5"
