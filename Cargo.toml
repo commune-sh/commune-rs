@@ -27,7 +27,7 @@ hmac = "0.12.1"
 sha1 = "0.10.6"
 anyhow = "1.0.75"
 axum = { version = "0.7.4", features = ["tokio", "macros"] }
-http = "0.2.11"
+http = "1.1.0"
 mime = "0.3.17"
 mail-send = "0.4.7"
 maud = "0.26.0"
