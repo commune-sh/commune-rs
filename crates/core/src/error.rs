@@ -1,59 +1,32 @@
-use http::StatusCode;
+use axum::{http::StatusCode, response::IntoResponse};
 use thiserror::Error;
-
-use crate::{
-    account::error::AccountErrorCode, auth::error::AuthErrorCode, mail::error::MailErrorCode,
-    room::error::RoomErrorCode,
-};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub trait HttpStatusCode {
-    fn status_code(&self) -> StatusCode;
-    fn error_code(&self) -> &'static str;
-}
-
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum Error {
-    #[error("{0}")]
-    Auth(#[from] AuthErrorCode),
-    #[error("{0}")]
-    User(AccountErrorCode),
-    #[error("{0}")]
-    Room(RoomErrorCode),
-    #[error("{0}")]
-    Mail(#[from] MailErrorCode),
-    #[error("An error occured while starting up. {0}")]
-    Startup(String),
-    #[error("Unknown Error Occured")]
-    Unknown,
+    #[error("forwarding a Matrix request failed: {0}")]
+    Matrix(#[from] matrix::HandleError),
+
+    #[error("instance does not allow email address originating from this domain")]
+    EmailDomain,
+
+    #[error("failed to validate identifier: {0}")]
+    InvalidIdentifier(#[from] matrix::ruma_identifiers_validation::Error),
+
+    #[error("an IO operation failed: {0}")]
+    IO(#[from] std::io::Error),
+
+    #[error(transparent)]
+    SMTP(#[from] mail_send::Error),
+
+    #[error(transparent)]
+    Unknown(#[from] anyhow::Error),
 }
 
-impl From<AccountErrorCode> for Error {
-    fn from(err: AccountErrorCode) -> Self {
-        Error::User(err)
-    }
-}
-
-impl HttpStatusCode for Error {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            Error::Auth(err) => err.status_code(),
-            Error::User(err) => err.status_code(),
-            Error::Mail(err) => err.status_code(),
-            Error::Room(err) => err.status_code(),
-            Error::Startup(_) | Error::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-
-    fn error_code(&self) -> &'static str {
-        match self {
-            Error::Auth(err) => err.error_code(),
-            Error::User(err) => err.error_code(),
-            Error::Mail(err) => err.error_code(),
-            Error::Room(err) => err.error_code(),
-            Error::Startup(_) => "SERVER_STARTUP_ERROR",
-            Error::Unknown => "UNKNOWN_ERROR",
-        }
+impl IntoResponse for Error {
+    fn into_response(self) -> axum::response::Response {
+        (StatusCode::BAD_REQUEST, self.to_string()).into_response()
     }
 }

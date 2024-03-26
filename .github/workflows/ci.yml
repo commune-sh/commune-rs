@@ -86,8 +86,7 @@ jobs:
         env:
           COMMUNE_SYNAPSE_ADMIN_TOKEN: ${{ env.COMMUNE_SYNAPSE_ADMIN_TOKEN }}
         run: |
-          # just e2e -- --show-output
-          echo "warning: end-to-end tests are temporarily disabled"
+          just e2e -- --show-output
 
       - name: Print Logs
         if: always()

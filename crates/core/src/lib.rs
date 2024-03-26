@@ -1,155 +1,128 @@
-pub mod account;
-pub mod auth;
+//! This library deals with our core logic, such as authorizing user
+//! interactions, forwarding regular events and constructing custom requests.
+
+pub mod config;
 pub mod error;
-pub mod mail;
-pub mod room;
 pub mod util;
 
-pub use error::{Error, HttpStatusCode, Result};
+pub mod account;
+pub mod profile;
 
-use mail::service::MailService;
-use room::service::RoomService;
-use url::Url;
+use std::sync::RwLock;
 
-use std::{fmt::Debug, str::FromStr, sync::Arc};
+use config::Config;
+use email_address::EmailAddress;
+use figment::{
+    providers::{Env, Format, Toml},
+    Figment,
+};
+use mail_send::{mail_builder::MessageBuilder, SmtpClientBuilder};
+use matrix::{
+    ruma_client::{HttpClientExt, ResponseResult},
+    ruma_common::api::{OutgoingRequest, SendAccessToken},
+};
 
-use matrix::Client as MatrixAdminClient;
-
-use self::{account::service::AccountService, auth::service::AuthService};
-
-pub mod env {
-    pub const COMMUNE_SYNAPSE_HOST: &str = "COMMUNE_SYNAPSE_HOST";
-    pub const COMMUNE_SYNAPSE_ADMIN_TOKEN: &str = "COMMUNE_SYNAPSE_ADMIN_TOKEN";
-    pub const COMMUNE_SYNAPSE_SERVER_NAME: &str = "COMMUNE_SYNAPSE_SERVER_NAME";
-    pub const COMMUNE_REGISTRATION_SHARED_SECRET: &str = "COMMUNE_REGISTRATION_SHARED_SECRET";
-    pub const REDIS_HOST: &str = "REDIS_HOST";
-    pub const SMTP_HOST: &str = "SMTP_HOST";
-    pub const MAILDEV_INCOMING_USER: &str = "MAILDEV_INCOMING_USER";
-    pub const MAILDEV_INCOMING_PASS: &str = "MAILDEV_INCOMING_USER";
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CommuneConfig {
-    pub smtp_host: Url,
-    pub redis_host: Url,
-    pub maildev_incoming_user: Option<String>,
-    pub maildev_incoming_pass: Option<String>,
-    pub synapse_host: String,
-    pub synapse_admin_token: String,
-    pub synapse_server_name: String,
-    pub synapse_registration_shared_secret: String,
-}
-
-impl Default for CommuneConfig {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl CommuneConfig {
-    pub fn new() -> Self {
-        Self {
-            smtp_host: Self::var(env::SMTP_HOST),
-            redis_host: Self::var(env::REDIS_HOST),
-            maildev_incoming_user: Self::var_opt(env::MAILDEV_INCOMING_USER),
-            maildev_incoming_pass: Self::var_opt(env::MAILDEV_INCOMING_PASS),
-            synapse_host: Self::var(env::COMMUNE_SYNAPSE_HOST),
-            synapse_admin_token: Self::var(env::COMMUNE_SYNAPSE_ADMIN_TOKEN),
-            synapse_server_name: Self::var(env::COMMUNE_SYNAPSE_SERVER_NAME),
-            synapse_registration_shared_secret: Self::var(env::COMMUNE_REGISTRATION_SHARED_SECRET),
-        }
-    }
-
-    fn var<P: Debug + FromStr>(name: &str) -> P {
-        if let Ok(value) = std::env::var(name) {
-            if let Ok(value) = value.parse() {
-                return value;
-            }
-        }
-
-        panic!(
-            "Failed to parse {} as {:?}",
-            name,
-            std::any::type_name::<P>()
-        );
-    }
-
-    fn var_opt<P: Debug + FromStr>(name: &str) -> Option<P> {
-        if let Ok(value) = std::env::var(name) {
-            if let Ok(value) = value.parse() {
-                return Some(value);
-            }
-
-            panic!(
-                "Failed to parse {} as {:?}",
-                name,
-                std::any::type_name::<P>()
-            );
-        }
-
-        None
-    }
-}
+static COMMUNE: RwLock<Option<&'static Commune>> = RwLock::new(None);
 
 pub struct Commune {
-    pub account: Arc<AccountService>,
-    pub auth: Arc<AuthService>,
-    pub room: Arc<RoomService>,
+    pub config: Config,
+    client: matrix::Client,
+    // smtp: SmtpClient<TlsStream<TcpStream>>,
+}
+
+pub async fn init() {
+    let mut commune = COMMUNE.write().unwrap();
+
+    let config = Figment::new()
+        .merge(Toml::file(
+            Env::var("COMMUNE_CONFIG").unwrap_or("./commune-example.toml".to_owned()),
+        ))
+        .extract::<Config>()
+        .unwrap();
+
+    if config
+        .allowed_domains
+        .as_ref()
+        .is_some_and(|v| !v.is_empty())
+        && config
+            .blocked_domains
+            .as_ref()
+            .is_some_and(|v| !v.is_empty())
+    {
+        panic!("config can only contain either allowed or blocked domains");
+    }
+
+    let client = matrix::Client::default();
+
+    *commune = Some(Box::leak(Box::new(Commune { config, client })));
+}
+
+pub fn commune() -> &'static Commune {
+    COMMUNE
+        .read()
+        .unwrap()
+        .expect("commune should be initialized at this point")
 }
 
 impl Commune {
-    pub async fn new<C: Into<CommuneConfig>>(config: C) -> Result<Self> {
-        let config: CommuneConfig = config.into();
-        let mut admin = MatrixAdminClient::new(&config.synapse_host, &config.synapse_server_name)
-            .map_err(|err| {
-            tracing::error!(?err, "Failed to create admin client");
-            Error::Startup(err.to_string())
-        })?;
-
-        admin
-            .set_token(&config.synapse_admin_token)
-            .map_err(|err| {
-                tracing::error!(?err, "Failed to set admin token");
-                Error::Startup(err.to_string())
-            })?;
-
-        let redis = {
-            let client = redis::Client::open(config.redis_host.to_string()).map_err(|err| {
-                tracing::error!(?err, host=%config.redis_host.to_string(), "Failed to open connection to Redis");
-                Error::Startup(err.to_string())
-            })?;
-            let mut conn = client.get_async_connection().await.map_err(|err| {
-                tracing::error!(?err, host=%config.redis_host.to_string(), "Failed to get connection to Redis");
-                Error::Startup(err.to_string())
-            })?;
-
-            redis::cmd("PING").query_async(&mut conn).await.map_err(|err| {
-                tracing::error!(?err, host=%config.redis_host.to_string(), "Failed to ping Redis");
-                Error::Startup(err.to_string())
-            })?;
-
-            tracing::info!(host=%config.redis_host.to_string(), "Connected to Redis");
-
-            Arc::new(client)
+    pub async fn send_matrix_request<R: OutgoingRequest>(
+        &self,
+        request: R,
+        access_token: Option<&str>,
+    ) -> ResponseResult<matrix::Client, R> {
+        let at = match access_token {
+            Some(at) => SendAccessToken::Always(at),
+            None => SendAccessToken::None,
         };
 
-        let admin_client = Arc::new(admin);
-        let auth = Arc::new(AuthService::new(
-            Arc::clone(&admin_client),
-            Arc::clone(&redis),
-        ));
-        let mail = Arc::new(MailService::new(&config));
-        let account = AccountService::new(
-            Arc::clone(&admin_client),
-            Arc::clone(&auth),
-            Arc::clone(&mail),
-        );
-        let room = RoomService::new(Arc::clone(&admin_client));
+        self.client
+            .send_matrix_request::<R>(self.config.matrix.host.as_str(), at, &[], request)
+            .await
+    }
 
-        Ok(Self {
-            account: Arc::new(account),
-            auth,
-            room: Arc::new(room),
-        })
+    pub async fn send_email_verification(
+        &self,
+        address: EmailAddress,
+        token: impl Into<String>,
+    ) -> mail_send::Result<()> {
+        let config = &commune().config;
+
+        let password = config.mail.password.inner();
+        let username = config
+            .mail
+            .username
+            .as_deref()
+            .unwrap_or(&password)
+            .to_owned();
+        let host = &config.mail.host;
+
+        let mut smtp = SmtpClientBuilder::new(
+            host.host_str()
+                .expect("failed to extract host from email configuration"),
+            587,
+        )
+        .implicit_tls(false)
+        .credentials((username.as_str(), password.as_str()))
+        .connect()
+        .await?;
+
+        let token = token.into();
+        let from = format!("commune@{host}");
+        let html = format!(
+            "<p>Thanks for signing up.\n\nUse this code to finish verifying your \
+             email:\n{token}</p>"
+        );
+        let text = format!(
+            "Thanks for signing up.\n\nUse this code to finish verifying your email:\n{token}"
+        );
+
+        let message = MessageBuilder::new()
+            .from(("Commune", from.as_str()))
+            .to(vec![address.as_str()])
+            .subject("Email Verification Code")
+            .html_body(html.as_str())
+            .text_body(text.as_str());
+
+        smtp.send(message).await
     }
 }

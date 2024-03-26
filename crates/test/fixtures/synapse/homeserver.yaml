@@ -11,6 +11,7 @@
 # https://matrix-org.github.io/synapse/latest/usage/configuration/config_documentation.html
 server_name: "matrix.localhost"
 pid_file: /data/homeserver.pid
+
 listeners:
   - port: 8008
     tls: false
@@ -79,4 +80,5 @@ rc_invites:
     per_second: 1000
     burst_count: 1000
 
-# vim:ft=yaml
+enable_registration: true
+enable_registration_without_verification: true
