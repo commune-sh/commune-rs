@@ -10,6 +10,9 @@ pub struct Config {
     pub public_loopback: bool,
     pub port: Option<u16>,
 
+    pub allowed_domains: Option<Vec<Url>>,
+    pub blocked_domains: Option<Vec<Url>>,
+
     pub matrix: Matrix,
     pub mail: SMTP,
 }

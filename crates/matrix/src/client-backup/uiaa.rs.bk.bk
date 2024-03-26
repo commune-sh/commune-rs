@@ -131,7 +131,7 @@ impl Password {
 }
 
 #[derive(Clone, Debug, Serialize)]
-pub struct Auth {
+pub struct UiaaRequest {
     session: Option<OwnedSessionId>,
 
     kind: AuthType,
@@ -140,7 +140,7 @@ pub struct Auth {
     data: AuthData,
 }
 
-impl Auth {
+impl UiaaRequest {
     pub fn new(data: AuthData, session: Option<OwnedSessionId>) -> Self {
         Self {
             session,

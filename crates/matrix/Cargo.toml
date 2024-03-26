@@ -13,6 +13,7 @@ ruma-events = { workspace = true }
 ruma-common = { workspace = true }
 ruma-macros = { workspace = true }
 ruma-client = { workspace = true }
+ruma-identifiers-validation = { workspace = true }
 
 # Workspace Dependencies
 mime = { workspace = true }
@@ -28,8 +29,6 @@ hmac = { workspace = true }
 http = { workspace = true }
 bytes = { workspace = true }
 async-trait = { workspace = true }
-async-stream = { workspace = true }
-futures = { workspace = true }
 
 [features]
 client = []

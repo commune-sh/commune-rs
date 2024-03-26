@@ -13,6 +13,7 @@ path = "src/lib.rs"
 anyhow = { workspace = true }
 axum = { workspace = true }
 rand = { workspace = true }
+email_address = { workspace = true }
 thiserror = { workspace = true }
 validator = { workspace = true, features = ["derive"] }
 http = { workspace = true }
@@ -24,6 +25,8 @@ tracing = { workspace = true }
 figment = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 tokio = { workspace = true, features = ["full"] }
+headers = { workspace = true }
+tokio-rustls = { workspace = true }
 
 # Local Dependencies
 matrix = { path = "../matrix", features = ["client"] }

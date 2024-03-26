@@ -9,6 +9,12 @@ pub enum Error {
     #[error("forwarding a Matrix request failed: {0}")]
     Matrix(#[from] matrix::HandleError),
 
+    #[error("instance does not allow email address originating from this domain")]
+    EmailDomain,
+
+    #[error("failed to validate identifier: {0}")]
+    InvalidIdentifier(#[from] matrix::ruma_identifiers_validation::Error),
+
     #[error("an IO operation failed: {0}")]
     IO(#[from] std::io::Error),
 

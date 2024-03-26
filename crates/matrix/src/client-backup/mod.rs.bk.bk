@@ -2,6 +2,9 @@
 //!
 //! reference: https://spec.matrix.org/unstable/client-server-api
 
+pub mod rooms;
+pub mod session;
+pub mod membership;
+pub mod uiaa;
+pub mod sync;
 pub mod account;
-pub mod relative;
-// pub mod session;

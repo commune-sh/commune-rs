@@ -13,10 +13,11 @@ name = "router"
 path = "src/lib.rs"
 
 [dependencies]
-# Workspace Dependencies
 axum = { workspace = true, features = ["tokio", "macros"] }
+axum-extra = { workspace = true, features = ["typed-header"] }
 anyhow = { workspace = true }
 http = { workspace = true }
+email_address = { workspace = true }
 # openssl = { workspace = true, features = ["vendored"] }
 # openssl-sys = { workspace = true, features = ["vendored"] }
 serde = { workspace = true, features = ["derive"] }
@@ -27,5 +28,5 @@ url = { workspace = true, features = ["serde"] }
 
 # Local Dependencies
 core = { path = "../core" }
+matrix = { path = "../matrix" }
 figment = { workspace = true, features = ["toml", "env"] }
-async-stream = "0.3.5"

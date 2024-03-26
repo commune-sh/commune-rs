@@ -1,11 +1,11 @@
 version: '3'
 
 services:
-  # maildev:
-  #   image: 'maildev/maildev'
-  #   ports:
-  #     - '1080:1080'
-  #     - '1025:1025'
+  mailcrab:
+    image: marlonb/mailcrab:latest
+    ports:
+      - '1025:1025'
+    networks: [default]
 
   redis:
     image: 'redis/redis-stack'

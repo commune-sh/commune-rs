@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use tokio::net::TcpListener;
@@ -9,23 +9,21 @@ use tokio::net::TcpListener;
 pub mod api;
 
 pub async fn routes() -> Router {
-    Router::new()
-        .route("/", get(|| async { "hello from commune!" }))
+    let router = Router::new()
+        .route("/register", post(api::relative::register::handler))
+        .route("/register/available/:username", get(api::relative::available::handler))
+        .route("/login", post(api::relative::login::handler))
+        .route("/logout", post(api::relative::logout::handler))
         .nest(
-            "/_commune/client/r0",
+            "/account",
             Router::new()
-                .nest(
-                    "/register",
-                    Router::new()
-                        .route("/", post(api::session::register::handler))
-                        .route(
-                            "/username/:username",
-                            get(api::session::username_available::handler),
-                        ),
-                )
-                .route("/login", post(api::session::login::handler))
-                .route("/logout", post(api::session::logout::handler)),
-        )
+                .route("/whoami", get(api::account::whoami::handler))
+                .route("/password", put(api::account::password::handler))
+                .route("/display_name", put(api::account::display_name::handler))
+                .route("/avatar", put(api::account::avatar::handler))
+        );
+
+    Router::new().nest("/_commune/client/r0", router)
 }
 
 pub async fn serve(public_loopback: bool, port: u16) -> anyhow::Result<()> {

@@ -2,6 +2,11 @@ registration_verification = false
 public_loopback = false
 port = 6421
 tls = true
+
+# Either one works but not both
+blocked_domains = []
+allowed_domains = ['gmail.com', 'outlook.com']
+
 # `X-Forwarded-For` header
 # xff = false
 

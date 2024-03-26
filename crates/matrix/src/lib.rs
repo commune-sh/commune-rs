@@ -13,50 +13,23 @@ pub mod client;
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
-use ruma_client::{HttpClient, HttpClientExt, ResponseResult};
+use ruma_client::HttpClient;
 
-use ruma_common::api::{OutgoingRequest, SendAccessToken};
-
+pub use ruma_client;
 pub use ruma_common;
 pub use ruma_events;
-pub use ruma_client;
+pub use ruma_identifiers_validation;
 
 pub type Error = ruma_common::api::error::MatrixError;
 pub type HandleError = ruma_client::Error<reqwest::Error, Error>;
 
-#[derive(Debug)]
-pub struct Handle {
+#[derive(Default, Debug)]
+pub struct Client {
     inner: reqwest::Client,
-    homeserver_url: url::Url,
-}
-
-impl Handle {
-    pub fn new(homeserver_url: &url::Url) -> Self {
-        Self {
-            inner: reqwest::Client::new(),
-            homeserver_url: homeserver_url.to_owned(),
-        }
-    }
-
-    pub async fn dispatch<R: OutgoingRequest>(
-        &self,
-        access_token: Option<&str>,
-        request: R,
-    ) -> ResponseResult<Handle, R> {
-        self.send_matrix_request::<R>(
-            self.homeserver_url.as_str(),
-            access_token
-                .map(SendAccessToken::IfRequired)
-                .unwrap_or(SendAccessToken::None),
-            &[],
-            request,
-        )
-        .await
-    }
 }
 
 #[async_trait]
-impl HttpClient for Handle {
+impl HttpClient for Client {
     type RequestBody = BytesMut;
     type ResponseBody = Bytes;
     type Error = reqwest::Error;
