@@ -81,4 +81,4 @@ rc_invites:
     burst_count: 1000
 
 enable_registration: true
-# vim:ft=yaml
+enable_registration_without_verification: true
