@@ -108,7 +108,10 @@ impl Commune {
 
         let token = token.into();
         let from = format!("commune@{host}");
-        let html = format!("<p>Thanks for signing up.\n\nUse this code to finish verifying your email:\n{token}</p>");
+        let html = format!(
+            "<p>Thanks for signing up.\n\nUse this code to finish verifying your \
+             email:\n{token}</p>"
+        );
         let text = format!(
             "Thanks for signing up.\n\nUse this code to finish verifying your email:\n{token}"
         );

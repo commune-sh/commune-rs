@@ -23,11 +23,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(
-        token: String,
-        uses_allowed: usize,
-        expiry_time: usize,
-    ) -> Self {
+    pub fn new(token: String, uses_allowed: usize, expiry_time: usize) -> Self {
         Self {
             token,
             uses_allowed,

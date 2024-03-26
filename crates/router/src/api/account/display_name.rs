@@ -2,7 +2,10 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
+use axum_extra::{
+    headers::{authorization::Bearer, Authorization},
+    TypedHeader,
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

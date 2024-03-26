@@ -38,5 +38,5 @@ async fn register_test() {
 
     tracing::info!(?resp);
 
-    // assert!(!resp.access_token.is_some() && resp.access_token.map(|at| !at.is_empty()).unwrap());
+    assert!(resp.access_token.is_some() && resp.access_token.map(|at| !at.is_empty()).unwrap());
 }

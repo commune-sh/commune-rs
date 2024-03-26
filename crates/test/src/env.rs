@@ -32,7 +32,6 @@ impl Env {
             .build()
             .unwrap();
 
-
         if let Err(e) = client
             .get(commune::commune().config.matrix.host.to_string() + "/_matrix/client/versions")
             .send()
@@ -52,6 +51,7 @@ impl Env {
         format!("http://{}{}", self.loopback, path)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn get(&self, url: &str) -> reqwest::RequestBuilder {
         tracing::info!("GET {}", self.path(url));
 
