@@ -48,7 +48,7 @@ tracing-subscriber = "0.3.18"
 url = "2.4.1"
 rand = "0.8.5"
 thiserror = "1.0.50"
-validator = { version = "0.16", features = ["derive"] }
+validator = { version = "0.17", features = ["derive"] }
 
 router = { workspace = true, path = "crates/router" }
 matrix = { workspace = true, path = "crates/matrix" }
