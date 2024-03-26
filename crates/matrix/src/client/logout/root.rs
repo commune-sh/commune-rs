@@ -2,7 +2,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata,
 };
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -25,5 +25,5 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Response {}

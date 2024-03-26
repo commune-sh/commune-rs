@@ -11,10 +11,7 @@
 // mod server;
 
 #[cfg(test)]
-mod register;
-
-#[cfg(test)]
-mod login;
+mod api;
 
 #[cfg(test)]
 mod env;

@@ -1,10 +1,20 @@
 use std::fmt::{Debug, Display};
 
 use rand::{distributions::Uniform, Rng};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct Secret(String);
+
+// is this necessary?
+impl Serialize for Secret {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.inner().serialize(serializer)
+    }
+}
 
 impl Secret {
     #[inline]

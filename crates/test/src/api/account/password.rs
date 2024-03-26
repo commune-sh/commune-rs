@@ -2,10 +2,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
-    TypedHeader,
-};
+use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use commune::util::secret::Secret;
 use serde::Deserialize;
 

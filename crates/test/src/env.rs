@@ -7,9 +7,9 @@ pub(crate) struct Env {
 
 impl Env {
     pub(crate) async fn new() -> Self {
-        tracing_subscriber::fmt().init();
+        let _ = tracing_subscriber::fmt().try_init();
 
-        commune::init();
+        commune::init().await;
 
         let loopback = SocketAddr::from((
             match commune::commune().config.public_loopback {

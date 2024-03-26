@@ -2,10 +2,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
-    TypedHeader,
-};
+use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use matrix::ruma_common::OwnedMxcUri;
 use serde::Deserialize;
 
@@ -20,7 +17,12 @@ pub async fn handler(
 ) -> Response {
     use commune::profile::avatar::update::service;
 
-    match service(access_token.token(), payload.mxc_uri).await {
+    match service(
+        access_token.token(),
+        payload.mxc_uri,
+    )
+    .await
+    {
         Ok(resp) => Json(resp).into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to update avatar");

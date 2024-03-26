@@ -51,7 +51,7 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Response {
     pub access_token: String,
 

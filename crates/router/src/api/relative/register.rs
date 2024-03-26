@@ -3,9 +3,9 @@ use axum::{
     Json,
 };
 use commune::util::secret::Secret;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Payload {
     pub username: String,
     pub password: Secret,
