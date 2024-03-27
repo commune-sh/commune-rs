@@ -6,9 +6,9 @@ use axum_extra::{
     headers::{authorization::Bearer, Authorization},
     TypedHeader,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Payload {
     pub display_name: String,
 }
@@ -20,7 +20,7 @@ pub async fn handler(
     use commune::profile::avatar::update::service;
 
     match service(access_token.token(), payload.display_name).await {
-        Ok(resp) => Json(resp).into_response(),
+        Ok(_) => ().into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to update display name");
 

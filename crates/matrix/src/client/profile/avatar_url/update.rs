@@ -15,6 +15,7 @@ const METADATA: Metadata = metadata! {
 };
 
 #[request(error = crate::Error)]
+#[derive(Serialize)]
 pub struct Request {
     #[ruma_api(path)]
     pub user_id: OwnedUserId,
@@ -32,5 +33,4 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
-#[derive(Serialize)]
 pub struct Response {}

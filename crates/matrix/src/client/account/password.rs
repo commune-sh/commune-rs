@@ -17,6 +17,7 @@ const METADATA: Metadata = metadata! {
 };
 
 #[request(error = crate::Error)]
+#[derive(Serialize)]
 pub struct Request {
     pub auth: Auth,
 
@@ -51,5 +52,4 @@ impl Request {
 }
 
 #[response(error = crate::Error)]
-#[derive(Serialize)]
 pub struct Response {}

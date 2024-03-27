@@ -7,13 +7,13 @@ use axum_extra::{
     TypedHeader,
 };
 use commune::util::secret::Secret;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Payload {
-    username: String,
-    password: Secret,
-    new_password: Secret,
+    pub username: String,
+    pub password: Secret,
+    pub new_password: Secret,
 }
 
 pub async fn handler(
@@ -30,7 +30,7 @@ pub async fn handler(
     )
     .await
     {
-        Ok(resp) => Json(resp).into_response(),
+        Ok(_) => ().into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to reset password");
 

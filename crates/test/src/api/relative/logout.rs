@@ -1,8 +1,6 @@
-use matrix::client::logout::root::*;
-
 use crate::{api::relative::login, env::Env};
 
-pub async fn logout(client: &Env) -> Result<Response, reqwest::Error> {
+pub async fn logout(client: &Env) -> Result<bool, reqwest::Error> {
     let login_resp = login::login(&client).await.unwrap();
 
     tracing::info!(?login_resp);
@@ -16,9 +14,8 @@ pub async fn logout(client: &Env) -> Result<Response, reqwest::Error> {
         .send()
         .await?;
 
-    resp.json::<Response>().await
-
     // TODO: use `/whoami` to confirm access token is invalid
+    Ok(resp.status().is_success())
 }
 
 #[tokio::test]
@@ -28,4 +25,6 @@ async fn logout_test() {
     let resp = logout(&client).await.unwrap();
 
     tracing::info!(?resp);
+
+    assert_eq!(resp, true);
 }

@@ -26,7 +26,7 @@ pub async fn register(client: &Env) -> Result<Response, reqwest::Error> {
         .send()
         .await?;
 
-    resp.json::<Response>().await
+    resp.json().await
 }
 
 #[tokio::test]

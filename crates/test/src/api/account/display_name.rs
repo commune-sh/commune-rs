@@ -1,27 +1,34 @@
-use axum::{
-    response::{IntoResponse, Response},
-    Json,
-};
-use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
-use serde::Deserialize;
+use router::api::account::display_name::Payload;
 
-#[derive(Debug, Deserialize)]
-pub struct Payload {
-    pub display_name: String,
+use crate::{api::relative::login, env::Env};
+
+pub async fn update_display_name(client: &Env) -> Result<bool, reqwest::Error> {
+    let login_resp = login::login(&client).await.unwrap();
+
+    tracing::info!(?login_resp);
+
+    let resp = client
+        .put("/_commune/client/r0/account/display_name")
+        .json(&Payload {
+            display_name: "awesome display name".to_owned(),
+        })
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", &login_resp.access_token),
+        )
+        .send()
+        .await?;
+
+    Ok(resp.status().is_success())
 }
 
-pub async fn handler(
-    TypedHeader(access_token): TypedHeader<Authorization<Bearer>>,
-    Json(payload): Json<Payload>,
-) -> Response {
-    use commune::profile::avatar::update::service;
+#[tokio::test]
+async fn update_display_name_test() {
+    let client = Env::new().await;
 
-    match service(access_token.token(), payload.display_name).await {
-        Ok(resp) => Json(resp).into_response(),
-        Err(e) => {
-            tracing::warn!(?e, "failed to update display name");
+    let resp = update_display_name(&client).await.unwrap();
 
-            e.into_response()
-        }
-    }
+    tracing::info!(?resp);
+
+    assert_eq!(resp, true);
 }

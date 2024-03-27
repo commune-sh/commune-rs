@@ -7,9 +7,9 @@ use axum_extra::{
     TypedHeader,
 };
 use matrix::ruma_common::OwnedMxcUri;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Payload {
     pub mxc_uri: OwnedMxcUri,
 }
@@ -21,7 +21,7 @@ pub async fn handler(
     use commune::profile::avatar::update::service;
 
     match service(access_token.token(), payload.mxc_uri).await {
-        Ok(resp) => Json(resp).into_response(),
+        Ok(_) => ().into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to update avatar");
 
