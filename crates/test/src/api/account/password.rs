@@ -1,37 +1,37 @@
-use axum::{
-    response::{IntoResponse, Response},
-    Json,
-};
-use axum_extra::{headers::{authorization::Bearer, Authorization}, TypedHeader};
 use commune::util::secret::Secret;
-use serde::Deserialize;
+use router::api::account::password::Payload;
 
-#[derive(Debug, Deserialize)]
-pub struct Payload {
-    username: String,
-    password: Secret,
-    new_password: Secret,
+use crate::{api::relative::login, env::Env};
+
+pub async fn update_password(client: &Env) -> Result<bool, reqwest::Error> {
+    let login_resp = login::login(&client).await.unwrap();
+
+    tracing::info!(?login_resp);
+
+    let resp = client
+        .put("/_commune/client/r0/account/password")
+        .json(&Payload {
+            username: login_resp.user_id.localpart().to_owned(),
+            password: Secret::new("verysecure"),
+            new_password: Secret::new("notverysecure"),
+        })
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", &login_resp.access_token),
+        )
+        .send()
+        .await?;
+
+    Ok(resp.status().is_success())
 }
 
-pub async fn handler(
-    TypedHeader(access_token): TypedHeader<Authorization<Bearer>>,
-    Json(payload): Json<Payload>,
-) -> Response {
-    use commune::account::password::service;
+#[tokio::test]
+async fn update_password_test() {
+    let client = Env::new().await;
 
-    match service(
-        access_token.token(),
-        payload.username,
-        payload.password,
-        payload.new_password,
-    )
-    .await
-    {
-        Ok(resp) => Json(resp).into_response(),
-        Err(e) => {
-            tracing::warn!(?e, "failed to reset password");
+    let resp = update_password(&client).await.unwrap();
 
-            e.into_response()
-        }
-    }
+    tracing::info!(?resp);
+
+    assert_eq!(resp, true);
 }

@@ -62,4 +62,11 @@ impl Env {
 
         self.client.post(self.path(url))
     }
+
+    pub(crate) fn put(&self, url: &str) -> reqwest::RequestBuilder {
+        tracing::info!("PUT {}", self.path(url));
+
+        self.client.put(self.path(url))
+    }
+
 }

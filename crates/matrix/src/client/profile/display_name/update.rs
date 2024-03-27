@@ -2,6 +2,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata, OwnedUserId,
 };
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -14,6 +15,7 @@ const METADATA: Metadata = metadata! {
 };
 
 #[request(error = crate::Error)]
+#[derive(Deserialize, Serialize)]
 pub struct Request {
     #[ruma_api(path)]
     pub user_id: OwnedUserId,

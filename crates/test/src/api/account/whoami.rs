@@ -1,21 +1,33 @@
-use axum::{
-    response::{IntoResponse, Response},
-    Json,
-};
-use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
-    TypedHeader,
-};
+use matrix::client::account::whoami::*;
 
-pub async fn handler(TypedHeader(access_token): TypedHeader<Authorization<Bearer>>) -> Response {
-    use commune::account::whoami::service;
+use crate::{api::relative::login, env::Env};
 
-    match service(access_token.token()).await {
-        Ok(resp) => Json(resp).into_response(),
-        Err(e) => {
-            tracing::warn!(?e, "failed to associate access token with user");
+pub async fn whoami(client: &Env) -> Result<Response, reqwest::Error> {
+    let login_resp = login::login(&client).await.unwrap();
 
-            e.into_response()
-        }
-    }
+    tracing::info!(?login_resp);
+
+    let resp = client
+        .get("/_commune/client/r0/account/whoami")
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", &login_resp.access_token),
+        )
+        .send()
+        .await?;
+
+    let json = resp.json::<Response>().await?;
+
+    assert_eq!(login_resp.user_id, json.user_id);
+
+    Ok(json)
+}
+
+#[tokio::test]
+async fn whoami_test() {
+    let client = Env::new().await;
+
+    let resp = whoami(&client).await.unwrap();
+
+    tracing::info!(?resp);
 }
