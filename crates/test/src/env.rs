@@ -51,7 +51,6 @@ impl Env {
         format!("http://{}{}", self.loopback, path)
     }
 
-    #[allow(dead_code)]
     pub(crate) fn get(&self, url: &str) -> reqwest::RequestBuilder {
         tracing::info!("GET {}", self.path(url));
 

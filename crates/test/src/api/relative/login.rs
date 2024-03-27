@@ -16,8 +16,7 @@ pub async fn login(client: &Env) -> Result<Response, reqwest::Error> {
             password: Secret::new("verysecure"),
         })
         .send()
-        .await
-        .unwrap();
+        .await?;
 
     resp.json::<Response>().await
 }
