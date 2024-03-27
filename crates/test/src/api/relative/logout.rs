@@ -14,10 +14,11 @@ pub async fn logout(client: &Env) -> Result<Response, reqwest::Error> {
             format!("Bearer {}", &login_resp.access_token),
         )
         .send()
-        .await
-        .unwrap();
+        .await?;
 
     resp.json::<Response>().await
+
+    // TODO: use `/whoami` to confirm access token is invalid
 }
 
 #[tokio::test]
