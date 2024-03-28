@@ -4,4 +4,4 @@
 
 pub mod account;
 pub mod relative;
-// pub mod session;
+pub mod register;

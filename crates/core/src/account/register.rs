@@ -2,7 +2,7 @@ use http::StatusCode;
 use matrix::{
     client::{
         register::root::*,
-        uiaa::{Auth, AuthData, AuthType, Dummy, UiaaResponse},
+        uiaa::{Auth, AuthData, AuthType, Dummy, RegistrationToken, UiaaResponse},
     },
     ruma_client::Error::FromHttpResponse,
     ruma_common::api::error::{FromHttpResponseError, MatrixError, MatrixErrorBody},
@@ -10,13 +10,22 @@ use matrix::{
 
 use crate::{commune, error::Result, util::secret::Secret};
 
-pub async fn service(username: impl Into<String>, password: Secret) -> Result<Response> {
+pub async fn service(
+    username: impl Into<String>,
+    password: Secret,
+    registration_token: Option<String>,
+) -> Result<Response> {
     let req = Request::new(
         username.into(),
         password.inner(),
         Some("commune".to_owned()),
         None,
-        None,
+        registration_token.map(|rt| {
+            Auth::new(
+                AuthData::RegistrationToken(RegistrationToken::new(rt)),
+                None,
+            )
+        }),
     );
 
     let mut retry_req = req.clone();

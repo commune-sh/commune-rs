@@ -6,7 +6,7 @@ use rand::{distributions::Uniform, prelude::Distribution};
 
 use crate::{commune, error::Result};
 
-pub async fn service(address: EmailAddress) -> Result<()> {
+pub async fn service(address: EmailAddress) -> Result<String> {
     let uni = Uniform::new('0', '9');
     let token: String = uni.sample_iter(rand::thread_rng()).take(6).collect();
 
@@ -26,7 +26,7 @@ pub async fn service(address: EmailAddress) -> Result<()> {
         .send_matrix_request(req, Some(&commune().config.matrix.admin_token.inner()))
         .await?;
 
-    commune().send_email_verification(address, token).await?;
+    commune().send_email_verification(address, token.clone()).await?;
 
-    Ok(())
+    Ok(token)
 }
