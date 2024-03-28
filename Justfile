@@ -7,12 +7,12 @@ target_release := "x86_64-unknown-linux-musl"
 default:
   just --list
 
-# Creates the `.env` file if it doesn't exist
+# Creates the `commune.toml` file if it doesn't exist
 # This indicates the first invocation of `just` so we also
 # create the docker folders while we're at it
 dotenv:
   export DOCKER_USER="$(id -u):$(id -g)" && \
-  cp -n .env.example .env || true && \
+  cp -n commune-example.toml commune.toml || true && \
   mkdir -p docker/synapse || true
 
 # Dump database to a file
@@ -35,7 +35,6 @@ gen_synapse_conf: dotenv
   docker run -i --rm \
     -u "$(id -u):$(id -g)" \
     -v ./docker/synapse:/data \
-    --env-file .env \
     matrixdotorg/synapse:v1.96.1 generate
 
 # Generates a de-facto admin user
@@ -49,10 +48,10 @@ gen_synapse_admin: dotenv
 
 # Retrieves admin access token uses de-facto admin user and Development Database Credentials
 get_access_token:
-  sed -i "s/COMMUNE_SYNAPSE_ADMIN_TOKEN='.*'/COMMUNE_SYNAPSE_ADMIN_TOKEN='$( \
+  sed -i "s/admin_token:\s'.*'/admin_token:\s'$( \
     curl -sS -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' \
     http://localhost:8008/_matrix/client/v3/login | jq --raw-output '.access_token' \
-  )'/" .env
+  )'/" commune-example.toml
 
 # Runs backend dependency services
 backend *args='': dotenv

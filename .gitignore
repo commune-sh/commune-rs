@@ -16,10 +16,5 @@ Cargo.lock
 # Development
 /docker/*
 !/docker/.gitkeep
-!/docker/postgre
-.env
-access_token.txt
+commune.toml
 dump.sql
-
-# System Specific
-.DS_Store

@@ -27,6 +27,7 @@ url = { workspace = true, features = ["serde"] }
 tokio = { workspace = true, features = ["full"] }
 headers = { workspace = true }
 tokio-rustls = { workspace = true }
+time = { workspace = true }
 
 # Local Dependencies
 matrix = { path = "../matrix", features = ["client"] }

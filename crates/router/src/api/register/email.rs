@@ -23,12 +23,17 @@ pub async fn handler(Path(address): Path<EmailAddress>) -> Response {
             let token_sha256 = digest::digest(&digest::SHA256, &token.as_bytes());
             let token_sha256_b64 = engine.encode(token_sha256);
 
-            let cookie = Cookie::build(("registration-token", token_sha256_b64)).max_age(Duration::minutes(60).into());
+            let cookie = Cookie::build(("registration-token", token_sha256_b64))
+                .max_age(Duration::minutes(60).into());
 
             (
                 (),
-                AppendHeaders([(SET_COOKIE, format!("registration_token={}", cookie.to_string()))]),
-            ).into_response()
+                AppendHeaders([(
+                    SET_COOKIE,
+                    cookie.to_string(),
+                )]),
+            )
+                .into_response()
         }
         Err(e) => {
             tracing::warn!(?e, "failed to send verification email");
