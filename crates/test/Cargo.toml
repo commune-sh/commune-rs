@@ -20,6 +20,7 @@ url = { workspace = true }
 rand = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+base64 = { workspace = true }
 
 # Local Dependencies
 core = { path = "../core" }

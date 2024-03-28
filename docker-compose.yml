@@ -22,8 +22,8 @@ services:
       - '5432:5432'
     volumes:
       - synapse-db:/var/lib/postgresql/data
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     restart: always
 
   synapse:
@@ -34,8 +34,8 @@ services:
       - '8448:8448'
     volumes:
       - ./docker/synapse:/data
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
     restart: always
     network_mode: 'host'
     depends_on:
