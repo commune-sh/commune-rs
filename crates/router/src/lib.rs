@@ -10,14 +10,15 @@ pub mod api;
 
 pub async fn routes() -> Router {
     let router = Router::new()
-        .route("/register", post(api::register::root::handler))
-        .route(
-            "/register/available/:username",
-            get(api::register::available::handler),
-        )
-        .route(
-            "/register/email/:email",
-            get(api::register::email::handler),
+        .nest(
+            "/register",
+            Router::new()
+                .route("/", post(api::register::root::handler))
+                .route(
+                    "/available/:username",
+                    get(api::register::available::handler),
+                )
+                .route("/email/:email", get(api::register::email::handler)),
         )
         .route("/login", post(api::relative::login::handler))
         .route("/logout", post(api::relative::logout::handler))
@@ -28,6 +29,11 @@ pub async fn routes() -> Router {
                 .route("/password", put(api::account::password::handler))
                 .route("/display_name", put(api::account::display_name::handler))
                 .route("/avatar", put(api::account::avatar::handler)),
+        )
+        .nest(
+            "/space",
+            Router::new()
+                .route("/space", post(api::spaces::create::handler))
         );
 
     Router::new().nest("/_commune/client/r0", router)

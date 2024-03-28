@@ -93,9 +93,13 @@ impl Commune {
         let mut smtp = SmtpClientBuilder::new(
             host.host_str()
                 .expect("failed to extract host from email configuration"),
-            config.mail.host.port().expect("failed to extract port from email configuration"),
+            config
+                .mail
+                .host
+                .port()
+                .expect("failed to extract port from email configuration"),
         )
-            .connect_plain()
+        .connect_plain()
         .await?;
 
         let token = token.into();
