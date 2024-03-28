@@ -99,7 +99,7 @@ impl Commune {
         let mut smtp = SmtpClientBuilder::new(
             host.host_str()
                 .expect("failed to extract host from email configuration"),
-            587,
+            config.mail.host.port().expect("failed to extract port from email configuration"),
         )
         .implicit_tls(false)
         .credentials((username.as_str(), password.as_str()))

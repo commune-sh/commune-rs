@@ -2,7 +2,7 @@ use commune::util::secret::Secret;
 use rand::seq::IteratorRandom;
 
 use matrix::client::register::root::*;
-use router::api::relative::register;
+use router::api::register::root as register;
 
 use crate::env::Env;
 
@@ -22,6 +22,7 @@ pub async fn register(client: &Env) -> Result<Response, reqwest::Error> {
         .json(&register::Payload {
             username,
             password: Secret::new("verysecure"),
+            registration_token: None,
         })
         .send()
         .await?;
