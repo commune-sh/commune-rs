@@ -86,14 +86,8 @@ impl Commune {
         token: impl Into<String>,
     ) -> mail_send::Result<()> {
         let config = &commune().config;
+        tracing::info!(?config.mail);
 
-        let password = config.mail.password.inner();
-        let username = config
-            .mail
-            .username
-            .as_deref()
-            .unwrap_or(&password)
-            .to_owned();
         let host = &config.mail.host;
 
         let mut smtp = SmtpClientBuilder::new(
@@ -101,17 +95,11 @@ impl Commune {
                 .expect("failed to extract host from email configuration"),
             config.mail.host.port().expect("failed to extract port from email configuration"),
         )
-        .implicit_tls(false)
-        .credentials((username.as_str(), password.as_str()))
-        .connect()
+            .connect_plain()
         .await?;
 
         let token = token.into();
         let from = format!("commune@{host}");
-        let html = format!(
-            "<p>Thanks for signing up.\n\nUse this code to finish verifying your \
-             email:\n{token}</p>"
-        );
         let text = format!(
             "Thanks for signing up.\n\nUse this code to finish verifying your email:\n{token}"
         );
@@ -120,7 +108,6 @@ impl Commune {
             .from(("Commune", from.as_str()))
             .to(vec![address.as_str()])
             .subject("Email Verification Code")
-            .html_body(html.as_str())
             .text_body(text.as_str());
 
         smtp.send(message).await

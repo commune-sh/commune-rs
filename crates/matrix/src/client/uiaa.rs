@@ -147,6 +147,7 @@ impl RegistrationToken {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Auth {
+    #[serde(skip_serializing_if = "Option::is_none")]
     session: Option<OwnedSessionId>,
 
     kind: AuthType,
