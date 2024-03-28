@@ -10,10 +10,14 @@ pub mod api;
 
 pub async fn routes() -> Router {
     let router = Router::new()
-        .route("/register", post(api::relative::register::handler))
+        .route("/register", post(api::register::root::handler))
         .route(
             "/register/available/:username",
-            get(api::relative::available::handler),
+            get(api::register::available::handler),
+        )
+        .route(
+            "/register/email/:email",
+            get(api::register::email::handler),
         )
         .route("/login", post(api::relative::login::handler))
         .route("/logout", post(api::relative::logout::handler))

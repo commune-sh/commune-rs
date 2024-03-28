@@ -84,9 +84,9 @@ pub enum AuthData {
 
     // Dummy authentication (`m.login.dummy`).
     Dummy(Dummy),
-    // Registration token-based authentication (`m.login.registration_token`).
-    // RegistrationToken(RegistrationToken),
 
+    // Registration token-based authentication (`m.login.registration_token`).
+    RegistrationToken(RegistrationToken),
     // Fallback acknowledgement.
     // FallbackAcknowledgement(FallbackAcknowledgement),
 }
@@ -96,6 +96,7 @@ impl AuthData {
         match self {
             AuthData::Password(_) => AuthType::Password,
             AuthData::Dummy(_) => AuthType::Dummy,
+            AuthData::RegistrationToken(_) => AuthType::RegistrationToken,
         }
     }
 }
@@ -118,7 +119,7 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn new<S: Into<String>>(user_id: impl Into<OwnedUserId>, password: S) -> Self {
+    pub fn new(user_id: impl Into<OwnedUserId>, password: impl Into<String>) -> Self {
         let user: &UserId = &user_id.into();
 
         Self {
@@ -126,6 +127,20 @@ impl Password {
                 user: user.localpart().to_owned(),
             },
             password: password.into(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(tag = "type", rename = "m.login.registration_token")]
+pub struct RegistrationToken {
+    token: String,
+}
+
+impl RegistrationToken {
+    pub fn new(token: impl Into<String>) -> Self {
+        Self {
+            token: token.into(),
         }
     }
 }
