@@ -1,22 +1,23 @@
 use matrix::{
     client::create_room::{Request, Response, RoomCreationContent, RoomVisibility},
-    ruma_common::{room::RoomType, RoomVersionId},
-    ruma_events::room::power_levels::RoomPowerLevelsEventContent,
+    ruma_common::{room::RoomType, OwnedRoomOrAliasId, RoomVersionId},
+    ruma_events::{
+        room::power_levels::RoomPowerLevelsEventContent,
+        space::parent::{InitialSpaceParentEvent, SpaceParentEventContent},
+    },
 };
 
 use crate::{commune, error::Result};
 
 pub async fn service(
     access_token: impl AsRef<str>,
+    parent: OwnedRoomOrAliasId,
     alias: Option<String>,
     name: Option<String>,
     topic: Option<String>,
 ) -> Result<Response> {
-    let mut power_levels = RoomPowerLevelsEventContent::new();
-    power_levels.events_default = 100.into();
-
     let creation_content = Some(RoomCreationContent {
-        kind: Some(RoomType::Space),
+        kind: None,
         federate: true,
         room_version: RoomVersionId::V11,
         predecessor: None,
@@ -28,14 +29,24 @@ pub async fn service(
         Vec::new(),
         false,
         name,
-        Some(power_levels),
+        None,
         alias,
         topic,
         RoomVisibility::Public,
     );
 
-    commune()
+    let resp = commune()
         .send_matrix_request(req, Some(access_token.as_ref()))
-        .await
-        .map_err(Into::into)
+        .await?;
+
+    let mut content =
+        SpaceParentEventContent::new(vec![commune().config.matrix.server_name.clone()]);
+    content.canonical = true;
+
+    let state_event = InitialSpaceParentEvent {
+        content,
+        state_key: resp.room_id.clone(),
+    };
+
+    Ok(resp)
 }
