@@ -3,7 +3,8 @@
 //! reference: https://spec.matrix.org/unstable/client-server-api
 
 pub mod account;
-pub mod relative;
+pub mod direct;
+pub mod membership;
 pub mod register;
+pub mod relative;
 pub mod spaces;
-pub mod rooms;

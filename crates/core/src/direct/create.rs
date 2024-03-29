@@ -1,23 +1,18 @@
 use matrix::{
     client::create_room::{Request, Response, RoomCreationContent, RoomVisibility},
-    ruma_common::{room::RoomType, RoomVersionId},
-    ruma_events::room::power_levels::RoomPowerLevelsEventContent,
+    ruma_common::{OwnedUserId, RoomVersionId},
 };
 
 use crate::{commune, error::Result};
 
 pub async fn service(
     access_token: impl AsRef<str>,
-    alias: Option<String>,
     name: Option<String>,
     topic: Option<String>,
+    invite: Vec<OwnedUserId>,
 ) -> Result<Response> {
-    // Only state events should be allowed in spaces
-    let mut power_levels = RoomPowerLevelsEventContent::new();
-    power_levels.events_default = 100.into();
-
     let creation_content = Some(RoomCreationContent {
-        kind: Some(RoomType::Space),
+        kind: None,
         federate: true,
         room_version: RoomVersionId::V11,
         predecessor: None,
@@ -26,13 +21,13 @@ pub async fn service(
     let req = Request::new(
         creation_content,
         Vec::new(),
-        Vec::new(),
-        false,
+        invite,
+        true,
         name,
-        Some(power_levels),
-        alias,
+        None,
+        None,
         topic,
-        RoomVisibility::Public,
+        RoomVisibility::Private,
     );
 
     commune()

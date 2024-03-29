@@ -1,5 +1,5 @@
 use matrix::client::create_room::*;
-use router::api::spaces::root::Payload;
+use router::api::spaces::create::Payload;
 
 use crate::{api::relative::login, env::Env};
 

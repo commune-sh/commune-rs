@@ -3,6 +3,6 @@
 //! reference: https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/index.html
 
 pub mod registration_tokens;
-// pub mod room;
+pub mod rooms;
 // pub mod session;
 // pub mod user;

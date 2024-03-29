@@ -3,12 +3,14 @@
 
 pub mod config;
 pub mod error;
+pub mod helpers;
 pub mod util;
 
 pub mod account;
+pub mod direct;
 pub mod profile;
 pub mod spaces;
-pub mod rooms;
+pub mod membership;
 
 use std::sync::RwLock;
 
