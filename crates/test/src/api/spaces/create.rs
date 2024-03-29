@@ -1,5 +1,6 @@
 use matrix::client::create_room::*;
-use router::api::spaces::root::Payload;
+use rand::{distributions::Uniform, prelude::Distribution};
+use router::api::spaces::create::Payload;
 
 use crate::{api::relative::login, env::Env};
 
@@ -8,12 +9,15 @@ pub async fn create_space(client: &Env) -> Result<Response, reqwest::Error> {
 
     tracing::info!(?login_resp);
 
+    let uni = Uniform::new('0', '9');
+    let id: String = uni.sample_iter(rand::thread_rng()).take(6).collect();
+
     let resp = client
         .post("/_commune/client/r0/spaces")
         .json(&Payload {
-            alias: Some("alias".to_owned()),
-            name: Some("name".to_owned()),
-            topic: Some("topic".to_owned()),
+            alias: Some(format!("alias-{id}")),
+            name: Some(format!("name-{id}")),
+            topic: Some(format!("topic-{id}")),
         })
         .header(
             reqwest::header::AUTHORIZATION,

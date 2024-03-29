@@ -10,6 +10,8 @@ pub mod api;
 
 pub async fn routes() -> Router {
     let router = Router::new()
+        .route("/login", post(api::relative::login::handler))
+        .route("/logout", post(api::relative::logout::handler))
         .nest(
             "/register",
             Router::new()
@@ -20,8 +22,6 @@ pub async fn routes() -> Router {
                 )
                 .route("/email/:email", get(api::register::email::handler)),
         )
-        .route("/login", post(api::relative::login::handler))
-        .route("/logout", post(api::relative::logout::handler))
         .nest(
             "/account",
             Router::new()
@@ -31,9 +31,17 @@ pub async fn routes() -> Router {
                 .route("/avatar", put(api::account::avatar::handler)),
         )
         .nest(
+            "/direct",
+            Router::new().route("/", post(api::direct::create::handler)),
+        )
+        .nest(
             "/spaces",
             Router::new()
-                .route("/", post(api::spaces::root::handler))
+                .route("/", post(api::spaces::create::handler))
+                .route(
+                    "/:space_id/channels",
+                    post(api::spaces::channels::create::handler),
+                ),
         );
 
     Router::new().nest("/_commune/client/r0", router)

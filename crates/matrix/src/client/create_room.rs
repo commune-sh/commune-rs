@@ -3,7 +3,7 @@ use ruma_common::{
     metadata,
     room::RoomType,
     serde::Raw,
-    OwnedRoomAliasId, OwnedRoomId, OwnedUserId, RoomVersionId,
+    OwnedRoomId, OwnedUserId, RoomVersionId,
 };
 use ruma_events::{
     room::{create::PreviousRoom, power_levels::RoomPowerLevelsEventContent},
