@@ -30,6 +30,20 @@ pub struct Request {
     pub force_purge: bool,
 }
 
+impl Request {
+    pub fn new(
+        room_id: OwnedRoomId,
+    ) -> Self {
+        Self {
+            room_id,
+            new_room: None,
+            block: false,
+            purge: false,
+            force_purge: false,
+        }
+    }
+}
+
 #[response(error = crate::Error)]
 pub struct Response {
     pub delete_id: String,

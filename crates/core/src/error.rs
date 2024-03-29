@@ -9,6 +9,9 @@ pub enum Error {
     #[error("forwarding a Matrix request failed: {0}")]
     Matrix(#[from] matrix::HandleError),
 
+    #[error("(de)serializing type failed: {0}")]
+    Serde(#[from] serde_json::Error),
+
     #[error("instance does not allow email address originating from this domain")]
     EmailDomain,
 

@@ -17,8 +17,8 @@ const METADATA: Metadata = metadata! {
 };
 
 #[request(error = crate::Error)]
+#[derive(Default)]
 pub struct Request {
-    #[serde(default)]
     #[ruma_api(query)]
     pub from: u64,
 
@@ -32,9 +32,27 @@ pub struct Request {
     #[ruma_api(query)]
     pub direction: Direction,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[ruma_api(query)]
-    pub search_term: String,
+    pub search_term: Option<String>,
+}
+
+impl Request {
+    pub fn new(
+        from: u64,
+        limit: Option<u64>,
+        order_by: OrderBy,
+        direction: Direction,
+        search_term: Option<String>,
+    ) -> Self {
+        Self {
+            from,
+            limit,
+            order_by,
+            direction,
+            search_term,
+        }
+    }
 }
 
 #[response(error = crate::Error)]

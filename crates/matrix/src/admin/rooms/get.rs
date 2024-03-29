@@ -20,6 +20,12 @@ pub struct Request {
     pub room_id: OwnedRoomId,
 }
 
+impl Request {
+    pub fn new(room_id: OwnedRoomId) -> Self {
+        Self { room_id }
+    }
+}
+
 #[response(error = crate::Error)]
 pub struct Response {
     #[ruma_api(body)]
