@@ -5,3 +5,4 @@
 pub mod account;
 pub mod relative;
 pub mod register;
+pub mod spaces;

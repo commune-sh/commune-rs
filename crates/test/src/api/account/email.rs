@@ -38,10 +38,10 @@ pub async fn verify_email(client: &Env) -> Result<Response, reqwest::Error> {
     let EmailBody { text } = resp.json().await?;
     let code: String = text.chars().filter(|c| c.is_digit(10)).collect();
 
-    let engine = GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD);
+    // let engine = GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD);
 
-    let token_sha256 = digest::digest(&digest::SHA256, &token.as_bytes());
-    let token_sha256_b64 = engine.encode(token_sha256);
+    // let token_sha256 = digest::digest(&digest::SHA256, &token.as_bytes());
+    // let token_sha256_b64 = engine.encode(token_sha256);
 
     let username = generate_comforming_localpart();
 

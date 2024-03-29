@@ -31,9 +31,9 @@ pub async fn routes() -> Router {
                 .route("/avatar", put(api::account::avatar::handler)),
         )
         .nest(
-            "/space",
+            "/spaces",
             Router::new()
-                .route("/space", post(api::spaces::create::handler))
+                .route("/", post(api::spaces::root::handler))
         );
 
     Router::new().nest("/_commune/client/r0", router)

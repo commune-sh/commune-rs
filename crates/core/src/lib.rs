@@ -7,6 +7,7 @@ pub mod util;
 
 pub mod account;
 pub mod profile;
+pub mod spaces;
 
 use std::sync::RwLock;
 
