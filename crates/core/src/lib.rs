@@ -8,6 +8,7 @@ pub mod util;
 pub mod account;
 pub mod profile;
 pub mod spaces;
+pub mod rooms;
 
 use std::sync::RwLock;
 

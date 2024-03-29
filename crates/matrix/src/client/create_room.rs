@@ -61,7 +61,7 @@ pub struct RoomCreationContent {
     pub predecessor: Option<PreviousRoom>,
 
     #[serde(rename = "type")]
-    pub kind: RoomType,
+    pub kind: Option<RoomType>,
 }
 
 #[derive(Clone, Default, Debug, Serialize)]

@@ -6,6 +6,7 @@ pub mod login;
 pub mod logout;
 pub mod register;
 pub mod create_room;
+pub mod rooms;
 
 pub mod account;
 pub mod profile;
