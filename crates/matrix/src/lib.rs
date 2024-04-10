@@ -10,6 +10,7 @@
 
 pub mod admin;
 pub mod client;
+pub mod error;
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
