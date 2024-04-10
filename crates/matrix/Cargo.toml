@@ -16,6 +16,7 @@ ruma-client = { workspace = true }
 ruma-identifiers-validation = { workspace = true }
 
 # Workspace Dependencies
+as_variant =  { workspace = true }
 mime = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
