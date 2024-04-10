@@ -11,9 +11,9 @@ default:
 # This indicates the first invocation of `just` so we also
 # create the docker folders while we're at it
 dotenv:
-  export DOCKER_USER="$(id -u):$(id -g)" && \
-  cp -n commune-example.toml commune.toml || true && \
-  mkdir -p docker/synapse || true
+  export DOCKER_USER="$(id -u):$(id -g)"; \
+    cp -n commune-example.toml commune.toml && true; \
+    mkdir -p docker/synapse && true
 
 # Dump database to a file
 backup_db:
