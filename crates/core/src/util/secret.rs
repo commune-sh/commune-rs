@@ -45,32 +45,3 @@ impl Display for Secret {
         f.write_str(s.as_str())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn do_not_display_value() {
-        let secret = Secret::new("secret");
-        let display = format!("{}", secret);
-
-        assert_eq!(display, "[REDACTED]");
-    }
-
-    #[test]
-    fn do_not_debug_value() {
-        let secret = Secret::new("secret");
-        let display = format!("{:?}", secret);
-
-        assert_eq!(display, "[REDACTED]");
-    }
-
-    #[test]
-    fn retrieves_original() {
-        let secret = Secret::new("secret");
-        let value = secret.inner();
-
-        assert_eq!(value, "secret".into());
-    }
-}

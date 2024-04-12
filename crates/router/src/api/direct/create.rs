@@ -26,7 +26,7 @@ pub async fn handler(
         access_token.token(),
         payload.name,
         payload.topic,
-        payload.invite
+        payload.invite,
     )
     .await
     {

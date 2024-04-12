@@ -18,7 +18,13 @@ pub struct Payload {
 pub async fn handler(Json(payload): Json<Payload>) -> Response {
     use commune::account::register::service;
 
-    match service(payload.username, payload.password, payload.registration_token).await {
+    match service(
+        payload.username,
+        payload.password,
+        payload.registration_token,
+    )
+    .await
+    {
         Ok(resp) => Json(resp).into_response(),
         Err(e) => {
             tracing::warn!(?e, "failed to create account");

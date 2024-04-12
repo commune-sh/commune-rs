@@ -10,14 +10,14 @@ use matrix::{
     },
 };
 
-use crate::{commune, error::Result, util::opaque_id::OpaqueId};
+use crate::{commune, error::Error, util::opaque_id::OpaqueId};
 
 pub async fn service(
     access_token: impl AsRef<str>,
     space_id: OpaqueId,
     name: Option<String>,
     topic: Option<String>,
-) -> Result<Response> {
+) -> Result<Response, Error> {
     let server_name = &commune().config.matrix.server_name;
     // this should never panic
     let space_id = OwnedRoomId::try_from(format!("!{space_id}:{server_name}"))

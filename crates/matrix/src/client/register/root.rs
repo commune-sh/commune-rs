@@ -4,7 +4,7 @@ use ruma_common::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::client::uiaa::Auth;
+use crate::client::uiaa::{Auth, UiaaResponse};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -16,7 +16,7 @@ const METADATA: Metadata = metadata! {
     }
 };
 
-#[request(error = crate::Error)]
+#[request(error = UiaaResponse)]
 pub struct Request {
     pub username: String,
 
@@ -57,7 +57,7 @@ impl Request {
     }
 }
 
-#[response(error = crate::Error)]
+#[response(error = UiaaResponse)]
 #[derive(Deserialize, Serialize)]
 pub struct Response {
     #[serde(default)]

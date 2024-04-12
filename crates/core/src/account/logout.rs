@@ -1,8 +1,8 @@
 use matrix::client::logout::root::*;
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
-pub async fn service(access_token: impl AsRef<str>) -> Result<Response> {
+pub async fn service(access_token: impl AsRef<str>) -> Result<Response, Error> {
     let req = Request::new();
 
     commune()

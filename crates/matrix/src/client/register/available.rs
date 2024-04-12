@@ -2,7 +2,7 @@ use ruma_common::{
     api::{request, response, Metadata},
     metadata,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {

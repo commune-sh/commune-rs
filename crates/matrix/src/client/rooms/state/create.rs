@@ -5,7 +5,7 @@ use ruma_common::{
     OwnedEventId, OwnedRoomId,
 };
 use ruma_events::{AnyStateEventContent, StateEventType};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {

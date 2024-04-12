@@ -7,14 +7,10 @@ use url::form_urlencoded::byte_serialize;
 use crate::{env::Env, util::generate_comforming_localpart};
 
 pub async fn verify_email(client: &Env) -> Result<Response, reqwest::Error> {
+    let email: String = byte_serialize(b"commune@example.org").collect();
+
     let resp = client
-        .get(
-            format!(
-                "/_commune/client/r0/register/email/{}",
-                byte_serialize("commune@example.org".as_bytes()).collect::<String>()
-            )
-            .as_str(),
-        )
+        .get(format!("/_commune/client/r0/register/email/{email}").as_str())
         .send()
         .await?;
 
@@ -38,7 +34,8 @@ pub async fn verify_email(client: &Env) -> Result<Response, reqwest::Error> {
     let EmailBody { text } = resp.json().await?;
     let code: String = text.chars().filter(|c| c.is_digit(10)).collect();
 
-    // let engine = GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD);
+    // let engine = GeneralPurpose::new(&alphabet::URL_SAFE,
+    // general_purpose::NO_PAD);
 
     // let token_sha256 = digest::digest(&digest::SHA256, &token.as_bytes());
     // let token_sha256_b64 = engine.encode(token_sha256);

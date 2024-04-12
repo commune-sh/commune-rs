@@ -3,14 +3,13 @@ use matrix::{
     ruma_common::{OwnedUserId, RoomVersionId},
 };
 
-use crate::{commune, error::Result};
-
+use crate::{commune, error::Error};
 pub async fn service(
     access_token: impl AsRef<str>,
     name: Option<String>,
     topic: Option<String>,
     invite: Vec<OwnedUserId>,
-) -> Result<Response> {
+) -> Result<Response, Error> {
     let creation_content = Some(RoomCreationContent {
         kind: None,
         federate: true,

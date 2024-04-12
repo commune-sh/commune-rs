@@ -1,6 +1,6 @@
 use commune::util::secret::Secret;
 
-use matrix::client::register::root::*;
+use matrix::{client::register::root::*, ClientError};
 use router::api::register::root as register;
 
 use crate::{env::Env, util::generate_comforming_localpart};

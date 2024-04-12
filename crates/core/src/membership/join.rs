@@ -3,13 +3,13 @@ use matrix::{
     ruma_common::OwnedRoomOrAliasId,
 };
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
 pub async fn service(
     access_token: impl AsRef<str>,
     room_id: impl Into<OwnedRoomOrAliasId>,
     reason: Option<String>,
-) -> Result<Response> {
+) -> Result<Response, Error> {
     let req = Request::new(room_id.into(), reason);
 
     commune()

@@ -9,7 +9,7 @@ use ruma_events::{
     room::{create::PreviousRoom, power_levels::RoomPowerLevelsEventContent},
     AnyInitialStateEvent,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 const METADATA: Metadata = metadata! {
@@ -74,6 +74,7 @@ pub enum RoomVisibility {
 }
 
 impl Request {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         creation_content: Option<RoomCreationContent>,
         initial_state: Vec<Raw<AnyInitialStateEvent>>,

@@ -18,7 +18,7 @@ pub async fn login(client: &Env) -> Result<Response, reqwest::Error> {
         .send()
         .await?;
 
-    resp.json::<Response>().await
+    resp.json().await
 }
 
 #[tokio::test]

@@ -1,8 +1,8 @@
 use matrix::client::register::available::*;
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
-pub async fn service(username: impl Into<String>) -> Result<Response> {
+pub async fn service(username: impl Into<String>) -> Result<Response, Error> {
     let req = Request::new(username.into());
 
     commune()

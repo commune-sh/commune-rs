@@ -1,18 +1,19 @@
 use axum::{http::StatusCode, response::IntoResponse};
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
-    #[error("forwarding a Matrix request failed: {0}")]
-    Matrix(#[from] matrix::HandleError),
+    #[error("forwarding Matrix request failed: {0}")]
+    Matrix(#[from] matrix::ClientError),
+
+    #[error("forwarding Matrix request requires UIA: {0}")]
+    Uiaa(#[from] matrix::UiaaError),
 
     #[error("(de)serializing type failed: {0}")]
     Serde(#[from] serde_json::Error),
 
-    #[error("instance does not allow email address originating from this domain")]
+    #[error("email host has been banned")]
     EmailDomain,
 
     #[error("failed to validate identifier: {0}")]
