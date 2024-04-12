@@ -1,8 +1,8 @@
 use matrix::client::account::whoami::*;
 
-use crate::{commune, error::Result};
+use crate::commune;
 
-pub async fn service(access_token: impl AsRef<str>) -> Result<Response> {
+pub async fn service(access_token: impl AsRef<str>) -> Result<Response, crate::error::Error> {
     let req = Request::new();
 
     commune()

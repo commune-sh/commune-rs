@@ -4,14 +4,14 @@ use matrix::{
     ruma_events::room::power_levels::RoomPowerLevelsEventContent,
 };
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
 pub async fn service(
     access_token: impl AsRef<str>,
     alias: Option<String>,
     name: Option<String>,
     topic: Option<String>,
-) -> Result<Response> {
+) -> Result<Response, Error> {
     // Only state events should be allowed in spaces
     let mut power_levels = RoomPowerLevelsEventContent::new();
     power_levels.events_default = 100.into();

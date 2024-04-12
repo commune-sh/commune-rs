@@ -1,9 +1,9 @@
 pub mod get {
     use matrix::{client::profile::display_name::get::*, ruma_common::OwnedUserId};
 
-    use crate::{commune, error::Result};
+    use crate::{commune, error::Error};
 
-    pub async fn service(user_id: impl Into<OwnedUserId>) -> Result<Response> {
+    pub async fn service(user_id: impl Into<OwnedUserId>) -> Result<Response, Error> {
         let req = Request::new(user_id.into());
 
         commune()
@@ -16,12 +16,12 @@ pub mod get {
 pub mod update {
     use matrix::client::{account::whoami, profile::display_name::update::*};
 
-    use crate::{commune, error::Result};
+    use crate::{commune, error::Error};
 
     pub async fn service(
         access_token: impl AsRef<str>,
         display_name: impl Into<String>,
-    ) -> Result<Response> {
+    ) -> Result<Response, Error> {
         let req = whoami::Request::new();
 
         let whoami::Response { user_id, .. } = commune()

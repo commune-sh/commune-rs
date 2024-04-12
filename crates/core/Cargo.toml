@@ -10,6 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # Workspace Dependencies
+reqwest = { workspace = true }
 anyhow = { workspace = true }
 axum = { workspace = true }
 rand = { workspace = true }

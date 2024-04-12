@@ -6,13 +6,13 @@ use matrix::{
     ruma_common::OwnedRoomOrAliasId,
 };
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
 pub async fn service(
     access_token: impl AsRef<str>,
     room_or_alias_id: impl Into<OwnedRoomOrAliasId>,
     reason: Option<String>,
-) -> Result<Response> {
+) -> Result<Response, Error> {
     let room_or_alias_id: OwnedRoomOrAliasId = room_or_alias_id.into();
 
     // this cannot error, `Result<T>` is just provided in place of an enum

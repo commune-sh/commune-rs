@@ -14,6 +14,7 @@ pub mod error;
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
+use client::uiaa::UiaaResponse;
 use ruma_client::HttpClient;
 
 pub use ruma_client;
@@ -21,8 +22,11 @@ pub use ruma_common;
 pub use ruma_events;
 pub use ruma_identifiers_validation;
 
-pub type Error = ruma_common::api::error::MatrixError;
-pub type HandleError = ruma_client::Error<reqwest::Error, Error>;
+use crate::error::Error;
+
+pub type ClientError = ruma_client::Error<reqwest::Error, crate::error::Error>;
+
+pub type UiaaError = ruma_client::Error<reqwest::Error, UiaaResponse>;
 
 #[derive(Default, Debug)]
 pub struct Client {

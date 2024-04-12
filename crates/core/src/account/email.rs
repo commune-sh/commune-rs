@@ -4,9 +4,9 @@ use email_address::EmailAddress;
 use matrix::admin::registration_tokens::new::*;
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::{commune, error::Result};
+use crate::{commune, error::Error};
 
-pub async fn service(address: EmailAddress) -> Result<String> {
+pub async fn service(address: EmailAddress) -> Result<String, Error> {
     let uni = Uniform::new('0', '9');
     let token: String = uni.sample_iter(rand::thread_rng()).take(6).collect();
 

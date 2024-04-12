@@ -4,5 +4,5 @@
 
 pub mod account;
 pub mod relative;
-pub mod spaces;
 pub mod rooms;
+pub mod spaces;

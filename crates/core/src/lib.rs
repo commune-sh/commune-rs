@@ -8,9 +8,9 @@ pub mod util;
 
 pub mod account;
 pub mod direct;
+pub mod membership;
 pub mod profile;
 pub mod spaces;
-pub mod membership;
 
 use std::sync::RwLock;
 
@@ -90,7 +90,6 @@ impl Commune {
         token: impl Into<String>,
     ) -> mail_send::Result<()> {
         let config = &commune().config;
-        tracing::info!(?config.mail);
 
         let host = &config.mail.host;
 
