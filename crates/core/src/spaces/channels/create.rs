@@ -19,9 +19,8 @@ pub async fn service(
     topic: Option<String>,
 ) -> Result<Response, Error> {
     let server_name = &commune().config.matrix.server_name;
-    // this should never panic
     let space_id = OwnedRoomId::try_from(format!("!{space_id}:{server_name}"))
-        .expect("failed to parse room ID");
+        .expect("Parsing space identifier should never panic");
 
     let req = Request::new(
         Some(RoomCreationContent {

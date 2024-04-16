@@ -4,9 +4,13 @@ use axum::{
     routing::{get, post, put},
     Router,
 };
+use serde::Serialize;
 use tokio::net::TcpListener;
 
 pub mod api;
+
+#[derive(Serialize)]
+pub struct EmptyBody {}
 
 pub async fn routes() -> Router {
     let router = Router::new()
@@ -27,8 +31,13 @@ pub async fn routes() -> Router {
             Router::new()
                 .route("/whoami", get(api::account::whoami::handler))
                 .route("/password", put(api::account::password::handler))
-                .route("/display_name", put(api::account::display_name::handler))
-                .route("/avatar", put(api::account::avatar::handler)),
+        )
+        .nest(
+            "/profile",
+            Router::new()
+                .route("/:user_id", get(api::profile::handler))
+                .route("/displayname", put(api::profile::displayname::handler))
+                .route("/avatar_url", put(api::profile::avatar_url::handler)),
         )
         .nest(
             "/direct",
@@ -42,7 +51,11 @@ pub async fn routes() -> Router {
                     "/:space_id/channels",
                     post(api::spaces::channels::create::handler),
                 ),
-        );
+        )
+        // .nest("/join",
+        //       Router::new().route("/join/:space_id", put(api::membership::join)),
+        // )
+        ;
 
     Router::new().nest("/_commune/client/r0", router)
 }
