@@ -10,19 +10,19 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Payload {
-    pub display_name: String,
+    pub displayname: String,
 }
 
 pub async fn handler(
     TypedHeader(access_token): TypedHeader<Authorization<Bearer>>,
     Json(payload): Json<Payload>,
 ) -> Response {
-    use commune::profile::avatar::update::service;
+    use commune::profile::displayname::service;
 
-    match service(access_token.token(), payload.display_name).await {
-        Ok(_) => ().into_response(),
+    match service(access_token.token(), payload.displayname).await {
+        Ok(_) => Json(crate::EmptyBody {}).into_response(),
         Err(e) => {
-            tracing::warn!(?e, "failed to update display name");
+            tracing::warn!(?e, "failed to update displayname");
 
             e.into_response()
         }

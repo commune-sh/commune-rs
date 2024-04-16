@@ -1,11 +1,14 @@
-use rand::seq::IteratorRandom;
+use rand::{distributions::Alphanumeric, Rng};
 
 pub fn generate_comforming_localpart() -> String {
-    let allowed = ('0'..='9')
-        .chain('a'..='z')
-        .chain(['-', '.', '=', '_', '/', '+']);
-    allowed
-        .choose_multiple(&mut rand::thread_rng(), 8)
-        .into_iter()
-        .collect()
+    // Synapse does not allow usernames to start with '_' despite
+    // the specification doing so.
+
+    let s: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .map(char::from) // From link above, this is needed in later versions
+        .collect();
+
+    s.to_lowercase()
 }
