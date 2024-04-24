@@ -81,4 +81,5 @@ rc_invites:
     burst_count: 1000
 
 enable_registration: true
-enable_registration_without_verification: true
+# enable_registration_without_verification: true
+registration_requires_token: true
