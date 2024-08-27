@@ -1,0 +1,32 @@
+[package]
+name = "router"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "commune-server"
+path = "src/main.rs"
+
+[lib]
+name = "router"
+path = "src/lib.rs"
+
+[dependencies]
+axum = { workspace = true, features = ["tokio", "macros"] }
+axum-extra = { workspace = true, features = ["typed-header"] }
+anyhow = { workspace = true }
+http = { workspace = true }
+email_address = { workspace = true }
+# openssl = { workspace = true, features = ["vendored"] }
+# openssl-sys = { workspace = true, features = ["vendored"] }
+serde = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+url = { workspace = true, features = ["serde"] }
+
+# Local Dependencies
+core = { path = "../core" }
+matrix = { path = "../matrix" }
+figment = { workspace = true, features = ["toml", "env"] }

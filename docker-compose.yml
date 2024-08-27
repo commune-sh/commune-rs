@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  mailcrab:
+    image: marlonb/mailcrab:latest
+    ports:
+      - '1025:1025'
+    networks: [default]
+
+  redis:
+    image: 'redis/redis-stack'
+    ports:
+      - '6379:6379'
+      - '8001:8001'
+    volumes:
+      - redis-db:/data
+
+  synapse-db:
+    image: 'postgres:16'
+    ports:
+      - '5432:5432'
+    volumes:
+      - synapse-db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    restart: always
+
+  synapse:
+    image: 'ghcr.io/element-hq/synapse:v1.100.0'
+    user: "${DOCKER_USER}"
+    ports:
+      - '8008:8008'
+      - '8448:8448'
+    volumes:
+      - ./docker/synapse:/data
+    env_file:
+      - .env
+    restart: always
+    network_mode: 'host'
+    depends_on:
+      - synapse-db
+
+volumes:
+  redis-db:
+  synapse-db:
