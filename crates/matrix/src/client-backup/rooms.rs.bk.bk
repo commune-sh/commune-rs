@@ -1,6 +1,0 @@
-//! This module contains handlers to interact with rooms.
-//!
-//! reference: https://spec.matrix.org/unstable/client-server-api/#rooms
-
-pub mod create;
-pub mod forget;
