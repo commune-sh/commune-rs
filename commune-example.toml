@@ -1,0 +1,23 @@
+registration_verification = false
+public_loopback = false
+port = 6421
+tls = true
+
+# Either one works but not both
+blocked_domains = []
+# allowed_domains = ['gmail.com', 'outlook.com']
+
+# `X-Forwarded-For` header
+# xff = false
+
+[matrix]
+server_name = "matrix.localhost"
+host = "http://0.0.0.0:8008"
+admin_token = "syt_YWRtaW4_FllbTksPWcQaDRUVVcYR_3LJQZ2"
+shared_registration_secret = "m@;wYOUOh0f:CH5XA65sJB1^q01~DmIriOysRImot,OR_vzN&B"
+
+[mail]
+host = "smtp://0.0.0.0:1025"
+username = ""
+password = ""
+tls = false

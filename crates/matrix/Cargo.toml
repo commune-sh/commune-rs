@@ -1,0 +1,35 @@
+[package]
+name = "matrix"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "matrix"
+path = "src/lib.rs"
+
+[dependencies]
+ruma-events = { workspace = true }
+ruma-common = { workspace = true }
+ruma-macros = { workspace = true }
+ruma-client = { workspace = true }
+ruma-identifiers-validation = { workspace = true }
+
+# Workspace Dependencies
+mime = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+sha1 = { workspace = true }
+url = { workspace = true, features = ["serde"] }
+hex = { workspace = true }
+hmac = { workspace = true }
+http = { workspace = true }
+bytes = { workspace = true }
+async-trait = { workspace = true }
+
+[features]
+client = []
+server = []

@@ -1,0 +1,27 @@
+[package]
+name = "test"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "test"
+path = "src/lib.rs"
+
+[dependencies]
+# Workspace Dependencies
+anyhow = { workspace = true }
+axum = { workspace = true, features = ["tokio"] }
+reqwest = { workspace = true, features = ["json"] }
+serde = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+thiserror = { workspace = true }
+url = { workspace = true }
+rand = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Local Dependencies
+core = { path = "../core" }
+matrix = { path = "../matrix" }
+router = { path = "../router" }
