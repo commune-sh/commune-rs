@@ -54,7 +54,7 @@ router = { workspace = true, path = "crates/router" }
 matrix = { workspace = true, path = "crates/matrix" }
 commune = { workspace = true, path = "crates/core" }
 
-ruma-events = { version = "0.27.11", default_features = false, features = [
+ruma-events = { version = "0.28.1", default_features = false, features = [
   "html",
   "markdown",
 ] }
