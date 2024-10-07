@@ -1,0 +1,63 @@
+[package]
+name = "commune-rs"
+edition = "2021"
+version = "0.1.0"
+readme = "README.md"
+license = "Apache-2.0"
+
+description = "Rust implementation of the Commune server."
+homepage = "https://commune.sh"
+repository = "https://github.com/commune-os/commune-rs"
+
+keywords = [
+    "matrix",
+    "chat",
+    "messaging",
+    "federation",
+    "social",
+    "community",
+]
+
+[dependencies]
+
+[profile.dev]
+incremental = true
+opt-level = 1
+lto = 'off'
+
+# NOTE: you might have to adjust the value for opt-level, as it
+# comes with the drawback of less useful error messages for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+incremental = true
+opt-level = 3
+lto = 'thin'
+
+[profile.release.package."*"]
+opt-level = 3
+
+[workspace.lints.rust]
+unreachable_pub = "warn"
+unsafe_code = "forbid"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+dbg_macro = "warn"
+keyword_idents = "warn"
+large_types_passed_by_value = "warn"
+mismatching_type_param_order = "warn"
+needless_collect = "warn"
+needless_pass_by_value = "warn"
+print_stdout = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_type_annotation = "warn"
+str_to_string = "warn"
+to_string_in_format_args = "warn"
+unsafe_code = "forbid"
+unused_async = "warn"
+unused_results = "warn"
+unwrap_used = "warn"
+wildcard_imports = "warn"
