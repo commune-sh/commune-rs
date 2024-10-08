@@ -30,14 +30,15 @@
           (pkgs.rust-bin.fromRustupToolchainFile
             ./rust-toolchain.toml)
           .override {
-            extensions = [
-              "rustc"
-              "cargo"
-              "rust-docs"
-              "rustfmt"
-              "clippy"
-            ];
-            # ++ (pkgs.lib.importTOML ./rust-toolchain.toml).toolchain.components;
+            extensions =
+              [
+                "rustc"
+                "cargo"
+                "rust-docs"
+                "rustfmt"
+                "clippy"
+              ]
+              ++ (pkgs.lib.importTOML ./rust-toolchain.toml).toolchain.components;
           };
 
         default = self.callPackage ./nix/default.nix {};
