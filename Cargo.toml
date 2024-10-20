@@ -50,10 +50,9 @@ tower-http = { version = "0.6.1", features = [
 ruma = { git = "https://github.com/ruma/ruma", branch = "main", features = [
   "compat",
   "rand",
-  "appservice-api-c",
+  "appservice-api-s",
   "client-api",
   "federation-api",
-  "push-gateway-api-c",
   "server-util",
   "state-res",
   "unstable-msc2448",

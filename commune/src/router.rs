@@ -8,7 +8,11 @@ use axum::{
 };
 use ruma::api::{IncomingRequest, Metadata};
 
-use crate::api::ruma::Ar;
+use crate::api::{self, ruma::Ar};
+
+fn router() -> Router {
+    Router::new().ruma_route(api::ping::send_ping)
+}
 
 trait RouterExt {
     fn ruma_route<H, T>(self, handler: H) -> Self

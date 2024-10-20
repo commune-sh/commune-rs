@@ -1,8 +1,11 @@
 use axum::{
+    body::Body,
     extract::{FromRequest, Path},
     response::IntoResponse,
     RequestExt as _, RequestPartsExt as _,
 };
+use bytes::BytesMut;
+use http::StatusCode;
 use http_body_util::{BodyExt as _, Collected};
 use ruma::api::{IncomingRequest, OutgoingResponse};
 
@@ -66,6 +69,13 @@ where
 
 impl<T: OutgoingResponse> IntoResponse for Ra<T> {
     fn into_response(self) -> axum::response::Response {
-        todo!()
+        let Ra(request) = self;
+
+        let Ok(response) = request.try_into_http_response() else {
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        };
+        response
+            .map(|bytes| Body::from(BytesMut::freeze(bytes)))
+            .into_response()
     }
 }

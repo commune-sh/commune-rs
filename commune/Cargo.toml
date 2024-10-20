@@ -23,6 +23,7 @@ http = { workspace = true }
 http-body-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+bytes = "1.7.2"
 
 [lints]
 workspace = true

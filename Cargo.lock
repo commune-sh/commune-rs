@@ -339,6 +339,7 @@ version = "0.0.0"
 dependencies = [
  "axum",
  "axum-server",
+ "bytes",
  "http",
  "http-body-util",
  "ruma",
