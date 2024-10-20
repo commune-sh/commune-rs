@@ -5,7 +5,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-    rust-manifest.url = "https://static.rust-lang.org/dist/channel-rust-nightly.toml";
+    rust-manifest.url = "https://static.rust-lang.org/dist/2024-09-06/channel-rust-nightly.toml";
     rust-manifest.flake = false;
 
     # fenix.url = "github:nix-community/fenix";

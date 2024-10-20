@@ -2,6 +2,7 @@
   default,
   mkShell,
   toolchain,
+  taplo,
 }:
 mkShell {
   env =
@@ -16,6 +17,7 @@ mkShell {
   # Development tools
   nativeBuildInputs =
     [
+      taplo
       toolchain
     ]
     ++ (with default;

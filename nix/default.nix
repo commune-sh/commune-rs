@@ -1,8 +1,9 @@
 {
   craneLib,
   inputs,
+  lib,
 }: let
-  cargoManifest = inputs.pkgs.lib.importTOML ./Cargo.toml;
+  cargoManifest = lib.importTOML "${inputs.self}/Cargo.toml";
 
   buildPackageEnv = {
     COMMUNE_VERSION = inputs.self.shortRev or inputs.self.dirtyShortRev;
@@ -24,13 +25,11 @@
 in
   craneLib.buildPackage (commonArgs
     // {
-      doCheck = false;
-
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
       cargoExtraArgs =
         "--locked --no-default-features "
-        + inputs.pkgs.lib.optionalString
+        + lib.optionalString
         (cargoManifest.features.default != [])
         "--features "
         + (builtins.concatStringsSep "," cargoManifest.features.default);

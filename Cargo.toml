@@ -9,16 +9,67 @@ description = "Rust implementation of the Commune server."
 homepage = "https://commune.sh"
 repository = "https://github.com/commune-os/commune-rs"
 
-keywords = [
-    "matrix",
-    "chat",
-    "messaging",
-    "federation",
-    "social",
-    "community",
-]
+keywords = ["matrix", "chat", "messaging", "federation", "social", "community"]
 
 [dependencies]
+tokio = { version = "1.40.0", features = [
+  "fs",
+  "macros",
+  "signal",
+  "sync",
+  "rt-multi-thread",
+] }
+
+axum = { version = "0.7.7", default-features = false, features = [
+  "form",
+  "http1",
+  "http2",
+  "json",
+  "matched-path",
+  "tracing",
+  "macros",
+] }
+axum-server = { version = "0.7.1", features = ["tls-rustls-no-provider"] }
+
+tower = { version = "0.5.1", features = ["buffer", "util"] }
+tower-http = { version = "0.6.1", features = [
+  "add-extension",
+  "cors",
+  "follow-redirect",
+  "map-request-body",
+  "sensitive-headers",
+  "set-header",
+  "timeout",
+  "trace",
+  "util",
+] }
+
+ruma = { git = "https://github.com/ruma/ruma", branch = "main", features = [
+  "compat",
+  "rand",
+  "appservice-api-c",
+  "client-api",
+  "federation-api",
+  "push-gateway-api-c",
+  "server-util",
+  "state-res",
+  "unstable-msc2448",
+  "unstable-msc3575",
+  "unstable-exhaustive-types",
+  "ring-compat",
+  "unstable-unspecified",
+] }
+
+thiserror = "1.0.64"
+
+http = "1.1.0"
+http-body-util = "0.1.2"
+
+tracing = { version = "0.1.40", features = [] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
+
+[features]
+default = []
 
 [profile.dev]
 incremental = true
