@@ -1,0 +1,17 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
+indicatif = "0.17.8"
+miette = "7.2.0"
+xshell = "0.2.6"
+
+rand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

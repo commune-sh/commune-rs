@@ -1,7 +1,7 @@
-[package]
-name = "commune-rs"
+[workspace.package]
+name = "commune"
 edition = "2021"
-version = "0.1.0"
+version = "0.0.0"
 readme = "README.md"
 license = "Apache-2.0"
 
@@ -11,7 +11,10 @@ repository = "https://github.com/commune-os/commune-rs"
 
 keywords = ["matrix", "chat", "messaging", "federation", "social", "community"]
 
-[dependencies]
+[workspace.features]
+default = []
+
+[workspace.dependencies]
 tokio = { version = "1.40.0", features = [
   "fs",
   "macros",
@@ -68,8 +71,9 @@ http-body-util = "0.1.2"
 tracing = { version = "0.1.40", features = [] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
 
-[features]
-default = []
+rand = "0.8.5"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.132"
 
 [profile.dev]
 incremental = true
@@ -88,6 +92,10 @@ lto = 'thin'
 
 [profile.release.package."*"]
 opt-level = 3
+
+[workspace]
+members = ["commune", "xtask"]
+resolver = "2"
 
 [workspace.lints.rust]
 unreachable_pub = "warn"
