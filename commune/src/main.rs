@@ -8,5 +8,4 @@ pub(crate) use error::Error;
 
 #[tokio::main]
 pub(crate) async fn main() {
-    let router = Router::<()>::new();
 }

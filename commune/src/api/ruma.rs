@@ -79,3 +79,20 @@ impl<T: OutgoingResponse> IntoResponse for Ra<T> {
             .into_response()
     }
 }
+
+#[macro_export]
+macro_rules! ruma_route {
+    ($( $path:ident )::* = $endpoint:ident @ $ver:ident => |$state:ident, $req:ident| $block:block) => {
+        use axum::extract::State;
+        use ruma::api::$($path::)* $endpoint;
+
+        use $crate::api::ruma::{Ar, Ra};
+
+        pub(crate) async fn $endpoint(
+            State($state): State<$crate::router::State>,
+            $req: Ar<$endpoint::$ver::Request>,
+        ) -> Result<
+            Ra<$endpoint::$ver::Response>, $crate::Error
+        > $block
+    };
+}

@@ -24,6 +24,7 @@ http-body-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 bytes = "1.7.2"
+sled = "0.34.7"
 
 [lints]
 workspace = true
