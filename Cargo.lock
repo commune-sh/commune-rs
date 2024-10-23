@@ -352,6 +352,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "ruma",
+ "serde",
  "sled",
  "thiserror",
  "tokio",

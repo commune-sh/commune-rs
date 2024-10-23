@@ -15,9 +15,6 @@ keywords = ["matrix", "chat", "messaging", "federation", "social", "community"]
 members = ["app", "xtask"]
 resolver = "2"
 
-[workspace.features]
-default = []
-
 [workspace.dependencies]
 tokio = { version = "1.40.0", features = [
   "fs",

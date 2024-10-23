@@ -88,10 +88,24 @@ impl<T: OutgoingResponse> IntoResponse for Ra<T> {
 /// This is used for imports such as `appservice::ping`.
 #[macro_export]
 macro_rules! ruma_route {
-    ($( $path:ident )::* = $endpoint:ident @ $ver:ident =>
+    ($endpoint:ident => |$state:ident, $req:ident| $block:block) => {
+        use axum::extract::State;
+
+        use $crate::api::ruma::{Ar, Ra};
+
+        pub(crate) async fn $endpoint(
+            #[allow(unused_variables)]
+            State($state): State<$crate::router::State>,
+            #[allow(unused_variables)]
+            $req: Ar<$endpoint::Request>,
+        ) -> Result<
+            Ra<$endpoint::Response>, $crate::Error
+        > $block
+    };
+    ($( $path:ident )::+ = $endpoint:ident @ $ver:ident =>
         |$state:ident, $req:ident| $block:block) => {
             use axum::extract::State;
-            use ruma::api::$($path::)*$endpoint;
+            use ruma::api::$($path::)+$endpoint;
 
             use $crate::api::ruma::{Ar, Ra};
 

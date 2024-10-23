@@ -4,6 +4,7 @@ use http::uri::Authority;
 use http::StatusCode;
 use http_body_util::{combinators::BoxBody, BodyExt, Empty, Full};
 use hyper::body::Incoming;
+use hyper::client::conn;
 use hyper::client::conn::http1::Builder;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
@@ -17,10 +18,25 @@ pub(crate) struct Proxy {}
 
 impl Proxy {
     pub(crate) async fn connect(addr: SocketAddr) -> Result<(), Error> {
+        let (stream, _) = TcpStream::connect;
+
+        let (mut tx, conn) = conn::http1::handshake(hyper_util::rt::TokioIo::new(stream)).await?;
+
+        tokio::task::spawn(async move {
+            if let Err(error) = conn.await {
+                tracing::error!(%error, "Failed to initialize connection handshake");
+            }
+        });
+    }
+
+    pub(crate) async fn send_request(&self) -> Result<(), Error> {
         let listener = TcpListener::bind(addr).await.map_err(|_| Error::Todo(()))?;
 
         loop {
             let (stream, _) = listener.accept().await.map_err(|_| Error::Todo(()))?;
+
+            let (mut sender, conn) =
+                conn::http1::handshake(hyper_util::rt::TokioIo::new(stream)).await?;
 
             let http = http1::Builder::new()
                 .preserve_header_case(true)
@@ -30,8 +46,8 @@ impl Proxy {
                 .await;
 
             tokio::task::spawn(async move {
-                if let Err(err) = http {
-                    println!("Failed to serve connection: {:?}", err);
+                if let Err(error) = http {
+                    tracing::error!(%error, "Failed to serve connection");
                 }
             });
         }
@@ -79,7 +95,7 @@ async fn proxy(
                     };
                 }
                 Err(error) => {
-                    eprintln!("upgrade error: {error}")
+                    tracing::error!(%error, "Upgrade error");
                 }
             }
         });
@@ -96,7 +112,7 @@ async fn proxy(
         request.uri().port_u16().unwrap_or(80),
     ))
     .await
-    .unwrap();
+    .expect("todo");
 
     let (mut sender, conn) = Builder::new()
         .preserve_header_case(true)
@@ -105,8 +121,8 @@ async fn proxy(
         .await?;
 
     tokio::task::spawn(async move {
-        if let Err(err) = conn.await {
-            println!("Connection failed: {:?}", err);
+        if let Err(error) = conn.await {
+            tracing::error!(%error, "Connection failed");
         }
     });
 

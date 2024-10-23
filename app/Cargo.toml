@@ -30,5 +30,13 @@ headers = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 
+serde = { workspace = true }
+
 [lints]
 workspace = true
+
+[features]
+default = ["client", "server"]
+
+client = []
+server = []
