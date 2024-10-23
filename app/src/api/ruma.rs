@@ -19,6 +19,8 @@ pub(crate) struct Ar<T> {
     pub(crate) inner: T,
 }
 
+/// Automatically coerces `Ar<T>` to `T`,
+/// allowing `T`'s methods and fields to be accessed without unpacking `Ar<T>`.
 impl<T> Deref for Ar<T> {
     type Target = T;
 
@@ -80,6 +82,10 @@ impl<T: OutgoingResponse> IntoResponse for Ra<T> {
     }
 }
 
+/// Handler declaration macro.
+///
+/// - `$( $path:ident )::*` matches one or more [identifier](https://veykril.github.io/tlborm/decl-macros/minutiae/fragment-specifiers.html#ident) fragment specifiers separated by `::`.
+/// This is used for imports such as `appservice::ping`.
 #[macro_export]
 macro_rules! ruma_route {
     ($( $path:ident )::* = $endpoint:ident @ $ver:ident =>

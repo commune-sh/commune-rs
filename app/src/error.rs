@@ -14,6 +14,8 @@ pub(crate) enum Error {
     Todo(()),
 }
 
+/// Handlers are required to have `Infallible` as their error type,
+/// this implementation allow the compiler to cast `Error` into `Response` automatically.
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         todo!()

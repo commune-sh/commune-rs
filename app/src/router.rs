@@ -4,6 +4,7 @@ use axum::Router;
 
 use crate::api;
 
+/// State shared across handlers.
 #[derive(Clone)]
 pub(crate) struct State {
     pub(crate) db: sled::Db,
@@ -44,14 +45,15 @@ impl<S> RouterExt<S> for Router<S> {
 }
 
 pub(crate) trait RumaHandler<S, T> {
-    // Can't transform to a handler without boxing or relying on the
-    // nightly-only impl-trait-in-traits feature. Moving a small amount of
-    // extra logic into the trait allows bypassing both.
+    /// Can't transform to a handler without boxing or relying on the
+    /// nightly-only impl-trait-in-traits feature. Moving a small amount of
+    /// extra logic into the trait allows bypassing both.
     fn add_to_router(self, router: Router<S>) -> Router<S>;
 }
 
+/// Conversion macro for enums with identical variants.
 macro_rules! into_method_filter {
-    ( $method:expr => $($variant:ident)* ) => {
+    ( $method:expr => $( $variant:ident )* ) => {
         match $method {
             $( http::Method::$variant => axum::routing::MethodFilter::$variant, )*
             m => panic!("Unsupported HTTP method: {m:?}"),
@@ -59,6 +61,11 @@ macro_rules! into_method_filter {
     };
 }
 
+/// Blanket implementation macro for handlers with parameters,
+/// which implement `ruma::api::OutgoingRequest`.
+///
+/// It derives the handler's path and method from `ruma::api::Metadata`,
+/// in addition to extracting the `Router`'s state.
 macro_rules! impl_ruma_handler {
     ( $state:ty ) => {
         #[axum::async_trait]
@@ -98,5 +105,7 @@ macro_rules! impl_ruma_handler {
     };
 }
 
+/// Since `Router::<S1>::with_state()` converts `S1` to `S2`,
+/// we are required to implement `RumaHandler` for both `()` and `State`.
 impl_ruma_handler!(());
 impl_ruma_handler!(State);
