@@ -11,6 +11,10 @@ repository = "https://github.com/commune-os/commune-rs"
 
 keywords = ["matrix", "chat", "messaging", "federation", "social", "community"]
 
+[workspace]
+members = ["app", "xtask"]
+resolver = "2"
+
 [workspace.features]
 default = []
 
@@ -74,6 +78,17 @@ rand = "0.8.5"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.132"
 
+bytes = "1.7.2"
+sled = "0.34.7"
+
+hyper = { version = "1.5.0", features = ["full"] }
+hyper-util = { version = "0.1.9", features = ["full"] }
+
+headers = "0.4.0"
+
+# [patch.'https://github.com/ruma/ruma']
+# ruma = { path = "./ruma", package = "/ruma" }
+
 [profile.dev]
 incremental = true
 opt-level = 1
@@ -91,10 +106,6 @@ lto = 'thin'
 
 [profile.release.package."*"]
 opt-level = 3
-
-[workspace]
-members = ["commune", "xtask"]
-resolver = "2"
 
 [workspace.lints.rust]
 unreachable_pub = "warn"

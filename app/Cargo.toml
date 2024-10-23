@@ -19,12 +19,16 @@ tower = { workspace = true }
 tower-http = { workspace = true }
 ruma = { workspace = true }
 thiserror = { workspace = true }
-http = { workspace = true }
+http.workspace = true
 http-body-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-bytes = "1.7.2"
-sled = "0.34.7"
+bytes = { workspace = true }
+sled = { workspace = true }
+headers = { workspace = true }
+
+hyper = { workspace = true }
+hyper-util = { workspace = true }
 
 [lints]
 workspace = true
